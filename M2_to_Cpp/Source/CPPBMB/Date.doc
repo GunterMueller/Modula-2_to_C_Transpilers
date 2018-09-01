@@ -1,0 +1,173 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Date                                        *
+ * Description:             Date Operations                             *
+ * Implementation level:    Low-level (Necessary module)                *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 16, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Date_m2h_
+#define _M2_Date_m2h_
+
+#include <_m2sys.h>
+
+namespace Date {
+
+   /* Correct dates will be calulated for dates between
+      years 1582 and 4096. For other years date will also
+      be dealt with, but resulting dates will be incorrect.
+      More precisely, for the years outside mentioned boundaries,
+      it will be assumed the current calendar. */
+
+   class T;    /* A 'date' data type */
+
+   typedef _SubrangeType<INTEGER, 0, 6> WeekDay;
+                                        /* 0 is Sunday, 1 is Monday, ... */
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError;         /* No Error */
+   const CARDINAL noRoomError;     /* No room in destination string */
+   const CARDINAL conversionError; /* Error in conversion from/to date */
+   const CARDINAL wrongDateError;  /* Impossible date generated */
+   const CARDINAL priviledgeError; /* Violation of system privilegdes to set/get date */
+
+   /* Accesing the date components */
+
+   CARDINAL Day(T d);
+      /* Returns the day of date 'd'. */
+
+   CARDINAL Month(T d);
+      /* Returns month of date 'd'. */
+
+   CARDINAL Year(T d);
+      /* Returns a year of date 'd'. */
+
+   void SetDay(T& d, CARDINAL n);
+      /* Sets day 'n' in date 'd'.
+       + Sets error codes:
+           'wrongDateError' - if 'n' < 1 or 'n' > 31
+      */
+
+   void SetMonth(T& d, CARDINAL n);
+      /* Sets month 'n' in date 'd'.
+       + Sets error codes:
+           'wrongDateError' - if 'n' < 1 or 'n' > 12
+      */
+
+   void SetYear(T& d, CARDINAL n);
+      /* Sets year 'n' in date 'd'. */
+
+   void Init(T& d, CARDINAL dd, CARDINAL mm, CARDINAL yy);
+      /* Initializes a date 'd' to 'dd' days, 'mm' months
+         and 'yy' years.
+       + Sets error codes:
+           'wrongDateError' - if 'd' was not properly constructed
+      */
+
+   void Copy(T& d, T d1);
+      /* Copies the date 'd1' into the date 'd'. */
+
+   /* Accessing the system date */
+
+   void SetSystemDate(T d);
+      /* Sets the system date to date 'd'.
+       + Sets error codes:
+           'priviledgeError' - if 'd' cannot be set due to lack of
+                               priviledges
+      */
+
+   void GetSystemDate(T& d);
+      /* Gets the system date in 'd'.
+       + Sets error codes:
+           'priviledgeError' - if 't' cannot be set due to lack of
+                               priviledges
+      */
+
+   /* Utilities */
+
+   BOOLEAN IsLeapYear(CARDINAL y);
+      /* Returns TRUE if the year 'y' is leap. */
+
+   WeekDay DayOfWeek(T date);
+      /* Returns a day of week for date 'd'. 0 is Sunday, ... */
+
+   /* Conversion operations */
+
+   void ToString(_ARRAYOF<CHAR>& str, T d);
+      /* Converts the date 'd' to string 'str' in the following
+         format: "yyyy/mm/dd".
+       + Sets error codes:
+           'noRoomError' - if 'd' cannot fit in 'str'
+      */
+
+   void FromString(T& d, _ARRAYOF<CHAR> str);
+      /* Converts the string 'str' from format "yyyy/mm/dd" into
+         a date 'd'.
+       + Sets error codes:
+           'conversionError' - if 'str' is not in proper format,
+           'wrongDateError'  - if constructed time is not valid
+      */
+
+   LONGCARD Days(T d);
+      /* Returns days corresponding to date 'd'. */
+
+   void FromDays(T& d, LONGCARD days);
+      /* Sets 'd' to a date corresponding to 'days'. */
+
+   /* Arithmetic operations */
+
+   void Inc(T& d1, LONGCARD days);
+      /* Increments date 'd1' for 'days'. */
+
+   void Dec(T& d1, LONGCARD days);
+      /* Decrements date 'd1' for 'days'. */
+
+   void Add(T& d, T d1, T d2);
+      /* Adds date 'd1' and 'd2' giving 'd'. */
+
+   void Sub(T& d, T d1, T d2);
+      /* Subtracts date 'd2' from 'd1' giving 'd'. */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code for previous operation from this module.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // Date
+
+#endif

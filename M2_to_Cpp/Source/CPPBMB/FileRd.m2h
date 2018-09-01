@@ -1,0 +1,106 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Implementation of:       FileRd (1.1)                                *
+ *                          (see FileRd.doc for full specification)     *
+ * Version:                 1.0                                         *
+ * Date:                    February 17, 2000                           *
+ * Conformance Test Passed: -                                           *
+ * Platform:                Every                                       *
+ * Requires:                Generic ISO C++ compiler                    *
+ *                                                                      *
+ * Author:                  Zoran Budimac                               *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: zjb@unsim.ns.ac.yu              *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_FileRd_m2h_
+#define _M2_FileRd_m2h_
+
+#include <_m2sys.h>
+
+#include <File.m2h>
+#include <Scan.m2h>
+
+namespace FileRd {
+
+   /* All operations read values of simple data types written down
+      as sequence of characters, and convert them into their internal
+      representation. For actual format of written values, see Scan.Doc
+      file.
+   */
+
+   BOOLEAN Bool(File::T f);
+      /* Reads a boolean from file 'f', previously skipping all blanks. */
+
+   INTEGER Int(File::T f);
+      /* Reads an integer from file 'f', previously skipping all blanks. */
+
+   LONGINT LongInt(File::T f);
+      /* Reads a long integer from file 'f', previously skipping all blanks. */
+
+   CARDINAL Card(File::T f);
+      /* Reads a cardinal from file 'f', previously skipping all blanks. */
+
+   LONGCARD LongCard(File::T f);
+      /* Reads a long cardinal from file 'f', previously skipping all blanks. */
+
+   REAL Real(File::T f);
+      /* Reads a real from file 'f', previously skipping all blanks. */
+
+   LONGREAL LongReal(File::T f);
+      /* Reads a long real from file 'f', previously skipping all blanks. */
+
+   INTEGER IntB(File::T f, Scan::Base base);
+      /* Reads an integer from file 'f' written in base 'base',
+         previously skipping all blanks.
+      */
+
+   LONGINT LongIntB(File::T f, Scan::Base base);
+      /* Reads a long integer from file 'f' written in base 'base',
+         previously skipping all blanks.
+      */
+
+   CARDINAL CardB(File::T f, Scan::Base base);
+      /* Reads a cardinal from file 'f' written in base 'base',
+         previously skipping all blanks.
+      */
+
+   LONGCARD LongCardB(File::T f, Scan::Base base);
+      /* Reads a long cardinal from file 'f' written in base 'base',
+         previously skipping all blanks.
+      */
+
+   template <class BYTEARRAY1>
+   void Bin(File::T f, BYTEARRAY1& bin);
+      /* Fills in an array of bytes 'bin' from a file 'f'. */
+
+   CHAR (*Char)(File::T) = File::RdChar;
+      /* Reads a character from file 'f'. */
+
+   void (*Line)(File::T, _ARRAYOF<CHAR>&) = File::RdLine;
+      /* Reads a line 'line' from the file 'f', up to
+         the end-of-line mark.
+      */
+
+   void (*Ln)(File::T) = File::RdLn;
+      /* Skips to a beginning of a new line of file 'f'. */
+
+   struct _ModuleBody {
+      _ModuleBody()  { BEGIN(); }
+      ~_ModuleBody() { FINALLY(); }
+
+      void BEGIN();
+      void FINALLY();
+   };
+
+   _ModuleBody _body;
+
+} // FileRd
+
+#endif

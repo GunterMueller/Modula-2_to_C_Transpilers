@@ -1,0 +1,9 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Switches;
+(* Data for storing command line options *)
+
+  VAR
+    s: BOOLEAN; (* "-s" -> s = TRUE *)
+
+END Switches.

@@ -1,0 +1,14 @@
+DEFINITION MODULE Storage;
+FROM SYSTEM IMPORT ADDRESS;
+
+ PROCEDURE ALLOCATE(VAR a:ADDRESS;size:CARDINAL);
+  (* Reserve memory with given size and return it's adress in a *)
+  (* If memory is not enough then program is finished           *)
+
+ PROCEDURE DEALLOCATE(VAR a:ADDRESS;size:CARDINAL);
+  (* free memory with adress a and given size *)
+
+ PROCEDURE Available(size:CARDINAL):BOOLEAN;
+  (* Return TRUE if ALLOCATE call with given size will be successful *)
+
+END Storage.

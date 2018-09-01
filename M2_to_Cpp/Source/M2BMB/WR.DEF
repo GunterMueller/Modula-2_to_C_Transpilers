@@ -1,0 +1,85 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Definition of:         Wr                                        *
+ * Description:           Output operations (on screen)             *
+ * Implementation level:  High-level (Utility module)               *
+ *                                                                  *
+ * Version:               1.00                                      *
+ * Date:                  March, 1995                               *
+ *                                                                  *
+ * Author:                Zoran Budimac                             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: zjb@unsim.ns.ac.yu            *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Wr;
+
+CONST
+   (* Error codes. Function Error() returns one of these *)
+
+   NoError = 0;             (* No error *)
+   ConversionError = 1;     (* Error in conversion of data types *)
+   FileError = 2;           (* Error in writing to a file. In this case
+                               File.Error() can be consulted for better
+                               diagnostics *)
+
+   PROCEDURE Bool(b: BOOLEAN; field: CARDINAL);
+      (* Writes a boolean 'b' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Int(n: INTEGER; field: CARDINAL);
+      (* Writes an integer 'n' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongInt(n: LONGINT; field: CARDINAL);
+      (* Writes a long integer 'n' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Card(n: CARDINAL; field: CARDINAL);
+      (* Writes a long integer 'n' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongCard(n: LONGCARD; field: CARDINAL);
+      (* Writes a long cardinal 'n' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Real(n: REAL; field: CARDINAL);
+      (* Writes a real 'n' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongReal(n: LONGREAL; field: CARDINAL);
+      (* Writes a long real 'n' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE IntB(n: INTEGER; base, field: CARDINAL);
+      (* Writes an integer 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongIntB(n: LONGINT; base, field: CARDINAL);
+      (* Writes a long integer 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE CardB(n: CARDINAL; base, field: CARDINAL);
+      (* Writes a long integer 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongCardB(n: LONGCARD; base, field: CARDINAL);
+      (* Writes a long cardinal 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Char(ch: CHAR);
+      (* Writes a character 'ch' to screen *)
+
+   PROCEDURE Str(s: ARRAY OF CHAR);
+      (* Writes a string 's' to screen *)
+
+   PROCEDURE Ln();
+      (* Writes a new-line mark to the screen *)
+
+   PROCEDURE Bin(bin: ARRAY OF BYTE);
+      (* Writes an array of bytes 'bin' to screen *)
+
+END Wr.
+

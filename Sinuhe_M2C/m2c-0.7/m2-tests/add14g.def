@@ -1,0 +1,5 @@
+(* file add14g.def *)
+(* see file test14g.mod *)
+DEFINITION MODULE add14g;
+ TYPE RecType;
+END add14g.

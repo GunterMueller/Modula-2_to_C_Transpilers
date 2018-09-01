@@ -1,0 +1,28 @@
+Coco/R - Compiler-Compiler V1.50
+Released by Pat Terry 10 March 2000
+Source file: C2.atg
+
+Grammar Tests:
+
+Deletable symbols:
+     EmptyStat
+     Stat
+     StatSeq
+     BlockBody
+Undefined nonterminals:   -- none --
+Unreachable nonterminals: -- none --
+Circular derivations:     -- none --
+Underivable nonterminals: -- none --
+LL(1) conditions:         --  ok  --
+
+Statistics:
+
+  nr of terminals:        81 (limit   400)
+  nr of non-terminals:   106 (limit   419)
+  nr of pragmas:           0 (limit   419)
+  nr of symbolnodes:     187 (limit   500)
+  nr of graphnodes:      953 (limit  1500)
+  nr of conditionsets:    17 (limit   100)
+  nr of charactersets:    16 (limit   250)
+
+

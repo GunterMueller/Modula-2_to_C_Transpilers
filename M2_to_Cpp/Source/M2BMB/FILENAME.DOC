@@ -1,0 +1,119 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      FileName                                  *
+ * Description:           File name operations                      *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  August 20, 1996                           *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE FileName;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+   noError          ;       (* No error. *)
+   unknownError     ;       (* Any other error not described below. *)
+   noRoomError      ;       (* Internal or external storage buffer exceeded. *)
+   notFileError     ;       (* Specified file is acctualy a directory or other filesystem structure. *)
+   fileNotFoundError;       (* Specified file cannot be found. *)
+   pathNotFoundError;       (* Specified directory path cannot be found. *)
+   priviledgeError  ;       (* Violation of system privilegdes to set/get time. *)
+
+(* Names of the root directory and a delimiter between directory names.
+   If you _really_ want to make portable programs, build pathnames with
+   these names, instead of string constants '\', '/', etc... *)
+
+CONST
+   root     ;       (* in DOS '\', in UNIX '/', in VMS '[000000]' ...*)
+   delim    ;       (* in DOS '\', in UNIX '/' ... *)
+
+(* Operations *)
+
+   PROCEDURE Exists(name: ARRAY OF CHAR): BOOLEAN;
+      (* Returns TRUE if a file with name 'name' exists.
+       + Sets error codes:
+           'pathNotFoundError'
+           'fileNotFoundError'
+           'notFileError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE Delete(name: ARRAY OF CHAR);
+      (* Deletes the file with name 'name'.
+       + Sets error codes:
+           'notFileError'
+           'fileNotFoundError'
+           'pathNotFoundError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE Rename(from, to: ARRAY OF CHAR);
+      (* Renames the file name 'from' to file name 'to'.
+       + Sets error codes:
+           'notFileError'      - if platform doesn't support renaming directories.
+           'fileNotFoundError'
+           'pathNotFoundError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE Split(fullName: ARRAY OF CHAR;
+                   VAR dir, name: ARRAY OF CHAR);
+      (* Splits the full file name 'fullName' into directory
+         name (path) 'dir' and proper filename 'name'. Device
+         name is the part of directory name 'dir'.
+       + Sets error codes:
+           'noRoomError' if strings 'dir' or 'name' are not large enough.
+      *)
+
+   PROCEDURE Concat(VAR fullName: ARRAY OF CHAR;
+                    dir, name: ARRAY OF CHAR);
+      (* Concats the names of directory name (path) 'dir' and
+         proper filename 'name' into a full file name 'fullName'.
+         Device name is the part of directory name 'dir'.
+       + Sets error codes:
+           'noRoomError' if string 'fullname' is not large enough.
+      *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+END FileName.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+*)
+
+

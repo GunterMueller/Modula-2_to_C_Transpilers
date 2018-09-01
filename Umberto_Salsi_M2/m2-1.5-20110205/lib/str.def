@@ -1,0 +1,84 @@
+DEFINITION MODULE str
+
+FUNCTION repeat(s: STRING, n: INTEGER): STRING
+(*
+	Returns the string s repeated n times. It is equivalent to s + s +
+	... + s  done n times. If s = NIL return NIL.  If n <= 0 returns
+	"".
+*)
+
+FUNCTION toupper(s: STRING): STRING
+(*
+	Convert the string to upper case letters: a-z -> A-Z.
+	If s = NIL return NIL.
+*)
+
+FUNCTION tolower(s: STRING): STRING
+(*
+	Convert the string to lower case letters: A-Z -> a-z.
+	If s = NIL return NIL.
+*)
+
+FUNCTION index(s: STRING, i: INTEGER, t: STRING): INTEGER
+(*
+	Returns the offset from the left of the first occurrence in 's'
+	of any of the characters of t starting from s[i], or returns -1
+	if no occurrences are found.  If length(s)=0 or length(t)=0 or
+	i > length(s) return -1.  Example:
+
+		index("x = 2;", 0, "=;") => 2   # match '='
+		index("x = 2;", 3, "=;") => 5   # match ';'
+*)
+
+FUNCTION split(s: STRING, t: STRING): ARRAY OF STRING
+(*
+	Split the string s using the characters of t as field separators.
+	The recurrence of any of the characters of t mark the separation
+	between two fields.  If t="" return s. If s = "" return "".
+	Example: split("a&b&&c&", "&") => {"a", "b", "", "c", ""}.
+*)
+
+FUNCTION join(a: ARRAY OF STRING, sep: STRING): STRING
+(*
+	All the strings of the array are joined using the string sep
+	as separator: a[0] + sep + a[1] + sep + ... + a[length(a)-1].
+	Examples:
+		join({"a", "b", "c"}, "/") => "a/b/c"
+		join({}, "/") => ""
+		join(NIL, "/") => ""
+*)
+
+FUNCTION find(s: STRING, target: STRING): INTEGER
+(*
+	Returns the index of the first recurrence of the string target
+	inside s. The string s is scanned from left to right. Returns -1
+	if no recurrences are found.
+*)
+
+FUNCTION substitute(s: STRING, target: STRING, sub: STRING): STRING
+(*
+	Returns the string s with all the recurrences of the target
+	substituted by sub.  If s = NIL returns NIL.  If s = "" returns "".
+	If length(target) = 0 returns s.
+*)
+
+
+FUNCTION starts_with(s: STRING, head: STRING): BOOLEAN
+(*
+	Returns TRUE if there exists any string `tail' so that s=head+tail.
+	This definition allows to resolve all the edge cases:
+	- If s=NIL then only head=NIL satifies the condition.
+	- If s = "" then both head=NIL and head="" satisfy the condition.
+	- NIL and "" are valid beginning of any string >= "".
+*)
+
+FUNCTION ends_with(s: STRING, tail: STRING): BOOLEAN
+(*
+	Returns TRUE if there exists any string `head' so that s=head+tail.
+	This definition allows to resolve all the edge cases:
+	- If s=NIL then only tail=NIL satifies the condition.
+	- If s = "" then both tail=NIL and tail="" satisfy the condition.
+	- NIL and "" are valid tails of any string >= "".
+*)
+
+END

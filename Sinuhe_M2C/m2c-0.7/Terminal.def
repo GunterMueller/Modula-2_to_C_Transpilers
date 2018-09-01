@@ -1,0 +1,26 @@
+DEFINITION MODULE Terminal;
+ VAR
+  Done: BOOLEAN;
+
+ PROCEDURE Read(VAR ch:CHAR);
+  (* Get a single character From the keyboard (stdin). *)
+
+ PROCEDURE BusyRead(VAR ch:CHAR);
+  (* Analogous to Read but return 0C if no character is waiting *)
+  (* when the terminal is on cbreak mode.                       *)
+
+ PROCEDURE ReadAgain;
+  (* Push the last character read back into input stream. *)
+  (* The char may be read lately by Read call.            *)
+
+ PROCEDURE Write(ch:CHAR);
+  (* Write a character out to the terminal (stdout). *)
+
+ PROCEDURE WriteLn;
+
+ PROCEDURE WriteString(s:ARRAY OF CHAR);
+  (* Write a string (see string determination) to the terminal (stdout). *)
+
+END Terminal.
+
+

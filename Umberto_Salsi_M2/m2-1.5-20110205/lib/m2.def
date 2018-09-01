@@ -1,0 +1,225 @@
+DEFINITION MODULE m2
+
+(* 
+	M2 Standard Library
+*)
+
+CONST
+	(* These limits are for C compilers that give sizeof(int)=32: *)
+	INTEGER_MIN = 0x80000000
+	INTEGER_MAX = 0x7FFFFFFF
+
+	INTEGER_MAX_R =  2147483647.0 # max INTEGER as REAL number
+	INTEGER_MIN_R = -2147483648.0 # min INTEGER as REAL number
+
+
+FUNCTION min(a: INTEGER, b: INTEGER): INTEGER
+FUNCTION max(a: INTEGER, b: INTEGER): INTEGER
+FUNCTION abs(i: INTEGER): INTEGER
+
+FUNCTION print(s: STRING)
+(*
+	Print the string to the standard output stream. If the string
+	is NIL, nothing will be printed.
+*)
+
+FUNCTION error(s: STRING)
+(*
+	Print the string to the standard error stream. If the string
+	is NIL, nothing will be printed.
+*)
+
+FUNCTION input(): STRING
+(*
+	Return a line from the standard input stream. A line is terminated
+	by "\n" or end-of-file or error condition.  On end-of-file or
+	error condition return NIL.  So, for example, if the file contains
+	two lines regularly terminated:
+
+		File content: "line 1\nline 2\n"
+		Values returned by input(): "line 1", "line 2", NIL, NIL, ...
+
+		File content: "line 1\nline 2" (<-- last line not terminated)
+		Values returned by input(): exactly as before.
+
+		File content: "\n"
+		Values returned by input(): "", NIL
+
+		File content: ""
+		Values returned by input(): NIL
+*)
+
+FUNCTION readchar(): STRING
+(*
+	Return the next char from the standard input stream.  On
+	end-of-file or error condition return NIL.
+
+	NOTE: if the standard input is line buffered (i.e. a terminal) this
+	function will begin returning chars only after a complete line of
+	input is available.
+*)
+
+FUNCTION stoi(s: STRING): INTEGER
+(*
+	Convert the string representation of an integer number to an
+	INTEGER. If the string is NIL, return 0.  Incorrect strings may
+	give unpredictable values as results.
+*)
+
+FUNCTION stor(s: STRING): REAL
+(*
+	Convert the string representation of a real number to REAL. If the
+	string is NIL, returns 0.0. "NAN", "INF", "-INF" (case insensitive)
+	return the respective special values in the IEEE-754 representation.
+	Incorrect strings may give unpredictable values as results.
+*)
+
+FUNCTION itor(i: INTEGER): REAL
+(*
+	Convert the INTEGER to a REAL.
+*)
+
+
+FUNCTION rtoi(r: REAL): INTEGER
+(*
+	Convert the REAL to an INTEGER. The fractional part is trunked.
+	If the REAL number can't fit in an INTEGER, the result is undefined;
+	check the value against INTEGER_MAX_R and INTEGER_MIN_R before
+	doing the conversion. Examples:
+
+		rtoi(1.5) ==> 1, rtoi(-1.5) ==> -1.
+
+		FUNCTION round(r: REAL): INTEGER
+		(* Return the nearest INTEGER *)
+		BEGIN
+			IF r > 0.0 THEN
+				r = r + 0.5
+			ELSE
+				r = r - 0.5
+			END
+			IF r <= INTEGER_MIN_R-1.0 OR r >= INTEGER_MAX_R+1.0 THEN
+				HALT("cannot convert " + r + " to INTEGER")
+			END
+			RETURN rtoi(r)
+		END
+*)
+
+FUNCTION inc(VAR i: INTEGER, d: INTEGER)
+(*
+	Increment `i' by `d'. Example: inc(i, -1) is a decrement.
+*)
+
+FUNCTION match(s: STRING, re: STRING): BOOLEAN
+(*
+	Return TRUE if 's' match the regular expression 're'.  If s=NIL
+	or re=NIL, return FALSE. Read below for the definition of regular
+	expression as supported by this module.
+*)
+
+FUNCTION match_array(s: STRING, re: STRING, VAR a: ARRAY OF STRING): BOOLEAN
+(*
+	Return TRUE if 's' match the regular expression 're'.  If s=NIL
+	or re=NIL, return FALSE.
+
+	If the result is TRUE, al the first-level sub-regular expressions
+	matching are saved in the array 'a'. Example:
+*)
+#		match("NAME=astring", "^([a-z]+)=(.*)$", a)
+(*		==> TRUE, a = {"NAME", "astring"}
+*)
+
+(*
+
+REGULAR EXPRESSIONS
+===================
+
+A regular expression (RE, for short) is a string that has to be matched
+against some other string (the target). As a general rule, the match is
+succesful if the target contains the RE as substring.  For example the RE
+"abc" matches "zzzabczzz" because the RE appears at least one time inside
+the target.
+
+Some charaters inside a RE have a special meaning. For example "."  (a period)
+match any other character; "^" matches the beginning of the target, and
+"$" matched the end of the target, and so on. The table below summarize
+the characters that have a special meaning when they appears inside a RE:
+
+    SPECIAL CHARACTERS:
+	------------------
+
+    ^      beginning of the target
+    $      end of the target (allowed only at the end of the RE)
+    |      alternative
+    ( )    sub-RE
+    [ ]    set of characters
+    {m,n}  repeater (at least m matches, up to n sub-RE are matched
+           with m,n betheen 0 and 9999, m<=n)
+    {m,}   repeater (at least m matched, with 0<=m<=9999)
+    ?      repeater {0,1}
+    *      repeater {0,9999}
+    +      repeater {1,9999}
+    -      a range of chars
+    .      any char
+    \X     the char 'X' must match literally
+
+These chars always have their special meaning, and MUST be escaped with \
+when have to be matched literally. For example, to match a period must be
+written as "\\." (the double back-slash is due to the M2 syntax for strings,
+the resulting string being simply \. ).
+
+The general syntax of a RE can be better described through the EBNF
+formalism:
+
+    regex = [ "^" ] term { "|" term } ;
+    term = factor { factor } ;
+    factor = ( set | subre | char | "." ) [ repeater ]  |  "$";
+    repeater = "?" | "*" | "+" | "{" [ number ] [ "," [ number ] "}" ] ;
+    set = "[" ["^"] char ["-" char] { char ["-" char] } "]" ;
+    subre = "(" term { "|" term } ")" ;
+    char = any char but those reserved ;
+
+that reads:
+
+- "^" means that the match must occour from the beginning of the target
+
+- the RE can contain one or more terms separated by | and every term
+  is tryied in turn, in the order
+
+- every term is composed of one or more factors, every factor can have
+  a repeater; all the factors must match in the order, or the term
+  fails
+
+- prentheses can be used to alter the priority of terms over branches,
+  and sub-RE (RE inside parenthses) can be nested as desired.
+
+WARNING. Syntactic errors inside a RE are detected only at run-time and causes
+a fatal error. So, you should be particularly careful when REs are build
+at run-time.  Remember that strings that need to match literally must have all
+the special characters escaped by \.
+
+Example: a RE that matches a number composed by one or more digits:
+
+    "^[0-9]+$"
+    matches "1", "123", "12345"
+
+Example: as before, but possibly with a sign and a fractional part:
+
+    "^[\\+\\-]?[0-9]+(\\.[0-9]+)?$"
+    matches "0", "+1.23", etc.
+
+Example: a sentence composed of words separated by one or more space or
+tabulation or new-line and terminated by period:
+
+    "^[a-zA-Z]+([ \t\n]+[a-zA-Z]+)*\\.$"
+    matches "The brown quick fox jumps over the lazy dog."
+
+Example: a RE that matches a string that contains non-printable ASCII
+characters (codes from 0 up to 31 and 127), or ASCII-extended chars (codes
+above 127):
+
+    "[\x00-\1f\7f-\xff]"
+
+*)
+
+END
+

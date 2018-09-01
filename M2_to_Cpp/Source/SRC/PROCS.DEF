@@ -1,0 +1,67 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Procs;
+(* Implements storing and using information about procedure definitions *)
+
+  FROM Defs IMPORT IdStr, BigStr;
+
+  TYPE
+    ParamList = POINTER TO ParamNode; (* List of descriptions of formal parameters *)
+    ParamNode = RECORD
+      name: IdStr;           (* Name of parameter *)
+      type: BigStr;          (* Type of parameter *)
+      arrayLvl: CARDINAL;    (* How many "ARRAY OF" before the type *)
+      isVar: BOOLEAN;        (* Is it a VAR parameter? *)
+      isTemplate: BOOLEAN;   (* Is it {ARRAY OF} (LOC | BYTE | WORD)?
+                                (In C++ it is translaten into a template parameter) *)
+      next, prev: ParamList;
+    END;
+
+    ProcDesc = RECORD               (* Procedure descriptor type *)
+      templateNo,                   (* Number of template parameters *)
+      level: CARDINAL;              (* Level of procedure (unused) *)
+      first, last, curr: ParamList;
+    END;
+
+  VAR
+    level: CARDINAL; (* Level of M2 procedure currently being processed
+                      * 1 = procedure declared in module block
+                      * 2 = procedure declared in block of lvl 1 procedure
+                      * ...
+                      *)
+
+  PROCEDURE Init(VAR p: ProcDesc);
+  (* Initialize 'p' *)
+
+  PROCEDURE AddParam(VAR p: ProcDesc;
+                     VAR name, type: ARRAY OF CHAR;
+                         arrayLvl: CARDINAL;
+                         isVar: BOOLEAN);
+  (* Add a formal parameter with the corresponding characteristics to 'p' *)
+
+  PROCEDURE IsTemplate(p: ProcDesc): BOOLEAN;
+  (* Does the procedure that 'p' describes have a forma parameter of type
+     {ARRAY OF} (LOC | BYTE | WORD)? *)
+     
+  PROCEDURE GetNextTemplateParam(VAR p: ProcDesc;
+                                 VAR name, type: ARRAY OF CHAR;
+                                 VAR arrayLvl: CARDINAL;
+                                 VAR isVar: BOOLEAN);
+  (* Return the characteristics of next template parameter of procedure
+     described by 'p'. If there are no more, empty strings for 'name' and
+     'type' are returned. Next call to GetNextTemplateParam will return
+     characteristics of the first template parameter *)
+
+  PROCEDURE GetNextParam(VAR p: ProcDesc;
+                         VAR name, type: ARRAY OF CHAR;
+                         VAR arrayLvl: CARDINAL;
+                         VAR isVar, isTemplate: BOOLEAN);
+  (* Return the characteristics of next parameter of procedure
+     described by 'p'. If there are no more, empty strings for 'name' and
+     'type' are returned. Next call to GetNextParam will return
+     characteristics of the first parameter *)
+
+  PROCEDURE Kill(VAR p: ProcDesc);
+  (* Dispose of 'p' *)
+
+END Procs.

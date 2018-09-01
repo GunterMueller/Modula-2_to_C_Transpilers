@@ -1,0 +1,143 @@
+# M2 Language -- EBNF Syntax
+# http://www.icosaedro.it/m2/
+
+compilation_unit = definition_module | implementation_module | module;
+
+
+definition_module = "DEFINITION" "MODULE" module_name import
+{ const_decl | var_decl | function_decl } "END" ;
+
+implementation_module = "IMPLEMENTATION" "MODULE" module_name
+import { const_decl | type_decl | var_decl | function_decl function_body } "END" ;
+
+module = "MODULE" module_name import function_body ;
+
+module_name = name ;
+
+import = { "IMPORT" [ module_name { "," module_name } ] };
+
+const_decl = "CONST" { name "=" const_value };
+
+const_value = boolean | ["+"|"-"] number | ["+"|"-"] const_name | string;
+
+const_name = qualified_name;
+
+type_decl = "TYPE" { name "=" ( "FORWARD" | type ) };
+
+var_decl = "VAR" ["STATIC"] { name {"," name} ":" type };
+
+type = simple_type | array_type | record_type | function_type | type_name;
+
+type_name = qualified_name;
+
+simple_type = "VOID" | "BOOLEAN" | "INTEGER" | enum_type | "REAL" | "STRING";
+
+enum_type = "(" enum_elem {"," enum_elem } ")";
+
+enum_elem = name [ "=" const_integer ];
+
+const_integer = int_number | const_name;
+
+array_type = "ARRAY" "OF" type ;
+
+record_type = "RECORD" { field_decl } "END" ;
+
+field_decl = field_name {"," field_name} ":" type;
+
+field_name = name;
+
+function_type = function_decl;
+
+function_decl = "FUNCTION" name "(" [ formal_arg {"," formal_arg } ] ")" [ ":" type ] [ "RAISE" "ERROR" ] ;
+
+formal_arg = ["VAR"] name ":" type ;
+
+function_body = { const_decl | type_decl | var_decl | function_decl function_body } "BEGIN" { instruction } "END";
+
+instruction = assignment | function_call | if | switch | while | repeat | for | loop | exit | try | raise | return;
+
+assignment = var_name {selector} "=" expr;
+
+function_call = prefix_function_call | postfix_function_call;
+prefix_function_call = function_name "(" { actual_arg } ")";
+postfix_function_call = ( var_name | function_name "(" {actual_arg} ")" )
+{ "->" qualified_name "(" { actual_arg } ")" };
+function_name = qualified_name;
+
+actual_arg = expr | var_name {selector};
+
+if = "IF" expr "THEN" {instruction} { "ELSIF" expr "THEN" {instruction} } [ "ELSE" {instruction} ] "END";
+
+switch = "SWITCH" expr "DO"
+{ "CASE" const_integer { "," const_integer } ":" {instruction} }
+["ELSE" {instruction}] "END";
+
+while = "WHILE" expr "DO" {instruction} "END";
+
+repeat = "REPEAT" {instruction} "UNTIL" expr;
+
+for = "FOR" qualified_name "=" expr "TO" expr [ "BY" const_integer ] "DO" {instruction} "END";
+
+loop = "LOOP" {instruction} "END";
+
+exit = "EXIT";
+
+try = "TRY" ( assignment | function_call )
+{ "CATCH" const_integer {"," const_integer} ":" {instruction} }
+[ "ELSE" {instruction} ] "END";
+
+raise = "RAISE" "ERROR" expr expr;
+
+return = "RETURN" [ expr ];
+
+expr = simple_expr [ relation simple_expr ];
+
+simple_expr = ["+"|"-"] term { add_operator term };
+
+term = factor { mult_operator factor };
+
+factor = "NIL" | boolean | number | string | const_name |
+var_name {selector}[substr_selector] | function_call | "(" expr ")"
+| "NOT" factor | "~" factor;
+
+relation = "<" | "<=" | "=" | ">=" | ">" | "<>";
+
+boolean = "FALSE" | "TRUE";
+
+number = int_number | real_number;
+
+add_operator = "+" | "-" | "OR" | "^" | "|";
+
+mult_operator = "*" | "/" | "DIV" | "MOD" | "AND" | "&";
+
+int_number = integer | hex_integer;
+integer = digit {digit};
+digit = "0".."9";
+hex_integer = "0x" hex_digit {hex_digit};
+hex_digit = digit | "a".."f" | "A".."F";
+
+real_number = integer ( decimals [ exponent ] | [decimals] exponent );
+decimals = "." integer;
+exponent = ("e"|"E") ["+"|"-"] integer;
+
+string = "\"" { str_char | str_escape } "\"";
+
+str_char = " " | "!" | "#".."[" | "]".."~";
+
+str_escape = "\\" ("\\" | "\"" | "a" | "b" | "n" | "r" | "t"
+| "x" hex_digit hex_digit);
+
+substr_selector = "[" expr [ "," expr ] "]";
+
+var_name = qualified_name ;
+
+selector = "[" (index|field_name) "]" | next_elem_in_array;
+
+next_elem_in_array = "[" "]";
+
+index = expr;
+name = (letter|"_") { letter | digit | "_" } ;
+
+letter = "a".."z" | "A".."Z" ;
+
+qualified_name = [module_name"."]name;

@@ -1,0 +1,37 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE IdQueue;
+(* Implements a queue of identifier strings *)
+
+  FROM Defs IMPORT IdStr;
+
+  TYPE
+    PQueueElement = POINTER TO QueueElement;
+    QueueElement  = RECORD
+      s: IdStr;
+      next: PQueueElement;
+    END;
+
+    T = RECORD                     (* Queue type *)
+      first, last: PQueueElement;
+    END;
+
+  PROCEDURE Init(VAR q: T);
+  (* Initialize queue 'q' *)
+
+  PROCEDURE IsEmpty(q: T): BOOLEAN;
+  (* Is 'q' empty? *)
+
+  PROCEDURE AddRear(VAR q: T; s: IdStr);
+  (* Add 's' to queue 'q' *)
+
+  PROCEDURE First(q: T; VAR s: IdStr);
+  (* Return the first element of 'q' in 's' *)
+
+  PROCEDURE PopFirst(VAR q: T);
+  (* Delete the first element of 'q' *)
+
+  PROCEDURE Kill(VAR q: T);
+  (* Dispose of 'q' *)
+
+END IdQueue.

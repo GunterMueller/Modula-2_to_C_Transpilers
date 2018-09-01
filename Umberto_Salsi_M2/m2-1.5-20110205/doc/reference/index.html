@@ -1,0 +1,1780 @@
+<HTML>
+<HEAD>
+<TITLE>M2 - Reference</TITLE>
+<META name=description content="M2 - Reference">
+<META name=author      content="icosaedro.it di Umberto Salsi">
+<META name=owner       content="icosaedro.it di Umberto Salsi">
+<META HTTP-EQUIV="Content-Language"    content="en">
+<LINK rel='SHORTCUT ICON' HREF='/favicon.ico'>
+<LINK rel=stylesheet type='text/css' href='/styles.css'>
+</HEAD><BODY>
+<table width="100%" cellspacing=2 cellpadding=0 border=0><tr><td><a href="/en-index.html" title='Go to the main page of this WEB site'><b>Home</b></a>&nbsp;/&nbsp;<a href="/m2/index.html"><b>Index</b></a></td>
+<td  width='100%'><hr width='100%' noshade></td>
+<td>&nbsp;<b>www.icosaedro.it</b>&nbsp;</td><td><img src="icosaedro-16x16.png"></td>
+</tr></table>
+<H1><IMG src="m2.png">&nbsp;M2 - Reference</H1>
+
+<p align=right>
+M2 version: 1.4-20110205
+</p>
+
+<pre>
+
+
+</pre>
+
+<p>
+M2 is a procedural, high-level programming language with a garbage collector.
+Data structures are automatically allocated, arrays are dynamically expanded.
+The syntax of M2 is similar to that of Modula-2: all the keywords are
+written in uppercase letters, and all the identifiers are case-sensitive:
+file, FILE and File are different names.
+</p>
+
+
+<h2>Index</h2>
+<ul>
+
+<li><a href="#helloworld">Hello, world!</a><br></li>
+<li><a href="#comments">Comments</a><br></li>
+<li></li>
+<li>Data types:
+	<ul>
+	<li>    <a href="#thebooleandatatype">The BOOLEAN data type</a><br></li>
+	<li>    <a href="#theintegerdatatype">The INTEGER data type</a><br></li>
+	<li>    <a href="#therealdatatype">The REAL data type</a><br></li>
+	<li>    <a href="#thestringdatatype">The STRING data type</a><br></li>
+	<li>    <a href="#thearraydatatype">The ARRAY data type</a><br></li>
+	<li>    <a href="#therecorddatatype">The RECORD data type</a><br></li>
+	<li>    <a href="#typecompatibility">Type compatibility</a><br></li>
+	</ul>
+</li>
+<li><a href="#thetypicalstructureofamodule">The typical structure of a MODULE</a><br></li>
+<li><a href="#theimportsection">The IMPORT section</a><br></li>
+<li><a href="#theconstsection">The CONST section</a><br></li>
+<li><a href="#thetypesection">The TYPE section</a><br></li>
+<li><a href="#thevarsection">The VAR section</a><br></li>
+<li><a href="#thefunctionsection">The FUNCTION section</a><br></li>
+<li></li>
+
+<li>Statements:
+	<ul>
+	<li>    <a href="#theifstatement">The IF statement</a><br></li>
+	<li>    <a href="#theswitchstatement">The SWITCH statement</a><br></li>
+	<li>    <a href="#theloopstatement">The LOOP statement</a><br></li>
+	<li>    <a href="#thewhilestatement">The WHILE statement</a><br></li>
+	<li>    <a href="#therepeatstatement">The REPEAT statement</a><br></li>
+	<li>    <a href="#theforstatement">The FOR statement</a><br></li>
+	<li>    <a href="#thereturnstatement">The RETURN statement</a><br></li>
+	<li>    <a href="#thehaltstatement">The HALT statement</a><br></li>
+	<li>    <a href="#theraiseerrorstatement">The RAISE ERROR statement</a><br></li>
+	<li>    <a href="#thetrystatement">The TRY statement</a><br></li>
+	</ul>
+</li>
+
+<li><a href="#librarymodules">Library modules</a><br></li>
+<li><a href="#compilingandexecutingcomplexapplications">Compiling and executing complex applications</a><br></li>
+<li><a href="#mixingccode">Mixing C code</a><br></li>
+<li><a href="#reservedkeywords">Reserved keywords</a><br></li>
+<li><a href="#datastructuresinmenory">Data structures in memory</a><br></li>
+<li><a href="#runtimeerrormessages">Run-time error messages</a><br></li>
+<li><a href="#ebnfsyntax">EBNF Syntax</a><br></li>
+<li><a href="#references">References</a><br></li>
+
+</ul>
+
+
+<a name=helloworld></a>
+<h2>Hello, world!</h2>
+
+<p>
+An M2 program is a text file with extension .mod (.def and .imp will be
+explained later). For example, open your preferred text editor and type-in
+this source (probably you will use some sort of copy-and-paste mechanism
+provided by your system):
+</p>
+
+<blockquote>
+<pre>
+MODULE hello
+IMPORT m2
+BEGIN
+    print("Hello, world!\n")
+END
+</pre>
+</blockquote>
+
+<p>
+then save this source into the file <code>hello.mod</code>, compile and
+execute with the command
+</p>
+
+<blockquote>
+<pre>
+$ <b>m2 hello.mod</b>
+$ <b>./hello</b>
+Hello, world!
+</pre>
+</blockquote>
+
+
+<p>
+<code>m2</code> actually is a script that first call the actual
+<code>m2c</code> M2-to-C cross compiler, so that the C source
+<code>hello.c</code> is generated, then it calls the C compiler
+in order to generate the executable program <code>hello</code>
+(<code>hello.exe</code> on Windows).  If all the compilation stages was
+successful, the intermediate source <code>hello.c</code> gets deleted.
+</p>
+
+<p>
+Check <code>m2 -h</code> for other useful options of the front-end script.
+</p>
+
+
+
+<a name=comments></a>
+<h2>Comments</h2>
+
+<p>
+All the text following a # character up to the end of the line is ignored:
+this is a <i>single line comment</i>.
+</p>
+
+<p>
+All the text enclosed between (* and *) is ignored: this is a
+<i>multi-line comment</i>. Multi-line comments can be nested.
+</p>
+
+
+<a name=thebooleandatatype></a>
+<h2>The BOOLEAN data type</h2>
+
+The type <code>BOOLEAN</code> has only the values <b>FALSE</b>
+or <b>TRUE</b>. Boolean expressions can be evaluated through the logical
+operators AND, OR and NOT. The following tables summarizes the computation
+done by these operators:
+
+<pre>
+a     b      |  a OR b     a AND b             a     |  NOT a
+-------------+--------------------             ------+-------
+FALSE FALSE  |  FALSE      FALSE               FALSE | TRUE
+FALSE TRUE   |  TRUE       FALSE               TRUE  | FALSE
+TRUE  FALSE  |  TRUE       FALSE
+TRUE  TRUE   |  TRUE       TRUE
+</pre>
+
+The NOT operator has the highest priority, followed by AND and then OR.
+The round parenthesis can be used to alter the order of the evaluation:
+
+<pre>
+NOT TRUE AND FALSE OR TRUE    gives   TRUE
+NOT TRUE AND (FALSE OR TRUE)  gives   FALSE
+</pre>
+
+The boolean expression are evaluated from left to right, and the first
+partial value that determinate the result terminates the evaluation of
+the sub-expression. That means that the first TRUE term of the
+expression <code>a OR b OR c</code> makes all the expression TRUE and
+the remaining terms aren't evaluated; the first FALSE factor of the
+expression <code>a AND b AND c</code> makes all the expression FALSE and
+the remaining factors aren't evaluated.
+
+
+<a name=theintegerdatatype></a>
+<h2>The INTEGER data type</h2>
+
+An <code>INTEGER</code> number is a two-complement integer number, i.e.
+the <code>int</code> data type of the underlying C compiler, typically
+32 bit long. There are only two levels of priority for the operators
+involving integer numbers
+
+<pre>
+first:  * DIV MOD &amp; &lt;&lt; &gt;&gt;
+next:   + - | ^
+</pre>
+
+<p>
+i DIV j gives the quotient, i MOD j gives the remainder of the division.
+</p>
+
+<p>
+i &lt;&lt; n is a bitwise left shift of n bits, i &gt;&gt; n is a bitwise
+right shift of n bits.
+</p>
+
+<p>
+i|j gives the bitwise OR, i^j gives the XOR, &amp; gives the bitwise AND.
+</p>
+
+<p>
+Integer numbers can be compared through the operators <code>&lt; &lt;=
+= &gt;= &lt;&gt;</code>, that give a BOOLEAN result.
+</p>
+
+
+
+<a name=therealdatatype></a>
+<h2>The REAL data type</h2>
+
+A <code>REAL</code> number is a floating-point number, i.e. the
+<code>double</code> data type of the underlying C compiler, typically
+64 bit long. A literal REAL number requires at least the decimal point
+or the scale part:
+
+<pre>
+3.141592
+1.6E-27
+-1.234
+</pre>
+
+The allowed operators are (in order of priority):
+
+<pre>
+first:  * /
+next:   + -
+</pre>
+
+REAL numbers can be compared through the operators <code>&lt; &lt;=
+= &gt;= &lt;&gt;</code>, that give a BOOLEAN result.
+
+
+
+<a name=thestringdatatype></a>
+<h2>The STRING data type</h2>
+
+A <code>STRING</code> is a sequence of zero or more bytes, dynamically
+allocated. A STRING can have the special value NIL, that means the string
+isn't allocated at all. Only the ASCII printable characters are allowed
+in strings, with the exception of the <code>"</code> (double quote)
+and the <code>\</code> (back-slash) that have special meaning.
+Example of literal strings:
+
+<pre>
+"abcdef"
+"A line.\nAnother line."
+"\x00"
+</pre>
+
+Two or more strings can be concatenated through the <code>+</code> operator.
+If all the strings concatenated are NIL, the result will be NIL.
+INTEGER and REAL numbers can be concatenated to a string, but they
+cannot appear as the first term. The conversion from number to string
+is automatically done by the functions <code>m2runtime.itos()</code>
+and <code>m2runtime.rtos()</code>. Examples:
+
+<pre>
+"abc" + "def" + NIL + ""   gives   "abcdef"
+"Pi = " + 3.141592         gives   "Pi = 3.14159"
+"Record no. " + (1+2)      gives   "Record no. 3"
+</pre>
+
+Strings can be compared through the operators <code>&lt; &lt;= = &gt;=
+&lt;&gt;</code>, that give a BOOLEAN result. The NIL string is equal to NIL
+and less of any other string. The empty string <code>""</code> is greater
+that NIL and less than any other string containing one or more characters:
+
+<pre>
+NIL &lt; "" &lt; "abc"
+</pre>
+
+Two non-NIL, non-empty strings are compared byte-by-byte, from left
+to right. Examples:
+
+<pre>
+NIL &lt; ""            gives TRUE
+NIL = NIL           gives TRUE
+NIL = ""            gives FALSE
+"a" &lt; "b"           gives TRUE
+"abc" &lt; "abcd"      gives TRUE
+</pre>
+
+
+<p>
+Only the printable ASCII characters are allowed in strings.
+Any other byte value can be entered using the escape sequence \xHH
+where HH is the hexadecimal value of the byte. Some commonly used special
+escape sequences are allowed:
+</p>
+
+<pre>
+
+</pre>
+<center>
+<table border=1 cellpadding=3 cellspacing=0>
+<tr><td><code>\xHH</code></td><td>hexadecimal code HH</td></tr>
+<tr><td><code>\\</code></td><td><code>\</code></td></tr>
+<tr><td><code>\"</code></td><td><code>"</code></td></tr>
+<tr><td><code>\a</code></td><td><code>\x07</code> (ASCII BEL)</td></tr>
+<tr><td><code>\b</code></td><td><code>\x08</code> (ASCII BS)</td></tr>
+<tr><td><code>\n</code></td><td><code>\x0A</code> (ASCII LF)</td></tr>
+<tr><td><code>\r</code></td><td><code>\x0D</code> (ASCII CR)</td></tr>
+<tr><td><code>\t</code></td><td><code>\x09</code> (ASCII HT)</td></tr>
+</table>
+</center>
+<pre>
+
+</pre>
+
+<p>
+The content of a string cannot be changed, but a variable of the type STRING
+can be re-assigned.
+</p>
+
+<p>
+The substring operator [] can be used to explore a string and return
+substrings.  s[i,j] gives a string (j-i) bytes long containing the
+characters ranging from s[i] up to s[j-1].  s[i] is short
+version of s[i,i+1] and it gives a string one-byte long containing the
+byte at offset i.  For examples:
+</p>
+
+<blockquote>
+<pre>
+s = "hello"
+s[0,2] gives "he"
+s[0]   gives "h"
+s[2,2] gives "" (empty string)
+s[0,length(s)-1]  gives "hello"
+</pre>
+</blockquote>
+
+<p>
+The substring operator cannot be applied to a NIL string.
+Use the m2runtime.length(s) function to return the current length of
+a string. To summarize, the range [i,j] is applicable to a string
+only if the string is not NIL and 0&lt;=i&lt;=j&lt;length(s) otherwise it
+is a run-time fatal error.
+</p>
+
+<p>
+The standard module str provides a set of basic string handling functions.
+</p>
+
+
+<a name=thearraydatatype></a>
+<h2>The ARRAY data type</h2>
+
+<p>
+An ARRAY is an ordered list of variables, all of the same type, that
+can be selected through an integer index ranging from 0 up to the
+last element assigned. The general syntax of this type is as follows:
+</p>
+
+<blockquote>
+<code>ARRAY OF <i>T</i></code>
+</blockquote>
+
+<p>
+where <i><code>T</code></i> is the type of the elements.  A variable
+of the type ARRAY has the initial value NIL, i.e. means it is not
+allocated. To allocate an array, simply assign an element to it with any
+non-negative integer index; if this index is greater that 0, the elements
+not assigned takes the initial value of the variable of their type (FALSE
+for BOOLEAN, zero for numbers, NIL for strings and for RECORD and ARRAY).
+For example
+</p>
+
+<blockquote>
+<pre>
+VAR a: ARRAY OF STRING
+...
+a[123] = "hello"
+</pre>
+</blockquote>
+
+<p>
+In this example the elements from a[0] up to a[122] are set to NIL.
+Arrays are expanded as necessary to hold the new element.
+The function <code>m2runtime.count(a)</code> gives the number of elements
+actually stored. For example, to print a list of strings:
+</p>
+
+<blockquote>
+<pre>
+...
+VAR names: ARRAY OF STRING
+    i: INTEGER
+BEGIN
+    FOR i=0 TO count(names)-1 DO
+        print("element no. " + i + " = " + names[i] + "\n")
+    END
+END
+</pre>
+</blockquote>
+
+<p>
+The <b>ARRAY constructor</b> can be used to assign the whole array;
+the elements specified will occupies the offsets 0, 1, 2, etc:
+</p>
+
+<blockquote><pre>
+a = {123, 456, 789}
+</pre></blockquote>
+
+<p>
+To assign a new element to an array just after the last one:
+</p>
+
+<blockquote>
+<pre>
+a[ count(a) ] = 456
+</pre>
+</blockquote>
+
+<p>
+Adding an element to an array is so frequent that M2 allows to simply
+omit the index, so bringing to the short form that follows:
+</p>
+
+<blockquote>
+<pre>
+a[] = 456
+</pre>
+</blockquote>
+
+<p>
+A matrix is an ARRAY OF ARRAY. This example will set a 3x3 identity matrix
+with 1.0 in all the diagonal elements; remember that the elements not
+assigned takes the value 0.0:
+</p>
+
+<blockquote>
+<pre>
+VAR m: ARRAY OF ARRAY OF REAL
+    i: INTEGER
+BEGIN
+    FOR i=0 TO 2 DO
+        m[1][2] = 0.0 # ensures the row be 3 elems wide
+        m[i][i] = 1.0
+    END
+
+    (* or simply:
+
+        m = {
+                {1.0, 0.0, 0.0},
+                {0.0, 1.0, 0.0},
+                {0.0, 0.0, 1.0}
+            }
+    *)
+
+END
+</pre>
+</blockquote>
+
+
+<p>
+ARRAYs can be compared through the operators <code>=</code> and
+<code>&lt;&gt;</code>. What will be actually compared are the addresses where
+these ARRAYs are allocated in memory, NOT their content. The special value
+NIL can be compared with an ARRAY.  This chunk of code prints the current
+status of the array `a'. Note that an array can be allocated with zero
+elements in it: this can be accomplished with the array constructor left
+empty, for example <code>a={}</code>.
+</p>
+
+<blockquote>
+<pre>
+IF a = NIL THEN
+    print("not allocated")
+ELSIF count(a) = 0 THEN
+    print("allocated, but empty")
+ELSE
+    print("allocated with one or more elements")
+END
+</pre>
+</blockquote>
+
+
+
+<a name=therecorddatatype></a>
+<h2>The RECORD data type</h2>
+
+<p>
+A RECORD is a list of variables (aka "fields"). Every field has a name
+that can be used as selector of the field. The general syntax of a
+RECORD type is as follows:
+</p>
+
+<blockquote>
+<pre>
+RECORD
+    fieldname1: type1
+    fieldname2: type2
+    fieldname3, fieldname4, fieldname5: type3
+    ...
+END
+</pre>
+</blockquote>
+
+<p>
+where fieldname1,... are the names of the fields, and type1,... are their
+types. A variable of the type RECORD is initially unallocated and its value
+is NIL. To allocate a RECORD simply assign one of its fields; the fields
+not assigned takes the initial value of their type (FALSE for BOOLEAN, zero for numbers, NIL for strings and for RECORD and ARRAY). For example
+</p>
+
+<blockquote>
+<pre>
+...
+VAR point: RECORD  x, y: REAL  END
+BEGIN
+    point[x] = 1.0  # here the RECORD is allocated
+    point[y] = 2.0
+END
+</pre>
+</blockquote>
+
+<p>
+Note that the selector [fieldname] is the name of the field. The number of
+the fields of a RECORD is fixed and cannot changed at run-time. The types
+of the fields can be any valid type, including ARRAY and RECORD.
+If you need a RECORD containing a variable number of data, use a field
+of the type ARRAY.
+</p>
+
+<p>
+The <b>RECORD constructor</b> can be used to assign all the fields to
+a RECORD; note that all the fields must be specified, in the order:
+</p>
+
+<blockquote><pre>
+point = {1.0, 0.0}
+</pre></blockquote>
+
+<p>
+Array constructors and record constructors can be combined to build complex
+structures.
+</p>
+
+
+<p>
+RECORD types typically have a name declared inside a TYPE section.
+For example, a typical single-linked list of strings can be declared
+in this way:
+</p>
+
+<blockquote><pre>
+TYPE
+    List: RECORD
+        next: List
+        key: STRING
+    END
+</pre></blockquote>
+
+<p>
+The following program first adds some strings to a list, then prints
+all the strings of this list:
+</p>
+
+<blockquote><pre>
+MODULE lists
+IMPORT m2
+
+TYPE
+    List: RECORD
+        next: List
+        key: STRING
+    END
+
+FUNCTION add_elem(VAR l: List, s: STRING)
+VAR m: List
+BEGIN
+    m[key] = s
+    m[next] = l
+    l = m
+
+    (* or simply:
+
+        l = {l, s}
+
+    *)
+END
+
+FUNCTION print_elems(l: List)
+BEGIN
+    WHILE l &lt;&gt; NIL DO
+        print(l[key] + "\n")
+        l = l[next]
+    END
+END
+
+VAR list: List
+BEGIN
+    add_elem(list, "Sunday")
+    add_elem(list, "Monday")
+    (* ...and so on *)
+    print_elems(list)
+END
+</pre></blockquote>
+
+
+<p>
+RECORDs can be compared through the operators <code>=</code> and
+<code>&lt;&gt;</code>. What will be actually compared are the addresses
+where these RECORDs are allocated in memory. The special value NIL
+can be compared with a RECORD. For example:
+</p>
+
+<pre>
+    VAR p,q: Point
+    ...
+    IF p = NIL THEN
+        print("not allocated")
+    END
+    IF p = q THEN
+        print("same point")
+    END
+</pre>
+
+
+
+<a name=typecompatibility></a>
+<h2>Type compatibility</h2>
+
+<p>
+A variable of a given type is assignment-compatible only with a variable
+of the same type. For dynamically allocated data types (STRING, ARRAY,
+RECORD) the assignment simply copy the pointer to the allocate data.
+Two ARRAYs are compatible if and only if their elements are compatible.
+Two RECORDs are compatible if and only if they have the same number of
+fields and their fields are compatible in the order. Different data
+types can have different names although being assignment-compatible.
+</p>
+
+
+
+
+<a name=thetypicalstructureofamodule></a>
+<h2>The typical structure of a MODULE</h2>
+
+<p>
+Every module can have several sections, listed in arbitrary order.
+Only the IMPORT sections must appear before any other section.
+The general layout of the module is as follows:
+</p>
+
+<pre>
+MODULE <i>name</i>
+
+IMPORT <i>list of modules to be imported</i>
+
+CONST <i>constants</i>
+
+TYPE <i>types</i>
+
+VAR <i>variables</i>
+
+FUNCTION <i>name</i>(<i>arguments</i>): <i>return_type</i>
+BEGIN ... END
+
+BEGIN
+    <i>here the main body of the program</i>
+END
+</pre>
+
+
+
+<a name=theimportsection></a>
+<h2>The IMPORT section</h2>
+
+This section declares the modules to be imported. You can specify several
+modules separated by commas, or use several IMPORT sections. Example:
+
+<pre>
+IMPORT m2, io, win, MyModule
+IMPORT AnotherModule
+</pre>
+
+
+<p>
+The required modules are searched first inside the same directory of the
+requiring module, then inside the list of directories given by the
+configuration of the compiler.
+</p>
+
+<p>
+If an imported module depends on other modules (either in its DEFINITION
+or in its IMPLEMENTATION), these modules are imported automatically and
+included in the final source.
+</p>
+
+<p>
+The items imported from a module (constants, types, variables and functions)
+are immediately available to the program.  If two or more modules export
+the same item name, this item must be qualified by its module name. This
+is the case, for example, of the <code>io.Open()</code> function and the
+<code>win.Open()</code> function.
+</p>
+
+
+<a name=theconstsection></a>
+<h2>The CONST section</h2>
+
+A constant is a name given to a literal value. The type of a constant
+can be only BOOLEAN, INTEGER, REAL and STRING. Examples:
+
+<pre>
+CONST
+    DEBUG = FALSE
+    MAX_FILES = 128
+    PI = 3.141592
+    ROOT_PATH = "/usr/local/bin/"
+</pre>
+
+
+<a name=thetypesection></a>
+<h2>The TYPE section</h2>
+
+A named type is a name given to a type. Named types are useful for
+structured data types (ARRAY and RECORD), the enumeration type and the
+FORWARD type (see below). A named type can be used in place of the full
+declaration.
+Examples:
+
+<pre>
+TYPE
+    Point = RECORD x, y: INTEGER END
+    Poly = ARRAY OF Point
+    ProcessStatus = (ready, running, waiting)
+</pre>
+
+
+Two variables are of the same type if they have the same structure in
+terms of the basic simple types (BOOLEAN, INTEGER, REAL, STRING) and the
+same structure builders (ARRAY, RECORD). The names of fields of a RECORD
+may differ. For example, any RECORD containing two INTEGER fields of any
+name, are equivalent to the <code>Point</code> record declared above;
+the type <code>ARRAY OF RECORD a, b: INTEGER END</code> is equivalent
+to the type <code>Poly</code> declared above.
+
+
+<a name=thevarsection></a>
+<h2>The VAR section</h2>
+
+A variable has a name, a type and a corresponding value. Variables
+declared inside a function are automatically allocated every time the
+function is called, and automatically released exiting that function.
+Examples:
+
+<pre>
+VAR
+    i, j: INTEGER
+    in_fn, out_fn: STRING
+    in, out: io.FILE
+    origin: Point
+    drawing: ARRAY OF Poly
+    proc1, proc2: ProcessStatus
+</pre>
+
+All the variables have a default value assigned:
+
+<pre>
+Type           Default value
+----------------------------
+BOOLEAN        FALSE
+INTEGER        0
+REAL           0.0
+STRING         NIL
+ARRAY          NIL
+RECORD         NIL
+</pre>
+
+<p>
+Variables that are local to a function can have the STATIC attribute that
+make these variables statically allocated, i.e. their value is allocated once
+for all when the program starts, then it is never released. For example,
+the function seq() of the following example will print the sequence of
+numbers 0, 1, 2, etc:
+</p>
+
+<pre>
+MODULE test_static
+
+IMPORT m2
+
+FUNCTION seq()
+VAR STATIC i: INTEGER
+BEGIN
+    print("i=" + i + "\n")
+    i = i + 1
+END
+
+BEGIN
+    seq()  # prints "i=0"
+    seq()  # prints "i=1"
+    seq()  # prints "i=2"
+END
+</pre>
+
+
+<p>
+Note that the initial value of the static variable is zero: even the static
+variables are initialized to their default value.
+</p>
+
+
+
+<a name=thefunctionsection></a>
+<h2>The FUNCTION section</h2>
+
+A function is a chunk of code with a name, some formal arguments and a
+resulting return type. The formal arguments are local variables whose
+value is assigned by the caller. The return value can be of any type.
+If the function does not return a value, the return type must be omitted.
+Example:
+
+<pre>
+FUNCTION min(a: INTEGER, b: INTEGER): INTEGER
+(*
+    Returns the minimum value between a,b.
+    Note: this function is already available as m2.min().
+*)
+BEGIN
+    IF a &lt;= b THEN
+        RETURN a
+    ELSE
+        RETURN b
+    END
+END
+
+
+FUNCTION InArray(s: STRING, a: ARRAY OF STRING): BOOLEAN
+(*
+    Returns TRUE if the string "s" is contained inside the array "a".
+*)
+VAR i: INTEGER
+BEGIN
+    FOR i=0 TO count(a)-1 DO
+        IF a[i] = s THEN
+            RETURN TRUE
+        END
+    END
+    RETURN FALSE
+END
+
+
+FUNCTION CharList(s: STRING): ARRAY OF CHAR
+(*
+    Returns the list of chars of which the given string is composed of.
+*)
+VAR  i: INTEGER  a: ARRAY OF STRING
+BEGIN
+    FOR i=0 TO length(s)-1 DO
+        a[i] = s[i]
+    END
+    RETURN a
+END
+</pre>
+
+The types BOOLEAN, INTEGER and REAL are passed as a copy of the actual
+argument.  STRING, ARRAY and RECORD are passed by address pointing to the
+allocated area, or NIL if not allocated. A formal argument can be passed
+by "reference" specifying the VAR attribute: in this case the actual
+argument must be a variable whose address is passes to the function, and
+any change to the formal arguments modify the original actual argument.
+Example:
+
+<pre>
+MODULE solve
+
+IMPORT m2, math
+
+FUNCTION solve(a: REAL, b: REAL, c: REAL,
+    VAR r1: REAL, VAR r2: REAL)
+(*
+    Returns the roots of the equation a*x*x + b*x + c = 0
+*)
+VAR
+    delta, r: REAL
+BEGIN
+    IF a = 0.0 THEN
+        HALT("a = 0")
+    END
+    delta = b*b - 4.0 * a * c
+    IF delta &lt;= 0.0 THEN
+        HALT("no real solutions")
+    END
+    r = math.sqrt(delta)
+    r1 = (-b - r) / (2.0 * a)
+    r2 = (-b + r) / (2.0 * a)
+END
+
+VAR s1, s2: REAL
+
+BEGIN
+    solve(1.0, 2.0, -3.0,  s1, s2)
+    print("s1=" + s1 + ", s2=" + s2 + "\n")
+END
+</pre>
+
+
+<p>
+A function can declare any number of local constants, types, variables
+and nested function.  All the items declared inside a function are local
+to the function, apart the STATIC variables. Local items are visible only
+inside the function.
+</p>
+
+<p>
+A function can access any item declared in global scope, including itself.
+</p>
+
+<p>
+Functions can be nested inside another function. The inner functions
+can have their local items and have access to the the items of the
+parent function, including variables and formal arguments.
+</p>
+
+
+
+<a name=theifstatement></a>
+<h2>The IF statement</h2>
+
+The simplest form of the IF statement controls a block of statements that
+are executed only if a boolean expression is evaluated to be TRUE. One or
+more ELSIF branches are allowed. An ELSE branch can catch the any other
+case. Examples:
+
+<pre>
+IF DEBUG THEN
+    print("still alive!")
+END
+
+IF (s = NIL) OR (s = "") THEN
+    print("missing value for the string")
+ELSE
+    print("s=" + s)
+END
+
+print("the number is ")
+IF i > 0 THEN
+    print("positive")
+ELSIF i = 0 THEN
+    print("zero")
+ELSE
+    print("negative")
+END
+</pre>
+
+
+
+<a name=theswitchstatement></a>
+<h2>The SWITCH statement</h2>
+
+A block of instructions is executed depending on the value of a given
+controlling INTEGER expression.
+
+<pre>
+SWITCH i DO
+
+CASE 0:
+    print("zero")
+
+CASE 1, 2, 3:
+    print("one or two or three")
+
+ELSE
+    print("invalid value: expected 0, 1, 2 or 3")
+
+END
+</pre>
+
+The ELSE branch is optional. It is a fatal, run-time error if the result of the
+controlling expression is a value that does not match any of the CASE
+branches and the ELSE branch is not provided.
+
+
+<a name=theloopstatement></a>
+<h2>The LOOP statement</h2>
+
+The sequence of instructions controlled by the LOOP...END statement are
+executed and the repetition continues indefinitely. The EXIT statement
+can be used to exit the LOOP and continue with the following statement.
+This chunk of code will print all the numbers from 0 to 9:
+
+<pre>
+i = 0
+LOOP
+    IF i &gt;= 10 THEN
+        EXIT
+    END
+    print("i=" + i + "\n")
+    i = i + 1
+END
+</pre>
+
+There may be several EXIT statements inside a LOOP statement. Another typical
+way to leave a LOOP cycle is through the RETURN statement.
+
+
+
+<a name=thewhilestatement></a>
+<h2>The WHILE statement</h2>
+
+A block of statements is executed repeatedly while a controlling
+BOOLEAN expression evaluates to TRUE.
+This chunk of code will print all the numbers from 0 to 9:
+
+<pre>
+i = 0
+WHILE i &lt; 10 DO
+    print("i=" + i + "\n")
+    i = i + 1
+END
+</pre>
+
+The block of controlled statements might not be executed if the
+BOOLEAN expression evaluates to FALSE at the first execution of the WHILE
+statement.
+
+
+
+<a name=therepeatstatement></a>
+<h2>The REPEAT statement</h2>
+
+A block of statements is executed repeatedly until a controlling
+BOOLEAN expression evaluates to TRUE. Note that the controlling expression
+is evaluated after the controlled statements, so that these latter are
+always executed at least one time. Note too that, contrary to the WHILE
+loop, the controlling expression gives the condition to exit the loop.
+This chunk of code will print all the numbers from 0 to 9:
+
+<pre>
+i = 0
+REPEAT
+    print("i=" + i + "\n")
+    i = i + 1
+UNTIL i >= 10
+</pre>
+
+
+<a name=theforstatement></a>
+<h2>The FOR statement</h2>
+
+A block of statements is executed several times while an INTEGER variable
+takes all the values inside a given range.
+This chunk of code will print all the numbers from 0 to 9:
+
+<pre>
+FOR i=0 TO 9 DO
+    print("i=" + i + "\n")
+END
+</pre>
+
+The expressions giving the initial and the final value of the range are
+evaluated only once when the FOR statement is executed, so they cannot
+contain values update inside the loop itself. If the final value is
+less than the initial value, the controlled statements are not executed.
+The range of values are scanned from the the initial value to the final
+value with an increment of 1. A different increment, possibly negative,
+can be provided:
+
+<pre>
+FOR i=9 TO 0 BY -1 DO
+    print("i=" + i + "\n")
+END
+</pre>
+
+
+<a name=thereturnstatement></a>
+<h2>The RETURN statement</h2>
+
+The RETURN statement can be used inside the main body of a MODULE or
+inside the body of a FUNCTION. When inside a MODULE, the RETURN statement
+causes the termination of the process and must specify the exit code of
+the process, typically 0 for success or 1 for failure:
+
+<pre>
+RETURN 0
+</pre>
+
+The exit code from a process must be an INTEGER number between 0 and 255
+(the value resulting from the expression is masked with 0xFF).
+<p>
+
+Inside a FUNCTION the RETURN statement causes the termination of the
+FUNCTION. If the FUNCTION returns a value, the RETURN statement must
+specify the value returned through an expression of the proper type.
+
+
+<a name=thehaltstatement></a>
+<h2>The HALT statement</h2>
+
+This statement causes the abnormal termination of the program suitable for
+debugging. For example:
+
+<pre>
+IF i &lt; 0 THEN
+    HALT("unexpected negative value")
+END
+</pre>
+
+will terminate the process sending to standard error a message similar to this:
+
+<pre>
+MyModule:342: HALT: unexpected negative value
+Abort
+</pre>
+
+
+<a name=theraiseerrorstatement></a>
+<h2>The RAISE ERROR statement</h2>
+
+<p>
+It allows to set the error condition:
+</p>
+
+<blockquote>
+<pre>
+RAISE ERROR <i>code message</i>
+</pre>
+</blockquote>
+
+<p>
+where <code><i>code</i></code> is an integer expression (typically a
+constant or a literal value) and <code><i>message</i></code> is a string giving
+the human readable description of the error occurred.
+</p>
+
+<p>
+The error code and its description are available as
+<code>m2runtime.ERROR_CODE</code> and <code>m2runtime.ERROR_MESSAGE</code>
+respectively. If the errors are not catch-ed inside a TRY...END section
+(see below) the RAISE ERROR instruction HALTs immediately the program
+sending to the standard error a message having the structure
+</p>
+
+<blockquote>
+<pre>
+<i>module</i>.<i>function</i>(), line <i>n</i>, code <i>code</i>: <i>message</i>
+</pre>
+</blockquote>
+
+<p>
+and the error status on the exit of the program will be 1.
+</p>
+
+<p>
+Vice-versa, if the RAISE ERROR is protected inside a TRY...END instruction,
+this instruction has no other effects than setting the error status.
+It is responsibility of the program to return to the caller and take any
+other countermeasure to handle the error condition.
+</p>
+
+<p>
+Functions that want to raise errors MUST have the "RAISE ERROR" qualifier
+in their declaration:
+</p>
+
+<blockquote><pre>
+FUNCTION FuncName()
+<b>RAISE ERROR</b>
+BEGIN
+    # ...
+END
+</pre></blockquote>
+
+
+<a name=thetrystatement></a>
+<h2>The TRY statement</h2>
+
+<p>
+It has the general structure
+</p>
+
+<blockquote>
+<pre>
+TRY
+    <i>assignment or function call</i>
+CATCH
+    code1:
+        code that handle the error code1
+    
+    code2:
+        code that handle the error code1
+    
+    (* ...more branches here *)
+
+    ELSE
+        <i>code that handle any other error</i>
+END
+</pre>
+</blockquote>
+
+
+<p>
+Typical usages of the TRY...END statement are along the handling of
+file access. For example, this function will return TRUE if the file
+exists and it is readable, and FALSE in any other case:
+</p>
+
+<blockquote>
+<pre>
+MODULE TryTest
+IMPORT m2, io
+VAR
+    f: FILE
+BEGIN
+
+    print("Trying to read myself: ")
+
+    TRY
+        io.Open(f, "TryTest.mod", "r")
+
+    CATCH
+        ENOENT: print("I do not exist, strange...\n")
+
+        EACCESS: print("access denied, very strange...\n")
+
+    ELSE
+        print(ERROR_MESSAGE + "\n")
+
+    END
+
+    IF ERROR_CODE = 0 THEN
+        print("success!\n")
+        TRY io.Close(f) ELSE END  # ignore any error
+    END 
+END
+</pre>
+</blockquote>
+
+<p>
+The ELSE branch is optional: if omitted and none of the catch branches
+catch-ed the error, the error is raised.
+</p>
+
+
+<a name=librarymodules></a>
+<h2>Library modules</h2>
+
+<p>
+A library module consists in a DEFINITION MODULE and an IMPLEMENTATION
+MODULE.  The DEFINITION MODULE gives the interface to the module, that is the
+list of constants, types, variables and functions accessible to any
+client module.  A DEFINITION MODULE cannot contain executable code.
+</p>
+
+<p>
+The IMPLEMENTATION MODULE gives the implementation of the exported functions.
+The IMPLEMENTATION MODULE can also contains private
+constants, private types, private variables, private functions and it
+MUST contain the implementation of the exported functions. Example:
+</p>
+
+
+<blockquote>
+<pre>
+DEFINITION MODULE example
+(* File: example.def *)
+
+IMPORT io
+
+CONST
+    (* My PC: *)
+    CPU = "i686"
+    RAM = 256 (* MB *)
+    HD  =  80 (* GB *)
+
+TYPE
+    Point2D = RECORD x, y: REAL END
+
+VAR
+    afile: io.FILE  # actually not used in this example
+
+FUNCTION Add2D(a: Point2D, b: Point2D): Point2D
+
+END
+</pre>
+</blockquote>
+    
+<p>
+This file defines the interface to the <code>example.imp</code>
+implementation module that follows. The DEFINITION example.def does not
+require to be compiled, but it can be checked with M2.
+</p>
+
+
+<blockquote>
+<pre>
+IMPLEMENTATION MODULE example
+(* File: example.imp *)
+
+(*
+    IMPORT, CONST, TYPE, VAR and FUNCTIONS private
+    to the module goes here.
+*)
+
+FUNCTION Add2D(a: Point2D, b: Point2D): Point2D
+VAR p: Point2D
+BEGIN
+    p[x] = a[x] + b[x]
+    p[y] = a[y] + b[y]
+    RETURN p
+END
+
+END
+</pre>
+</blockquote>
+    
+
+<p>
+Compiling this file gives <code>example.c</code> containing the C
+source of the module, and <code>example.lnk</code> containing possible
+options for the C compiler or the linker (see "Mixing C code" below for
+details). To summarize, these files are involved:
+</p>
+
+
+<blockquote>
+<code>example.def</code><p>
+<code>example.imp</code><p>
+<code>example.c</code><p>
+<code>example.lnk</code><p>
+</blockquote>
+
+
+<p>
+A client program might looks like this:
+</p>
+
+<blockquote>
+<pre>
+MODULE tryExample
+IMPORT m2, example
+VAR one, img, sum: Point2D
+BEGIN
+    one = {1.0, 0.0}
+    img = {0.0, 1.0}
+    sum = Add2D(one, Add2D(one, img))
+    print("it works!\n")
+END
+</pre>
+</blockquote>
+
+    
+
+
+<a name=compilingandexecutingcomplexapplications></a>
+<h2>Compiling and executing complex applications</h2>
+
+<p>
+Use a Makefile to define the dependencies of the various elements.
+For example, suppose the main module M.mod requires the modules
+A.def,A.imp that in turn required B.def,B.imp. The Makefile can be
+the following:
+</p>
+
+<blockquote>
+<pre>
+# Makefile for the M project
+
+B.c: B.def B.imp
+    m2 B.imp
+
+A.c: A.def A.imp B.c
+    m2 A.imp
+
+M: M.mod A.c B.c
+    m2 M.mod
+
+test: M
+    ./M
+</pre>
+</blockquote>
+
+<p>
+The program can be compiled simply giving the command "make", and it can
+be compiled and executed simply giving the command "make test".
+</p>
+
+
+<a name=mixingccode></a>
+<h2>Mixing C code</h2>
+
+<p>
+It is really simple to mix C code along the M2 code.  Lines beginning
+with a $ in the first column are passed verbatim to the resulting C
+source. All the M2 identifiers take the form MODULE_ITEM, where MODULE
+is the name of the module and ITEM is the name of a variable or function.
+</p>
+
+<blockquote>
+<b>WARNING!</b>
+This simple naming scheme MODULE_ITEM was just intended to simplify the
+integration between C code and M2 code, but it does not protect from possible
+collisions. For example, a module M exporting the item A_B and a module
+M_A exporting the item B both will produce the name M_A_B.	To avoid these
+situations the names of the modules should not contain the underscore
+character.
+</blockquote>
+
+
+<p>
+For example, here is the implementation of a function that returns the
+current process identifier number (PID):
+</p>
+
+<blockquote>
+<pre>
+FUNCTION getpid(): INTEGER
+BEGIN
+$   return getpid();
+END
+</pre>
+</blockquote>
+
+
+<p>
+The following function returns TRUE if the file exists, FALSE otherwise:
+</p>
+
+
+<blockquote>
+<pre>
+MODULE mymod
+
+$ #include &lt;sys/types.h&gt;
+$ #include &lt;sys/stat.h&gt;
+$ #include &lt;unistd.h&gt;
+
+FUNCTION file_exists(fn: STRING)
+VAR
+$   char *s;
+$   struct stat buf;
+BEGIN
+    IF InvalidZString(fn) THEN
+        # The file name contain a NUL byte --&gt; not a valid file name
+        RETURN FALSE
+    END
+
+# Build a valid zero-terminated C string:
+$   MK_ZSTRING(s, mymod_fn);
+
+$   return stat(mymod_fn-&gt;s, &amp;buf) == 0;
+END
+
+BEGIN
+    IF file_exists("mymod.mod") THEN
+        print("I exist!\n")
+    END
+END
+</pre>
+</blockquote>
+
+<p>
+InvalZString(fn) returns TRUE is the passed string contains a
+zero byte, forbidden in zstrings usually handled by the C standard
+library.  MK_ZSTRING(s, mymod_fn) dynamically allocates into the stack
+a zero-terminated copy of the string mymod_fn and sets s to be a pointer
+to this string; that string will be released on exit from the function.
+</p>
+
+<p>
+Any line beginning with "$$ linker options:" can contain a list of options
+for the C compiler and linker. See for example the module math.def that
+requires the linker option -lm.
+</p>
+
+
+<a name=reservedkeywords></a>
+<h2>Reserved keywords</h2>
+
+<table cellpadding=15>
+<tr>
+<td>
+<pre>
+AND
+ARRAY
+BEGIN
+BOOLEAN
+BY
+CASE
+CATCH
+CONST
+DEFINITION
+DIV
+DO
+ELSE
+ELSIF
+END
+ERROR
+EXIT
+FALSE
+FOR
+FORWARD
+FUNCTION
+HALT
+IF
+IMPLEMENTATION
+IMPORT
+</pre>
+</td>
+<td>
+<pre>
+INTEGER
+LOOP
+MOD
+MODULE
+NIL
+NOT
+OF
+OR
+RAISE
+REAL
+RECORD
+REPEAT
+RETURN
+STATIC
+STRING
+SWITCH
+THEN
+TO
+TRUE
+TRY
+TYPE
+UNTIL
+VAR
+VOID
+WHILE
+</pre>
+</td>
+</tr>
+</table>
+
+
+<a name=datastructuresinmenory></a>
+<h2>Data structures in memory</h2>
+
+<p>
+A BOOLEAN is represented as a 32 bit word, whose value is 0 for FALSE,
+TRUE otherwise.
+</p>
+
+<p>
+An INTEGER is a 32 bit word, 2-complement.
+</p>
+
+<p>
+A REAL is a 64 bit word.
+</p>
+
+<p>
+A STRING is a pointer to a dynamically allocated area containing the
+actual string and its length. Several pointers can share the same string:
+since strings, once created, can never be changed (only pointers can),
+copying a string to another or passing a string as an argument of a
+function simply involves the copy of a pointer. The NIL string is a
+pointer whose value is zero. The empty string "" is pre-allocated by
+the m2runtime module.
+</p>
+
+<p>
+M2 do not has a "CHAR" data type; single characters are simply strings
+one byte long. For efficiency reasons, the strings whose length is
+exactly 1 byte are allocate only one time in a special internal table,
+so that programs that scans a file byte-per-byte do not really cause
+the dynamic memory to be used.
+</p>
+
+<p>
+The ARRAYs are dynamically allocated. The picture below illustrates the
+structure used. Some elements of the array are preallocated, so adding
+elements to an array does not produce too many re-allocations of the
+memory block.
+</p>
+
+<p>
+The RECORDs are dynamically allocated. The picture below illustrate
+the structure used.
+</p>
+
+
+<pre>
+
+</pre>
+<center>
+<img src=memory.gif>
+</center>
+<pre>
+
+</pre>
+
+<p>
+For more informations about the internal representation of data, read the
+file lib/m2runtime.c.
+</p>
+
+
+
+<a name=runtimeerrormessages></a>
+<h2>Run-time error messages</h2>
+
+<p>
+Errors detected at run-time cause the termination of the program.
+The message displayed on standard error has the format below:
+</p>
+
+<blockquote><code>MODULE.FUNCTION(), line LINE: MESSAGE</code></blockquote>
+
+<p>
+The messages that can be produced by the run-time module m2runtime are
+as follow:
+</p>
+
+<blockquote>
+    <p><b>Substring of a NIL string</b><br>
+    Can't apply the substring operator s[*] to a NIL string.
+    </p>
+
+    <p><b>Invalid substring index</b><br>
+    Range s[i] invalid because i&lt;0 or i&gt;=length(s).
+    </p>
+
+    <p><b>Invalid substring range</b><br>
+    Range s[i,j] invalid because i&lt;0 or j&gt;=length(s) or i&gt;j.
+    </p>
+
+    <p><b>Cannot dereference NIL array</b><br>
+    Can't access elements of an unallocated array.
+    </p>
+    
+    <p><b>Array index is negative</b><br>
+    The expression a[EXPR] gives an invalid negative index.
+    </p>
+    
+    <p><b>Array index too large</b><br>
+	Can't read the element a[EXPR] because EXPR &gt;= count(a).
+    </p>
+    
+    <p><b>Cannot dereference NIL record</b><br>
+    Can't read the fields of an unallocated RECORD.
+    </p>
+    
+    <p><b>Unexpected case in SWITCH</b><br>
+    The expression SWITCH EXPR gives a value not found between the
+    expected CASEs and the ELSE branch is not present.
+    </p>
+    
+    <p><b>Missing RETURN &lt;expr&gt;</b><br>
+    Missing RETURN EXPR in a function returning a value. Since this issue
+    is difficult to detect from the analysis of the source, this
+    control is made at run-time.
+    </p>
+</blockquote>
+
+
+<a name=ebnfsyntax></a>
+<h2>EBNF Syntax</h2>
+
+<p>
+The following EBNF declarations describes in a concise but precise form
+the syntax of the M2 language. For learn more about this formalism,
+you can look at the page <a href="http://www.icosaedro.it/bnf_chk/index.html">www.icosaedro.it/bnf_chk/index.html</a>.
+</p>
+
+1. compilation_unit =  <i>definition_module</i><sub>2</sub> | <i>implementation_module</i><sub>3</sub> | <i>module</i><sub>4</sub> ;<br>
+2. definition_module =  <code><b>"DEFINITION"</b></code> <code><b>"MODULE"</b></code> <i>module_name</i><sub>5</sub> <i>import</i><sub>6</sub> { <i>const_decl</i><sub>7</sub> | <i>var_decl</i><sub>11</sub> | <i>function_decl</i><sub>23</sub> } <code><b>"END"</b></code> ;<br>
+3. implementation_module =  <code><b>"IMPLEMENTATION"</b></code> <code><b>"MODULE"</b></code> <i>module_name</i><sub>5</sub> <i>import</i><sub>6</sub> { <i>const_decl</i><sub>7</sub> | <i>type_decl</i><sub>10</sub> | <i>var_decl</i><sub>11</sub> | <i>function_decl</i><sub>23</sub> <i>function_body</i><sub>25</sub> } <code><b>"END"</b></code> ;<br>
+4. module =  <code><b>"MODULE"</b></code> <i>module_name</i><sub>5</sub> <i>import</i><sub>6</sub> <i>function_body</i><sub>25</sub> ;<br>
+5. module_name =  <i>name</i><sub>68</sub> ;<br>
+6. import =  { <code><b>"IMPORT"</b></code> [ <i>module_name</i><sub>5</sub> { <code><b>","</b></code> <i>module_name</i><sub>5</sub> } ] } ;<br>
+7. const_decl =  <code><b>"CONST"</b></code> { <i>name</i><sub>68</sub> <code><b>"="</b></code> <i>const_value</i><sub>8</sub> } ;<br>
+8. const_value =  <i>boolean</i><sub>48</sub> | [ <code><b>"+"</b></code> | <code><b>"-"</b></code> ] <i>number</i><sub>49</sub> | [ <code><b>"+"</b></code> | <code><b>"-"</b></code> ] <i>const_name</i><sub>9</sub> | <i>string</i><sub>60</sub> ;<br>
+9. const_name =  <i>qualified_name</i><sub>70</sub> ;<br>
+10. type_decl =  <code><b>"TYPE"</b></code> { <i>name</i><sub>68</sub> <code><b>"="</b></code> ( <code><b>"FORWARD"</b></code> | <i>type</i><sub>12</sub> ) } ;<br>
+11. var_decl =  <code><b>"VAR"</b></code> [ <code><b>"STATIC"</b></code> ] { <i>name</i><sub>68</sub> { <code><b>","</b></code> <i>name</i><sub>68</sub> } <code><b>":"</b></code> <i>type</i><sub>12</sub> } ;<br>
+12. type =  <i>simple_type</i><sub>14</sub> | <i>array_type</i><sub>18</sub> | <i>record_type</i><sub>19</sub> | <i>function_type</i><sub>22</sub> | <i>type_name</i><sub>13</sub> ;<br>
+13. type_name =  <i>qualified_name</i><sub>70</sub> ;<br>
+14. simple_type =  <code><b>"VOID"</b></code> | <code><b>"BOOLEAN"</b></code> | <code><b>"INTEGER"</b></code> | <i>enum_type</i><sub>15</sub> | <code><b>"REAL"</b></code> | <code><b>"STRING"</b></code> ;<br>
+15. enum_type =  <code><b>"("</b></code> <i>enum_elem</i><sub>16</sub> { <code><b>","</b></code> <i>enum_elem</i><sub>16</sub> } <code><b>")"</b></code> ;<br>
+16. enum_elem =  <i>name</i><sub>68</sub> [ <code><b>"="</b></code> <i>const_integer</i><sub>17</sub> ] ;<br>
+17. const_integer =  <i>int_number</i><sub>52</sub> | <i>const_name</i><sub>9</sub> ;<br>
+18. array_type =  <code><b>"ARRAY"</b></code> <code><b>"OF"</b></code> <i>type</i><sub>12</sub> ;<br>
+19. record_type =  <code><b>"RECORD"</b></code> { <i>field_decl</i><sub>20</sub> } <code><b>"END"</b></code> ;<br>
+20. field_decl =  <i>field_name</i><sub>21</sub> { <code><b>","</b></code> <i>field_name</i><sub>21</sub> } <code><b>":"</b></code> <i>type</i><sub>12</sub> ;<br>
+21. field_name =  <i>name</i><sub>68</sub> ;<br>
+22. function_type =  <i>function_decl</i><sub>23</sub> ;<br>
+23. function_decl =  <code><b>"FUNCTION"</b></code> <i>name</i><sub>68</sub> <code><b>"("</b></code> [ <i>formal_arg</i><sub>24</sub> { <code><b>","</b></code> <i>formal_arg</i><sub>24</sub> } ] <code><b>")"</b></code> [ <code><b>":"</b></code> <i>type</i><sub>12</sub> ] [ <code><b>"RAISE"</b></code> <code><b>"ERROR"</b></code> ] ;<br>
+24. formal_arg =  [ <code><b>"VAR"</b></code> ] <i>name</i><sub>68</sub> <code><b>":"</b></code> <i>type</i><sub>12</sub> ;<br>
+25. function_body =  { <i>const_decl</i><sub>7</sub> | <i>type_decl</i><sub>10</sub> | <i>var_decl</i><sub>11</sub> | <i>function_decl</i><sub>23</sub> <i>function_body</i><sub>25</sub> } <code><b>"BEGIN"</b></code> { <i>instruction</i><sub>26</sub> } <code><b>"END"</b></code> ;<br>
+26. instruction =  <i>assignment</i><sub>27</sub> | <i>function_call</i><sub>28</sub> | <i>if</i><sub>33</sub> | <i>switch</i><sub>34</sub> | <i>while</i><sub>35</sub> | <i>repeat</i><sub>36</sub> | <i>for</i><sub>37</sub> | <i>loop</i><sub>38</sub> | <i>exit</i><sub>39</sub> | <i>try</i><sub>40</sub> | <i>raise</i><sub>41</sub> | <i>return</i><sub>42</sub> ;<br>
+27. assignment =  <i>var_name</i><sub>64</sub> { <i>selector</i><sub>65</sub> } <code><b>"="</b></code> <i>expr</i><sub>43</sub> ;<br>
+28. function_call =  <i>prefix_function_call</i><sub>29</sub> | <i>postfix_function_call</i><sub>30</sub> ;<br>
+29. prefix_function_call =  <i>function_name</i><sub>31</sub> <code><b>"("</b></code> { <i>actual_arg</i><sub>32</sub> } <code><b>")"</b></code> ;<br>
+30. postfix_function_call =  ( <i>var_name</i><sub>64</sub> | <i>function_name</i><sub>31</sub> <code><b>"("</b></code> { <i>actual_arg</i><sub>32</sub> } <code><b>")"</b></code> ) { <code><b>"-&gt;"</b></code> <i>qualified_name</i><sub>70</sub> <code><b>"("</b></code> { <i>actual_arg</i><sub>32</sub> } <code><b>")"</b></code> } ;<br>
+31. function_name =  <i>qualified_name</i><sub>70</sub> ;<br>
+32. actual_arg =  <i>expr</i><sub>43</sub> | <i>var_name</i><sub>64</sub> { <i>selector</i><sub>65</sub> } ;<br>
+33. if =  <code><b>"IF"</b></code> <i>expr</i><sub>43</sub> <code><b>"THEN"</b></code> { <i>instruction</i><sub>26</sub> } { <code><b>"ELSIF"</b></code> <i>expr</i><sub>43</sub> <code><b>"THEN"</b></code> { <i>instruction</i><sub>26</sub> } } [ <code><b>"ELSE"</b></code> { <i>instruction</i><sub>26</sub> } ] <code><b>"END"</b></code> ;<br>
+34. switch =  <code><b>"SWITCH"</b></code> <i>expr</i><sub>43</sub> <code><b>"DO"</b></code> { <code><b>"CASE"</b></code> <i>const_integer</i><sub>17</sub> { <code><b>","</b></code> <i>const_integer</i><sub>17</sub> } <code><b>":"</b></code> { <i>instruction</i><sub>26</sub> } } [ <code><b>"ELSE"</b></code> { <i>instruction</i><sub>26</sub> } ] <code><b>"END"</b></code> ;<br>
+35. while =  <code><b>"WHILE"</b></code> <i>expr</i><sub>43</sub> <code><b>"DO"</b></code> { <i>instruction</i><sub>26</sub> } <code><b>"END"</b></code> ;<br>
+36. repeat =  <code><b>"REPEAT"</b></code> { <i>instruction</i><sub>26</sub> } <code><b>"UNTIL"</b></code> <i>expr</i><sub>43</sub> ;<br>
+37. for =  <code><b>"FOR"</b></code> <i>qualified_name</i><sub>70</sub> <code><b>"="</b></code> <i>expr</i><sub>43</sub> <code><b>"TO"</b></code> <i>expr</i><sub>43</sub> [ <code><b>"BY"</b></code> <i>const_integer</i><sub>17</sub> ] <code><b>"DO"</b></code> { <i>instruction</i><sub>26</sub> } <code><b>"END"</b></code> ;<br>
+38. loop =  <code><b>"LOOP"</b></code> { <i>instruction</i><sub>26</sub> } <code><b>"END"</b></code> ;<br>
+39. exit =  <code><b>"EXIT"</b></code> ;<br>
+40. try =  <code><b>"TRY"</b></code> ( <i>assignment</i><sub>27</sub> | <i>function_call</i><sub>28</sub> ) { <code><b>"CATCH"</b></code> <i>const_integer</i><sub>17</sub> { <code><b>","</b></code> <i>const_integer</i><sub>17</sub> } <code><b>":"</b></code> { <i>instruction</i><sub>26</sub> } } [ <code><b>"ELSE"</b></code> { <i>instruction</i><sub>26</sub> } ] <code><b>"END"</b></code> ;<br>
+41. raise =  <code><b>"RAISE"</b></code> <code><b>"ERROR"</b></code> <i>expr</i><sub>43</sub> <i>expr</i><sub>43</sub> ;<br>
+42. return =  <code><b>"RETURN"</b></code> [ <i>expr</i><sub>43</sub> ] ;<br>
+43. expr =  <i>simple_expr</i><sub>44</sub> [ <i>relation</i><sub>47</sub> <i>simple_expr</i><sub>44</sub> ] ;<br>
+44. simple_expr =  [ <code><b>"+"</b></code> | <code><b>"-"</b></code> ] <i>term</i><sub>45</sub> { <i>add_operator</i><sub>50</sub> <i>term</i><sub>45</sub> } ;<br>
+45. term =  <i>factor</i><sub>46</sub> { <i>mult_operator</i><sub>51</sub> <i>factor</i><sub>46</sub> } ;<br>
+46. factor =  <code><b>"NIL"</b></code> | <i>boolean</i><sub>48</sub> | <i>number</i><sub>49</sub> | <i>string</i><sub>60</sub> | <i>const_name</i><sub>9</sub> | <i>var_name</i><sub>64</sub> { <i>selector</i><sub>65</sub> } [ <i>substr_selector</i><sub>63</sub> ] | <i>function_call</i><sub>28</sub> | <code><b>"("</b></code> <i>expr</i><sub>43</sub> <code><b>")"</b></code> | <code><b>"NOT"</b></code> <i>factor</i><sub>46</sub> | <code><b>"~"</b></code> <i>factor</i><sub>46</sub> ;<br>
+47. relation =  <code><b>"&lt;"</b></code> | <code><b>"&lt;="</b></code> | <code><b>"="</b></code> | <code><b>"&gt;="</b></code> | <code><b>"&gt;"</b></code> | <code><b>"&lt;&gt;"</b></code> ;<br>
+48. boolean =  <code><b>"FALSE"</b></code> | <code><b>"TRUE"</b></code> ;<br>
+49. number =  <i>int_number</i><sub>52</sub> | <i>real_number</i><sub>57</sub> ;<br>
+50. add_operator =  <code><b>"+"</b></code> | <code><b>"-"</b></code> | <code><b>"OR"</b></code> | <code><b>"^"</b></code> | <code><b>"|"</b></code> ;<br>
+51. mult_operator =  <code><b>"*"</b></code> | <code><b>"/"</b></code> | <code><b>"DIV"</b></code> | <code><b>"MOD"</b></code> | <code><b>"AND"</b></code> | <code><b>"&amp;"</b></code> ;<br>
+52. int_number =  <i>integer</i><sub>53</sub> | <i>hex_integer</i><sub>55</sub> ;<br>
+53. integer =  <i>digit</i><sub>54</sub> { <i>digit</i><sub>54</sub> } ;<br>
+54. digit =  <code><b>"0".."9"</b></code> ;<br>
+55. hex_integer =  <code><b>"0x"</b></code> <i>hex_digit</i><sub>56</sub> { <i>hex_digit</i><sub>56</sub> } ;<br>
+56. hex_digit =  <i>digit</i><sub>54</sub> | <code><b>"a".."f"</b></code> | <code><b>"A".."F"</b></code> ;<br>
+57. real_number =  <i>integer</i><sub>53</sub> ( <i>decimals</i><sub>58</sub> [ <i>exponent</i><sub>59</sub> ] | [ <i>decimals</i><sub>58</sub> ] <i>exponent</i><sub>59</sub> ) ;<br>
+58. decimals =  <code><b>"."</b></code> <i>integer</i><sub>53</sub> ;<br>
+59. exponent =  ( <code><b>"e"</b></code> | <code><b>"E"</b></code> ) [ <code><b>"+"</b></code> | <code><b>"-"</b></code> ] <i>integer</i><sub>53</sub> ;<br>
+60. string =  <code><b>"\""</b></code> { <i>str_char</i><sub>61</sub> | <i>str_escape</i><sub>62</sub> } <code><b>"\""</b></code> ;<br>
+61. str_char =  <code><b>" "</b></code> | <code><b>"!"</b></code> | <code><b>"#".."["</b></code> | <code><b>"]".."~"</b></code> ;<br>
+62. str_escape =  <code><b>"\\"</b></code> ( <code><b>"\\"</b></code> | <code><b>"\""</b></code> | <code><b>"a"</b></code> | <code><b>"b"</b></code> | <code><b>"n"</b></code> | <code><b>"r"</b></code> | <code><b>"t"</b></code> | <code><b>"x"</b></code> <i>hex_digit</i><sub>56</sub> <i>hex_digit</i><sub>56</sub> ) ;<br>
+63. substr_selector =  <code><b>"["</b></code> <i>expr</i><sub>43</sub> [ <code><b>","</b></code> <i>expr</i><sub>43</sub> ] <code><b>"]"</b></code> ;<br>
+64. var_name =  <i>qualified_name</i><sub>70</sub> ;<br>
+65. selector =  <code><b>"["</b></code> ( <i>index</i><sub>67</sub> | <i>field_name</i><sub>21</sub> ) <code><b>"]"</b></code> | <i>next_elem_in_array</i><sub>66</sub> ;<br>
+66. next_elem_in_array =  <code><b>"["</b></code> <code><b>"]"</b></code> ;<br>
+67. index =  <i>expr</i><sub>43</sub> ;<br>
+68. name =  ( <i>letter</i><sub>69</sub> | <code><b>"_"</b></code> ) { <i>letter</i><sub>69</sub> | <i>digit</i><sub>54</sub> | <code><b>"_"</b></code> } ;<br>
+69. letter =  <code><b>"a".."z"</b></code> | <code><b>"A".."Z"</b></code> ;<br>
+70. qualified_name =  [ <i>module_name</i><sub>5</sub> <code><b>"."</b></code> ] <i>name</i><sub>68</sub> ;<br>
+
+
+<a name=references></a>
+<h2>References</h2>
+
+<p>
+<a href="http://www.icosaedro.it/m2/index.html">www.icosaedro.it/m2</a>
+is the official WEB site of the M2 language. Check her for new versions of
+the language and of the compiler.
+</p>
+
+<p>
+<a
+href="http://www.icosaedro.it/m2/applications.html">www.icosaedro.it/m2/applications.html</a>
+contains a list of applications developed with M2.
+</p>
+
+<pre>
+
+</pre>
+<table width='100%' cellspacing=2 cellpadding=0 border=0><tr>
+<td><a href="mailto:salsi@icosaedro.it" title="Send an email to the author of this WEB page"><b>Umberto&nbsp;Salsi</b></a></td>
+<td><hr width=20 noshade></td>
+<td><SCRIPT><!--
+document.write("<a target=blank hr" + "ef=/comments/rh.cgi?path=%2Fm2%2Freference%2Findex.html&cod=2a7307b138bea6c0f9fbfc9c title='Add/read comments about this WEB page'><b>Comments</b></a>");
+// -->
+</SCRIPT></td>
+<td><hr width=20 noshade></td>
+<td><a href="/me/index.html?lang=en" title="Send a comment to the author of this WEB page"><b>Contact</b></a></td>
+<td  width='100%'><hr noshade></td>
+<td><a href="/mappa.html" title='List of all the pages of this WEB site'><b>Site&nbsp;map</b></a></td>
+<td><hr width=20 noshade></td>
+<td width='5%'><a href="/en-index.html" title='Go to the main page of this WEB site'><b>Home</b></a>&nbsp;/&nbsp;<a href="/m2/index.html"><b>Index</b></a></td></tr></table></p>
+</BODY></HTML>

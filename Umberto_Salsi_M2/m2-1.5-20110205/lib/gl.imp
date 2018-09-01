@@ -1,0 +1,55 @@
+IMPLEMENTATION MODULE gl
+
+####$#include <GL/gl.h>
+
+$#define gl_ClearColor(red, green, blue, alpha) \
+$	glClearColor(red, green, blue, alpha)
+
+$#define gl_ShadeModel(mask)  glShadeModel(mask)
+
+$#define gl_Viewport(x, y, width, height) \
+$	glViewport(x, y, width, height)
+
+$#define gl_MatrixMode(mask)  glMatrixMode(mask)
+
+$#define gl_LoadIdentity()  glLoadIdentity()
+
+$#define gl_Ortho(left, right, bottom, top, near_val, far_val) \
+$	glOrtho(left, right, bottom, top, near_val, far_val)
+
+$#define gl_Clear(mask)  glClear(mask)
+
+$#define gl_PushMatrix()  glPushMatrix()
+
+$#define gl_Rotate(angle, x, y, z)  glRotated(angle, x, y, z)
+
+$#define gl_Color(r, g, b)  glColor3d(r, g, b)
+
+$#define gl_Begin(mode)  glBegin(mode)
+
+$#define gl_End()  glEnd()
+
+$#define gl_PopMatrix()  glPopMatrix()
+
+$#define gl_Vertex3(x, y, z)  glVertex3d(x, y, z)
+
+$#define gl_PolygonMode(face, mode)  glPolygonMode(face, mode)
+
+$#define gl_FrontFace(mode)  glFrontFace(mode)
+
+$#define gl_CullFace(mode)  glCullFace(mode)
+
+$#define gl_Enable(cap)  glEnable(cap)
+
+$#define gl_Disable(cap)  glDisable(cap)
+
+$#define gl_Frustum(left, right, bottom, top, near_val, far_val) \
+$	glFrustum(left, right, bottom, top, near_val, far_val)
+
+$#define gl_Scale(x, y, z)  glScaled(x, y, z)
+
+$#define gl_Flush()  glFlush()
+
+$#define gl_Translate(x, y, z)  glTranslated(x, y, z)
+
+END

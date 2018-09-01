@@ -1,0 +1,301 @@
+#!/bin/bash
+
+# Set default configuration vars:
+if [ -n "$M2_BASE" ]; then # $M2_BASE envar is set
+	:
+elif [ -L "$0" ]; then # guess $M2_BASE from m2 symlink
+	M2_BASE="$( cd $(dirname "$0"); cd $(dirname $( readlink "$0" ) )/..; echo $PWD)"
+else # guess $M2_BASE from m2 pathfile
+	M2_BASE="$( cd $(dirname $0)/..; echo $PWD)"
+fi
+M2_M2C="$M2_BASE/src/m2c"
+M2_LIB="$M2_BASE/lib"
+M2_TAB=8
+
+# Load configuration file:
+if [ -f /etc/m2 ]; then # source system cfg
+	. /etc/m2
+fi
+if [ -f "$HOME/.m2" ]; then # source custom cfg
+	. "$HOME/.m2"
+fi
+
+# Internal status:
+src=""
+exe=""
+rm_c=yes
+run=no
+warnings=yes
+debugging=no
+
+
+help_cfg()
+{
+echo "\
+M2 - Configuration
+
+This script try to load the configuration file /etc/m2, then $HOME/.m2
+in this order.  In that file you may set these parameters (here you see
+the values currently set or guessed):
+
+# Where the M2 compiler is. Example: $HOME/m2/src/m2c
+M2_M2C=$M2_M2C
+
+# Where the libraries are (one or more paths separated by ':').
+# Example: /my/libs:/more/libs:$HOME/m2/lib
+M2_LIB=$M2_LIB
+
+# Your preferred tabulation size (optional; default 8). The compiler use
+# this value to report the exact position of any error found.
+M2_TAB=$M2_TAB"
+}
+
+
+help()
+{
+echo "\
+m2 - The M2 cross-compiler front end
+
+Compile and run a MODULE:
+	m2 MODULE.mod [ -o MODULE ] [ -s ] [ -r [ -- args... ] ]
+
+Check a DEFINITION MODULE:
+	m2 MODULE.def
+	
+Compile an IMPLEMENTATION MODULE:
+	m2 MODULE.imp [ -o MODULE.c ]
+	
+where:
+	-s               preserve intermediate C source (MODULE.c)
+	-r               run the executable
+	args             arguments to be passed to the executable
+	
+Other options:
+	--debug          enable compiler debugging
+	--help           show this help
+	--no-warn        disable compiler warnings
+	--version        show compiler version and copyright notices
+	--cfg FILE       load this configuration file
+	--cfg-help       show info about the configuration file
+	
+Usage as doc viewer:
+	m2 -d MODULE     show the definition module MODULE.def
+	m2 -w REGEXP     search REGEXP in all the definition modules"
+}
+
+
+error()
+{
+	echo "m2: $@" >&2
+	exit 1
+}
+
+
+show_def()
+{
+	def="$1"
+	echo "$M2_LIB" | tr ':' '\n' | \
+	while read -r dir; do
+		f="$dir/$def.def"
+		if [ -f "$f" ]; then
+			echo "Found $f:"
+			less "$f"
+		fi
+	done
+}
+
+
+show_word()
+{
+	word="$1"
+	echo "$M2_LIB" | tr ':' '\n' | \
+	while read -r dir; do
+		grep "$word" $dir/*.def
+	done
+}
+
+
+# Parse cmd line options:
+while [ $# -gt 0 ]; do
+	case "$1" in
+		
+	-*)
+
+		case "$1" in
+
+		-o) shift; exe="$1"; shift;;
+
+		-s) rm_c=no; shift;;
+
+		-r) run=yes; shift;;
+
+		-d) shift; show_def $1; shift;;
+		
+		-w) shift; show_word "$1"; shift;;
+
+		--no-warn) warnings=no; shift;;
+		--debug) debugging=yes; shift;;
+		--help|-h) help; shift;;
+		--version|-v) $M2_M2C --version; shift;;
+		--cfg-help) help_cfg; shift;;
+		--cfg)
+			shift
+			if [ -z "$1" ]; then
+				error "missing file name of the configuration file"
+			fi
+			if [ ! -r "$1" ]; then
+				error "configuration file $1 not found/not readable"
+			fi
+			. "$1"
+			shift
+			;;
+		
+		--) shift; break;; # opts to pass to the program just compiled
+
+		*) error "unknown option $1";;
+		esac;;
+
+	*)
+		if [ -n "$src" ]; then
+			error "argument $1: source file already set as $src"
+		fi
+		src="$1"
+		shift;;
+
+	esac
+done
+
+# Check source file:
+if [ -z "$src" ]; then # no source to compile
+	exit
+fi
+if [ ! -f "$src" ]; then
+	error "file $src not found"
+fi
+
+# Check installation:
+err=0
+if [ ! -x "$M2_M2C" ]; then
+	error "M2 compiler m2c not found"
+fi
+(IFS=: ; for d in $M2_LIB; do [ ! -d "$d" ] && error "library directory $d not found"; done)
+
+# This envar is required by m2c:
+export M2_LIB
+
+# Set cmd line options of m2c and gcc:
+m2_warnings=""
+cc_warnings="-Wall"
+#cc_warnings="-w"
+if [ $warnings = no ]; then
+	m2_warnings="--no-warn"
+	cc_warnings="-w"
+fi
+m2_debugging=""
+if [ $debugging = yes ]; then
+	m2_debugging="--debug"
+fi
+
+
+case "$src" in
+
+*.def)
+	base="${src%.def}"
+	#[ $debugging = yes ] && echo "Parsing the DEFINITION MODULE $src:"
+	$M2_M2C $m2_warnings $m2_debugging $src --tabsize $M2_TAB >/dev/null
+	err=$?
+	[ $err -ne 0 ] && echo "$src: COMPILATION FAILED"
+	exit $err
+	;;
+
+*.imp)
+	base="${src%.*}"
+	lnk="$base.lnk"
+	obj="$base.c"
+	#[ $debugging = yes ] && echo "Compiling $src -> $obj:"
+	$M2_M2C $m2_warnings $m2_debugging $src -o $obj --tabsize $M2_TAB >"$lnk"
+	# Debug the compiler:
+
+	#gdb --args $M2_M2C $m2_warnings $m2_debugging $src -o $obj --tabsize $M2_TAB
+	#exit
+	err=$?
+	[ -s "$lnk" ] || rm -f -- "$lnk"
+	if [ $err -ne 0 -a $rm_c = yes ]; then
+		rm -f "$obj"
+	fi
+	[ $err -ne 0 ] && echo "$src: COMPILATION FAILED"
+	exit $err
+	;;
+
+*.mod|*.cgi)
+	base="${src%.mod}"
+	if [ -z "$exe" ]; then
+		exe="$base"
+	fi
+	lnk=$exe.lnk
+	obj="$exe.c"
+	#[ $debugging = yes ] && echo "Compiling $src -> $obj:"
+	$M2_M2C $m2_warnings $m2_debugging $src -o $obj --tabsize $M2_TAB >"$lnk"
+	# Debug the compiler:
+	#gdb --args $M2_M2C $m2_warnings $m2_debugging $src -o $obj --tabsize $M2_TAB
+	#exit
+	err=$?
+	if [ $err -ne 0 ]; then
+		if [ $rm_c = yes ]; then
+			rm -f -- "$obj"
+		fi
+		echo "$src: COMPILATION FAILED"
+		rm -f "$lnk"
+		exit $err
+	fi
+
+	case `uname | tr a-z A-Z` in
+		*LINUX*) DL="-ldl -I /usr/local/include/gc" ;;
+		*CYGWIN*) DL="" ;;
+		*MINGW*) DL="-I /usr/local/include/gc" ;;
+		*) DL="-ldl" ;;
+	esac
+
+	SP="[[:space:]]"
+	opt=$( grep "^$SP*linker$SP\\+options$SP*:" "$lnk" \
+		| sed "s/[^:]*://" | sort | uniq )
+	rm -f -- "$lnk"
+	if [ $debugging = yes -a -n "$opt" ]; then
+		echo "Linker options: $opt"
+	fi
+
+	[ $debugging = yes ] && echo "Compiling $obj -> $exe:"
+
+	if grep -q USE_GC $M2_BASE/include/missing.c; then
+		L_FLAG="-lgc"
+	else
+		L_FLAG=""
+	fi
+
+	gcc $cc_warnings -g -I $M2_LIB $opt $obj -o $exe \
+		$DL -L/usr/local/lib $L_FLAG
+	err=$?
+
+	if [ $rm_c = yes ]; then
+		rm -f -- "$obj"
+	fi
+
+	if [ $err -ne 0 ]; then
+		echo "$src: COMPILATION FAILED"
+		exit 1
+	fi
+
+	if [ $run = yes ]; then
+		echo "Executing $exe $@:"
+		case "$exe" in
+		/*) $exe "$@"; err=$? ;;
+		*) ./$exe "$@"; err=$? ;;
+		esac
+		echo "Exit code: $err"
+	fi
+	;;
+
+*) error "$src: unknown file extension - expected .mod .def .imp" ;;
+esac
+
+# THE END

@@ -1,0 +1,27 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Addr                                      *
+ * Description:           Address arithmetic                        *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  April 6, 1996                             *
+ *                                                                  *
+ * Author:                Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Addr;
+
+   PROCEDURE Inc(VAR a: ADDRESS; n: LONGCARD);
+      (* Increments address 'a' for 'n' *)
+
+   PROCEDURE Dec(VAR a: ADDRESS; n: LONGCARD);
+      (* Decrements address 'a' for 'n' *)
+
+END Addr.
+
+

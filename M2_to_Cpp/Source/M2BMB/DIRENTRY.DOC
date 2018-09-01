@@ -1,0 +1,110 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      DirEntry                                  *
+ * Description:           Directory and file scanning operations    *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  August 20, 1996                           *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE DirEntry;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+   noError          ;       (* No error. *)
+   unknownError     ;       (* Any other error described below. *)
+   noRoomError      ;       (* Internal or external storage buffer exceeded. *)
+   pathNotFoundError;       (* Specified directory path cannot be found. *)
+   priviledgeError  ;       (* Violation of system privilegdes to set/get time. *)
+
+
+TYPE
+   T;                (* Directory entry *)
+
+   (* Accessing the dir-entry components *)
+
+   PROCEDURE Name(VAR Name:ARRAY OF CHAR; e: T);
+      (* Gets file or directory name from entry 'e'.
+       + Sets error codes:
+           'noRoomError; if string 'dir' is not large enough.
+      *)
+
+   PROCEDURE CrTime(VAR t: Time.T; e: T);
+      (* Gets creation time of directory entry 'e'. *)
+
+   PROCEDURE CrDate(VAR d: Date.T; e: T);
+      (* Gets creation date of directory entry 'e'. *)
+
+   PROCEDURE ModTime(VAR t: Time.T; e: T);
+      (* Gets last modification time of directory entry 'e'. *)
+
+   PROCEDURE ModDate(VAR d: Date.T; e: T);
+      (* Gets last modification date of directory entry 'e'. *)
+
+   (* If both of those dates and times are not supported by
+      current file system, then "Cr" and "Mod" functions return
+      same values for time (date) *)
+
+   PROCEDURE Size(e: T): LONGCARD;
+      (* Returns a size of field from directory entry 'e'. If it is
+         a directory then returns 0. *)
+
+   PROCEDURE SetPath(filename: ARRAY OF CHAR);
+      (* Sets the file name pattern to be searched for in the calls
+         of 'Found'.
+       + Sets error codes:
+           'pathNotFoundError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE Found(VAR e: T): BOOLEAN;
+      (* Returns TRUE if direntry 'e' is found for 'filename'.
+       + Sets error codes:
+           'unknownError'    - platform specific (file-)system error.
+           'priviledgeError'
+      *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+
+END DirEntry.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+   - 'FoundNext' renamed to 'Found'
+*)
+
+

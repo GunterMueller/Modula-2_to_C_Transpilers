@@ -1,0 +1,14 @@
+DEFINITION MODULE EBNFScanner;
+ TYPE
+  Lexema=(ident,literal,lbr,lsqbr,lfbr,
+	  bar,eq,dot,rbr,rsqbr,rfbr,other);
+
+ CONST IdentLong =24;
+ VAR lex: Lexema; (* next lexema *)
+  id: ARRAY[0..IdentLong] OF CHAR;
+  linenumb: INTEGER;
+
+ PROCEDURE GetLexema;
+ PROCEDURE MarkError(n: INTEGER);
+ PROCEDURE SkipLine;
+END EBNFScanner.

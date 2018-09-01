@@ -1,0 +1,65 @@
+DEFINITION MODULE Files;
+FROM SYSTEM IMPORT ADDRESS,WORD;
+
+TYPE
+ File;
+ Mode=(Rmode,Wmode,RWmode);
+ FileStatus=(Done,NotDone);
+
+VAR
+ status:FileStatus;
+
+PROCEDURE Create(filename:ARRAY OF CHAR; m:Mode):File;
+ (* Create a new file and open it for mode m                       *)
+ (* Return its descriptor (status=Done if the call is successfull) *)
+
+PROCEDURE Open(filename:ARRAY OF CHAR; m:Mode):File;
+ (* Like Create but the file is expected to exist *)
+
+PROCEDURE Close(f:File);
+ (* Close file f (status=Done if the call is successfull) *)
+
+PROCEDURE Delete(filename:ARRAY OF CHAR);
+ (* Delete file filename (status=Done if the call is successfull) *)
+
+PROCEDURE SetPos(f:File;highpos,lowpos:CARDINAL);
+ (* Set up current position of f on highpos*2**16+lowpos *)
+ (* (status=Done if the call is successfull)             *)
+
+PROCEDURE GetPos(f:File;VAR highpos,lowpos:CARDINAL);
+ (* Get current position of f in highpos,lowpos *)
+
+PROCEDURE Length(f:File;VAR highpos,lowpos:CARDINAL);
+ (* Get length of f in highpos,lowpos *)
+
+PROCEDURE IsEof(f:File):BOOLEAN;
+ (* Return TRUE if current is at the end of file *)
+
+PROCEDURE GetNErr(f:File):CARDINAL;
+ (* Return error status of f (0 is normal) *)
+
+PROCEDURE ClearErr(f:File);
+ (* Set up error status of f into 0 (normal) *)
+
+PROCEDURE ReadNBytes(f:File;p:ADDRESS;nbytes:CARDINAL):CARDINAL;
+ (* Read next nbytes from f and put them at p.     *)
+ (* Return the number of actually read bytes       *)
+
+PROCEDURE WriteNBytes(f:File;p:ADDRESS;nbytes:CARDINAL):CARDINAL;
+ (* Write next nbytes from p into f.           *)
+ (* Return the number of actually writen bytes *)
+
+PROCEDURE ReadChar(f:File;VAR ch:CHAR);
+ (* Read next char (status=Done if char is read) *)
+
+PROCEDURE WriteChar(f:File;ch:CHAR);
+ (* Write next char (status=Done if char is writen) *)
+
+PROCEDURE ReadWord(f:File;VAR w:WORD);
+ (* Read next word (status=Done if word is read) *)
+
+PROCEDURE WriteWord(f:File;w:WORD);
+ (* Write next word (status=Done if word is writen) *)
+
+END Files.
+

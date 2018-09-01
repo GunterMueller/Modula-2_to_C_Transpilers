@@ -1,0 +1,28 @@
+This is the Modula-2 translator, by Vladimir Makarov. The translator
+is based on the language report in the 4th edition of Wirth's book
+Programming in Modula-2. The translator also supports the third edition of
+this book. High portability of the translator is achieved by intermediate
+translation into C. The translator is aimed for use on POSIX systems.
+
+The configure generated Makefile understands the variables bindir,
+libdir, man1dir, and prefix. Use only the full path name for directories.
+
+           make install prefix=/usr/users/VHDL/mak
+     
+                           or
+
+           make install bindir=/usr/users/VHDL/mak/bin\
+                libdir=/usr/users/VHDL/mak/lib\
+                /usr/users/VHDL/mak/man/man1
+
+To specify where to find the sources, as an argument +srcdir to
+configure:
+
+          ../m2c-0.7/configure +srcdir=../m2c-0.7
+
+You can use option `+cc' if you wish that configure will not ask
+about C compiler name. For example:
+
+      configure +cc=gcc
+
+Please send bug reports and comments to m2c-main@nongnu.org.

@@ -1,0 +1,174 @@
+=============================================================
+                    BMB Modula-2 Cross-Platform Library
+                               version 1.00
+                          'FAQ' file (of XDOC-10.ZIP)
+
+                       Zoran Budimac, Daniel Sendula
+                             Novi Sad, Yugoslavia
+=============================================================
+
+What is BMB Modula-2 Cross-Platform Library?
+============================================
+
+BMB Modula-2 Cross-Platform Library (BMB M2 X-Platform Library)
+is a library of Modula-2 modules that enables high portability of
+Modula-2 programs between different platforms (Modula-2
+compilers, operating systems and hardware). If you use modules
+from this library instead the predefined modules of your
+favorite M2 compiler, your programs will execute (mostly)
+without changes on any platform where BMB M2 X-Platform Library
+has been implemented.
+
+Why a library such is 'BMB M2 X-Platform' should exist?
+=======================================================
+
+Modula-2 is not (yet) standardized programming language. More
+importantly, the modules which have to accompany every Modula-2
+implementation are not standardized as well. Therefore, Modula-2
+programs are not highly portable, because they mostly relies on
+modules which are specific for every Modula-2 implementation.
+(Don't forget that C programs are highly portable only because C
+libraries are standardized and implemented on many platforms.)
+
+How are the library modules organized?
+======================================
+
+The basic principles in a design of a library were the following:
+
+1. The most frequently used operations are to be implemented as
+   separate library procedures.
+2. Every library action must be achieved in at most one way.
+3. Every operation must be obtainable by combining at most three
+   library procedures.
+
+The modules are organized in three levels: low-level, middle-
+level and high-level modules. The above mentioned principles hold
+for low and middle level modules. High level modules can
+occasionally introduce alternative ways for doing the same thing
+(which is the break of the second principle).
+
+Low-level (i.e., necessary) modules are the ones that are truly
+dependable on the platform. Besides nonportable operations these
+modules contain all the other operations which logically fit into
+these modules. For example, the module 'Date' contains only two
+truly nonportable operations (GetSystemDate and SetSystemDate)
+but it also contains other date manipulations.
+
+Middle-level (i.e., useful) modules are the ones that are not
+dependable on architecture / operating system, but are frequently
+needed and therefore contained in the specific Modula-2
+implementations (for example: string operations). (We could say
+that middle-level modules are in a way dependent on Modula-2
+compilers.)
+
+High-level (i.e., utility) modules are our suggestions for
+combination of low and middle level procedures. These modules
+depend only on low and middle level modules and are highly
+portable. You don't have to use them and can make your own
+combinations of low and middle level procedures.
+
+What modules are in the library?
+================================
+
+Low-level modules are:
+----------------------
+File       - basic file operations
+FileName   - all procedures handling _filenames_ (not files)
+Dir        - making removing, changing ... directories
+DirEntry   - searching the directories
+Time       - time operations
+Date       - date operations
+
+Middle-level modules are:
+-------------------------
+Fmt        - conversions from basic data types to strings
+Scan       - conversions from strings to basic data types
+String     - basic string operations
+
+RLib       - useful functions involving real values
+LongRLib   - useful functions involving long real values
+
+High-level modules are:
+-----------------------
+FileWr     - combines 'File' and 'Fmt' to provide you with a
+             greater range of file output operations
+FileRd     - combines 'File' and 'Scan' to provide you with a
+             greater range of file output operations
+
+Wr         - the same as 'FileWr', but writes on standard output
+Rd         - the same as 'FileRd', but reads from standard input
+
+How can I use the library?
+==========================
+
+1. Download the file XDOC-??.ZIP (where ?? stands for the version
+   of module specifications), and the file corresponding to:
+   - your platform(s) and
+   - the version ?? of downloaded specification (the version of
+     specification is always between '-' and '.' in the
+     filename.)
+   The list of available implementation files is included in the
+   README.TXT file.
+
+   For example, for MS-DOS and TopSpeed Modula-2 Compiler
+   (ver 1.xx), you should download:
+   - XDOC-12.ZIP (if, for example, the highest version of
+     specifications is 1.2) and
+   - X1T20-12.ZIP (if, for example, the highest version of
+     implementation is 2.0)
+
+2. Install the DOC files and library implementation (definition
+   and implementation modules). In most cases it will be
+   sufficient to copy files to your disk and update the
+   compiler's search path. For details see the 'readme' file in
+   every implementation archive.
+
+3. Study the DOC files where you should find enough information
+   for every procedure / abstract data type. Avoid looking into
+   definition modules, because they are often not so informative.
+   Try to use qualified imports in your programs (the ones where
+   every module identifier need to be preceded with module name)
+   - your programs will be more readable that way.
+
+What if I can not find in the library the operation I need?
+===========================================================
+
+Maybe we forgot to include it in the library. If so, let us know.
+Or, it is not portable operation at all (for example, dealing
+with processor registers cannot be portable and therefore is not
+in the library).
+
+On which platforms is the library implemented and tested?
+=========================================================
+
+o 80x86, MS-DOS, TopSpeed Modula-2 compiler, ver 1.xx
+o 80x86, MS-DOS, TopSpeed Modula-2 compiler, ver 3.xx
+
+What is 'BMB' ?
+===============
+
+BMB is short for 'Black Mailbox' - an informal group of people
+trying to produce (and share) the interesting software of good
+quality. The members of BMB are teachers and students of the
+Institute of Mathematics, University of Novi Sad, Yugoslavia.
+However, BMB is completely unofficial and private initiative.
+
+Who are the authors of the library?
+===================================
+
+o Zoran Budimac and Daniel Sendula took the liberty to specify
+  the library. They are also the authors of some library
+  implementations.
+o Dragan Masulovic was of great help during the 'specification
+  time.' He also promised to implement the library for Atari
+  computer.
+
+Will the new modules be included in the library soon?
+=====================================================
+
+Yes. In preparation are the modules 'Cns' for low-level console
+operations, 'Env' for accessing the program environment and
+parameters, 'Address' for address arithmetic, 'Mem' for memory
+operations and so on...
+
+

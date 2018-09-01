@@ -1,0 +1,24 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE ConstStr;
+(* This module implements a constant string type, which uses the least
+   possible amount of memory *)
+
+  TYPE
+    PointerToChar = POINTER TO CHAR;
+
+    T = RECORD          (* Constant string type *)
+      len: CARDINAL;
+      p: PointerToChar;
+    END;
+
+  PROCEDURE Init(VAR cs: T; s: ARRAY OF CHAR);
+  (* Initialize 'cs' and assign 's' to it *)
+
+  PROCEDURE ToStr(VAR s: ARRAY OF CHAR; cs: T);
+  (* Extract 's' from `cs' *)
+
+  PROCEDURE Kill(VAR cs: T);
+  (* Dispose of 'cs' *)
+
+END ConstStr.

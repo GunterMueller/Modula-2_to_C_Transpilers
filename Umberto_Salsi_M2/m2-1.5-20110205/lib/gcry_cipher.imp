@@ -1,0 +1,134 @@
+IMPLEMENTATION MODULE gcry_cipher
+
+IMPORT str, gcry_common
+
+(* FIXME: i dati nel campo tail sono in memoria non sicura. *)
+
+TYPE
+	CIPHER = RECORD
+		encrypt: BOOLEAN  (* TRUE = do encryption, FALSE = do decryption *)
+		hd: ADDRESS
+		block_size: INTEGER
+		tail: STRING
+	END
+
+
+
+FUNCTION Open(VAR cp: CIPHER, encrypt: BOOLEAN, algo: ALGO, mode: MODE,
+	flags: FLAGS, key: STRING, iv: STRING)
+RAISE ERROR
+VAR
+	r: ADDRESS
+	err, bs: INTEGER
+$	gcry_cipher_hd_t hd;
+BEGIN
+	mark(algo)
+	mark(mode)
+	mark(flags)
+	cp = NIL
+	gcry_common.Init()
+	IF key = NIL THEN
+		HALT("gcry_cipher.Open(): NIL key")
+	END
+$	gcry_cipher_err = gcry_cipher_open(&hd, gcry_cipher_algo, gcry_cipher_mode,
+$		gcry_cipher_flags);
+$	if( gcry_cipher_err != 0 ){
+		RAISE ERROR 1 ErrorDesc(err)
+		RETURN
+$	}
+$	gcry_cipher_err = gcry_cipher_setkey(hd, gcry_cipher_key->s,
+$		gcry_cipher_key->len);
+$	if( gcry_cipher_err != 0 ){
+$		gcry_cipher_close(hd);
+		RAISE ERROR 2 ErrorDesc(err)
+		RETURN
+$	}
+	IF iv <> NIL THEN
+$		gcry_cipher_err = gcry_cipher_setiv(hd, gcry_cipher_iv->s,
+$			gcry_cipher_iv->len);
+		(* FIXME: se la lunghezza dell'iv e' sbagliata, stampa un
+		"warning" su stderr invece che produrre un codice di errore. *)
+$		if( gcry_cipher_err != 0 ){
+$			gcry_cipher_close(hd);
+			RAISE ERROR 3 ErrorDesc(err)
+			RETURN
+$		}
+	END
+$	gcry_cipher_err = gcry_cipher_algo_info(gcry_cipher_algo,
+$		GCRYCTL_GET_BLKLEN, 0, (unsigned int *)&gcry_cipher_bs);
+$	if( gcry_cipher_err != 0 ){
+$		gcry_cipher_close(hd);
+		RAISE ERROR 4 ErrorDesc(err)
+		RETURN
+$	}
+$	gcry_cipher_r = (RECORD *) hd;
+	cp = {encrypt, r, bs, NIL}
+END
+
+
+FUNCTION Write(h: CIPHER, s: STRING): STRING
+RAISE ERROR
+VAR
+	bs, len, err: INTEGER
+	r: ADDRESS
+$	char *c;
+BEGIN
+	IF length(s) = 0 THEN
+		RETURN NIL
+	END
+	IF h[tail] <> NIL THEN
+		s = h[tail] + s
+	END
+	bs = h[block_size]
+	IF length(s) < bs THEN
+		h[tail] = s
+		RETURN NIL
+	END
+	len = bs*(length(s) DIV bs)
+$	c = alloca(gcry_cipher_len);
+	r = h[hd]
+	IF h[encrypt] THEN
+$		gcry_cipher_err = gcry_cipher_encrypt((gcry_cipher_hd_t) gcry_cipher_r,
+$			c, gcry_cipher_len, gcry_cipher_s->s, gcry_cipher_len);
+	ELSE
+$		gcry_cipher_err = gcry_cipher_decrypt((gcry_cipher_hd_t) gcry_cipher_r,
+$			c, gcry_cipher_len, gcry_cipher_s->s, gcry_cipher_len);
+	END
+$	if( gcry_cipher_err != 0 ){
+		RAISE ERROR 1 ErrorDesc(err)
+$	}
+	IF len < length(s) THEN
+		h[tail] = s[len,length(s)]
+	ELSE
+		h[tail] = NIL
+	END
+$	return new_STRING(c, gcry_cipher_len);
+END
+
+
+FUNCTION Close(VAR h: CIPHER): STRING
+RAISE ERROR
+VAR
+	s: STRING
+	bs: INTEGER
+	r: ADDRESS
+BEGIN
+	s = h[tail]
+	IF length(s) = 0 THEN
+		s = NIL
+	ELSE
+		bs = h[block_size]
+		TRY s = Write(h, repeat("\x00", bs - length(s) MOD bs))
+		ELSE
+			RAISE ERROR ERROR_CODE ERROR_MESSAGE
+			RETURN NIL
+		END
+	END
+	r = h[hd]
+$	gcry_cipher_close((gcry_cipher_hd_t) gcry_cipher_r);
+	h = NIL
+	RETURN s
+END
+
+
+END

@@ -1,0 +1,133 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Keyboard                                  *
+ * Description:           Keyboard handler                          *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  November, 1996                            *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Key;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+    noError		; (* No Error *)
+    unknownError        ; (* Any other error described below *)
+
+(* Keys *)
+
+    none;
+
+    esc;
+    f1; f2; f3; f4; f5; f6; f7; f8; f9; f10; f11; f12;
+
+    tilda;
+    num1; num2; num3; num4; num5; num6; num7; num8; num9; num0;
+
+    minus; equal; dir; backSpace; tab;
+
+    q; w; e; r; t; y; u; i; o; p; rightBracket; leftBracket;
+
+    a; s; d; f; g; h; j; k; l; semiColon; apostrophe;
+
+    z; x; c; v; b; n; m; comma; dot; slash; space;
+
+    home; end; delete; pageUp; pageDown; up; down; left; right;
+
+    padSlash; padAsterisk; padMinus; padPlus; padEnter; padDot;
+
+    padNum1; padNum2; padNum3; padNum4;
+    padNum6; padNum7; padNum8; padNum9;
+    padNum0;
+
+(* Qualifiers *)
+
+    qualifierNone;
+    qualifierShift;
+    qualifierCtrl;
+    qualifierAlt;
+    qualifierSysReq;
+    qualifierPause;
+    qualifierScrollLock;
+    qualifierNumLock;
+    qualifierCapsLock;
+    qualifierInsert;
+    qualifierCtrlAlt;
+    qualifierCtrlShift;
+    qualifierAltShift;
+
+(* Following increases are used by procedure RdKey for
+   determining functional keys, because they generate
+   different scan code when they are pressed in
+   combination with qualifiers, such as SHIFT,ALT etc.*)
+
+    increaseAlt;
+    increaseShift;
+    increaseCtrl;
+
+TYPE
+   KeyType;
+   QualType;
+
+PROCEDURE Pressed(): BOOLEAN;
+   (* Detect if key is pressed on keyboard *)
+
+PROCEDURE Rd(): KeyType;
+   (* Scans keyboard and returns pressed key (no echo) as predefined
+      constant shown above *)
+
+PROCEDURE Qualifiers(): QualType;
+   (* Returns current state of qualifiers *)
+   (* Daniel: Sxta ovaj vracya? Skup? *)
+
+PROCEDURE LastQualifier(): QualType;
+   (* Returns last pressed qualifier *)
+
+   (* Errors *)
+
+PROCEDURE Error(): CARDINAL;
+   (* Returns an error code and resets it to 'noError'.
+      See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+END Key.
+
+(* Daniel: Trebaju li nam posebni KeyType i QualType?
+           Treba li da izvezemo increaseAlt, ...Shift itd...?
+           Ima li neko zgodnije ime osim qualifier ?
+           Mozxe li neko kracye ime od qualifierShift i sl.?
+   ZJB   : Zvanicxno KeyType i QualType su nepotrebni - ako CARDINAL
+           radi posao.
+
+           Valjda ne treba izvoziti increaseAlt...
+           Ne znam za zgodnije ime... Na Amigi se tako zove.... O:)
+
+           ReDraw cyemo izbaciti...
+*)

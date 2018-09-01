@@ -1,0 +1,109 @@
+M2 - INSTALLATION
+
+1. SYSTEM REQUIREMENTS
+======================
+Known to work on:
+- GNU/Linux (Red Hat 7.3, Slackware 10.0, Ubuntu)
+- Cygwin/Windows 98/NT
+
+
+2. GARBAGE COLLECTOR
+====================
+If you plan to run programs that need large amount of data, or need to run
+longer than a few seconds, you will definitively need the Conservative Garbage
+Collector from Hans Boehm, or GC for short. Although not mandatory, it is
+recommended also for ordinary uses of the M2 programs. The GC is not used
+by the M2 Development System per se, but only by programs he generates.
+
+The GC can be also installed later. If you do that, remember to re-run the
+configure script of M2 (see below) in order to generate an updated version
+of the file include/missing.c.
+
+The GC can be downloaded from:
+
+	http://www.hpl.hp.com/personal/Hans_Boehm/gc/
+
+Compile and install gc. On some systems this library is already installed:
+please check for the presence of the file libgc.a (locate libgc.a).
+
+This GC is used by many other projects, like GJC, Mozilla, W3m, Mono, DotGNU,
+so it might be already present in your system. Please check your system
+for the presence of the library libgc.so (use the command `locate libgc.so').
+
+	NOTE ABOUT THE INSTALLATION OF THE GC SHARED LIBRARY.  Normally the
+	GC shared library gets installed under the directory /usr/local/lib
+	rather than the default /usr/lib.  To make the dynamic linker aware
+	of the contents of this new directory you need to add the directory
+	to the list /etc/ld.so.conf then run the command ldconfig. As
+	an alternative, go to the directory /usr/lib then set here a
+	symbolic link
+
+		ln -s ../local/lib/libgc.so .
+
+	If you get the error message "error while loading shared libraries:
+	libgc.so.1: cannot open shared object file: No such file or
+	directory", here is the fix.
+
+
+
+3. COMPILING
+============
+Compile and install M2 giving the commands:
+
+	tar xvzf m2-VER-BUILD.tar.gz
+	mv m2-VER-BUILD m2
+	cd m2
+	./configure
+	make
+	make install
+
+The ./configure script will generate the include/missing.c containing
+some definition specific of your system.
+
+The last command, make install, is not really necessary, since M2 do not
+need to be installed on a particular place, but it will give you some hints
+for the correct usage of the compiler.
+
+
+4. HELLO WORLD
+==============
+The script ./bin/m2 is your interface to the M2 compiler. Ensure it may be
+called from any directory. For example:
+
+	echo 'export PATH=$PATH:$HOME/m2/bin' >> .bash_profile
+	. $HOME/.bash_profile
+
+When the script m2 start, it look for the file ".m2" in your home
+directory $HOME. You may set in this file these variables:
+
+# The dir of M2 (optional):
+M2_BASE=$HOME/src/m2
+# The compiler:
+M2_M2C=$M2_BASE/src/m2c
+# A list of paths where the libraries are stored. Ensure the path of the
+# standard libraries of M2 be there:
+M2_LIB=$HOME/my/libs:$M2_BASE/lib
+# Your preferred tabulation size. Mine is this:
+M2_TAB=4
+
+Check if the script runs:
+
+	m2 --version
+
+Now, write this simple test program using your preferred text editor:
+
+	MODULE hello
+	IMPORT m2
+	BEGIN
+		print("Hello, world!\n")
+	END
+
+Save it in the file hello.mod, and run it with the command
+
+	m2 hello.mod -r
+
+Try also "m2 --help" for more info on m2.
+
+That's all, enjoy!
+
+THE END

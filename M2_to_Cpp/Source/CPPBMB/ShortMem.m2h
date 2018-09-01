@@ -1,0 +1,67 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Implementation of:       ShortMem (1.1)                              *
+ *                          (see ShortMem.doc for full specification)   *
+ * Version:                 1.0                                         *
+ * Date:                    February 17, 2000                           *
+ * Conformance Test Passed: -                                           *
+ * Platform:                Every                                       *
+ * Requires:                Generic ISO C++ compiler                    *
+ *                                                                      *
+ * Author:                  Zoran Budimac                               *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: zjb@unsim.ns.ac.yu              *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_ShortMem_m2h_
+#define _M2_ShortMem_m2h_
+
+#include <_m2sys.h>
+
+namespace ShortMem {
+
+   void Copy(ADDRESS dest, ADDRESS source, CARDINAL n);
+      /* Copies a block of memory of 'n' bytes from
+         'source' to 'dest'.
+      */
+
+   template <class _BYTE1>
+   void Fill(ADDRESS dest, CARDINAL n, _BYTE1 val);
+      /* Starting from 'dest' fills 'n' bytes with 'val'. */
+
+   BOOLEAN Equal(ADDRESS m1, ADDRESS m2, CARDINAL n);
+      /* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         and 'm2' are equal.
+      */
+
+   BOOLEAN LEq(ADDRESS m1, ADDRESS m2, CARDINAL n);
+      /* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are less than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically.
+      */
+
+   BOOLEAN GEq(ADDRESS m1, ADDRESS m2, CARDINAL n);
+      /* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are greater than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically.
+      */
+
+   struct _ModuleBody {
+      _ModuleBody()  { BEGIN(); }
+      ~_ModuleBody() { FINALLY(); }
+
+      void BEGIN();
+      void FINALLY();
+   };
+
+   _ModuleBody _body;
+
+} // ShortMem
+
+#endif

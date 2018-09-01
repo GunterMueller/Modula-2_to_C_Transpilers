@@ -1,0 +1,6 @@
+(* file add14c.def *)
+(* see file test14c.mod *)
+DEFINITION MODULE add14c;
+ VAR
+    x: REAL;
+END add14c.

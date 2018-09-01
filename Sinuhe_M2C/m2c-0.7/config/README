@@ -1,0 +1,17 @@
+This directory contains configuration files depended from object machine
+and used C compiler. These files named as CPU-COMPILER.h (e.g. vax-gcc.h).
+
+The directory also contains assembler files which implements Modula-2
+coroutines. These files named as CPU-corout.c (e.g. vax-corout.c) If the
+corresponding file does not exist the Modula-2 coroutines will not work
+on given machine.
+
+Auxiliary files in this directory may be used for creation of new
+configuration files. File common_part.h contains common part of all
+configuration files for tunning Modula-2 translator. Files named as CPU.h
+describe common information about all C compiler on given machine. Files
+named as COMPILER.h describe common information about given compiler on
+all machines.
+
+------------------------------------------------------------------------
+Vladimir Makarov

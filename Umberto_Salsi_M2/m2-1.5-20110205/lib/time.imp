@@ -1,0 +1,98 @@
+IMPLEMENTATION MODULE time
+
+IMPORT m2, str
+
+$#include <time.h>
+$#include <sys/time.h>
+
+
+$#define m2_Time() time(NULL)
+
+
+VAR tzset_just_invoked: BOOLEAN
+
+FUNCTION GetTime(): TIME
+VAR
+	t: TIME
+	seconds, useconds, tz, dst: INTEGER
+$	struct timeval tv;
+BEGIN
+$	if( gettimeofday(&tv, NULL) != 0 )
+$		die("GetTime(): %s", strerror(errno));
+$	time_seconds = tv.tv_sec;
+$	time_useconds = tv.tv_usec;
+	# FIXME: possible race condition between gettimeofday() and tzset().
+	IF NOT tzset_just_invoked THEN
+$		tzset();
+		tzset_just_invoked = TRUE
+	END
+$	time_tz = -timezone;
+$	time_dst = daylight;
+	t[seconds] = seconds
+	t[useconds] = useconds
+	t[tz] = tz
+	t[dst] = (dst <> 0)
+	RETURN t
+END
+
+
+FUNCTION DiffTime(t1: TIME, t2: TIME): INTERVAL
+VAR s, u: INTEGER   i: INTERVAL
+BEGIN
+	s = t2[seconds] - t1[seconds]
+	u = t2[useconds] - t1[useconds]
+	IF (s > 0) AND (u < 0) THEN
+		s = s - 1
+		u = u + 1000000
+	ELSIF (s < 0) AND (u > 0) THEN
+		s = s + 1
+		u = u - 1000000
+	END
+	i[seconds] = s
+	i[useconds] = u
+	RETURN i
+END
+
+
+FUNCTION Interval2Real(i: INTERVAL): REAL
+BEGIN
+	RETURN itor(i[seconds]) + 1.0e-6 * itor(i[useconds])
+END
+
+
+FUNCTION Interval2String(int: INTERVAL): STRING
+VAR s, u, i: INTEGER  w, us: STRING
+BEGIN
+	s = int[seconds]
+	u = int[useconds]
+	IF (s < 0) OR (u < 0) THEN
+		w = "-" + itos(s)
+		u = -u
+	ELSE
+		w = itos(s)
+	END
+	IF u = 0 THEN
+		RETURN w
+	END
+	us = itos(u)
+	w = w + "." + repeat("0", 6 - length(us)) + us
+	i = length(w) - 1
+	IF w[i] <> "0" THEN
+		RETURN w
+	END
+	REPEAT
+		i = i - 1
+	UNTIL us[i] <> "0"
+	RETURN w[0,i+1]
+END
+
+
+FUNCTION GetTimeReal(): REAL
+VAR t: TIME
+BEGIN
+	t = GetTime()
+	RETURN itor(t[seconds]) + 1e-6 * itor(t[useconds])
+END
+
+
+END

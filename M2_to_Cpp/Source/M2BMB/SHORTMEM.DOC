@@ -1,0 +1,44 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Mem                                       *
+ * Description:           Memory manipulations in small blocks      *
+ *                        up to 65535 bytes                         *
+ *                        (see the Mem.Doc as well)                 *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  January 23, 1997                          *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE ShortMem;
+
+   PROCEDURE Copy(dest, source: ADDRESS; n: CARDINAL);
+      (* Copies a block of memory of 'n' bytes from
+         'source' to 'dest' *)
+
+   PROCEDURE Fill(dest: ADDRESS; n: CARDINAL; val: BYTE);
+      (* Starting from 'dest' fills 'n' bytes with 'val' *)
+
+   PROCEDURE Equal(m1, m2: ADDRESS; n: CARDINAL): BOOLEAN;
+      (* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         and 'm2' are equal *)
+
+   PROCEDURE LEq(m1, m2: ADDRESS; n: CARDINAL): BOOLEAN;
+      (* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are less than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically  *)
+
+   PROCEDURE GEq(m1, m2: ADDRESS; n: CARDINAL): BOOLEAN;
+      (* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are greater than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically  *)
+
+END ShortMem.
+
+

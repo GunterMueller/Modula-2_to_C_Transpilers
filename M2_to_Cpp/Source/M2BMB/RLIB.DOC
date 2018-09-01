@@ -1,0 +1,91 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      RLib                                      *
+ * Description:           Mathematical functions (REAL values)      *
+ *                        (see 'LongRLib' for LONGREAL values)      *
+ * Implementation level:  Mid-level (Useful module)                 *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  February 15, 1995                         *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE RLib;
+
+CONST
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+    noError;                 (* No error ocurred *)
+    arithmeticError;         (* Error in floating point opeartion *)
+
+   PROCEDURE Sin(r: REAL): REAL;
+      (* Returns sin(r) *)
+
+   PROCEDURE Cos(r: REAL): REAL;
+      (* Returns cos(r) *)
+
+   PROCEDURE SinH(r: REAL): REAL;
+      (* Returns sinh(r) *)
+
+   PROCEDURE CosH(r: REAL): REAL;
+      (* Returns cosh(r) *)
+
+   PROCEDURE Exp(r: REAL): REAL;
+      (* Returns e^r *)
+
+   PROCEDURE Log(r: REAL): REAL;
+      (* Returns ln(r) *)
+
+   PROCEDURE Log10(r: REAL): REAL;
+      (* Returns ln(r) for base 10 *)
+
+   PROCEDURE ATan(r: REAL): REAL;
+      (* Returns arctan(r) *)
+
+   PROCEDURE ATanH(r: REAL): REAL;
+      (* Returns arctanh(r) *)
+
+   PROCEDURE Sqrt(r: REAL): REAL;
+      (* Returns square root of 'r' *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+END RLib.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - error handler 'errorHandler' added
+
+*)
+
+

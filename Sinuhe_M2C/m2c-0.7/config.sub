@@ -1,0 +1,24 @@
+#!/bin/sh
+# Configuration validation subroutine script.
+#   Usage: config.sub CPU
+#   Copyright (C) 1993-1997 (see more details in file COPYING).
+
+case $1 in
+	# Recognize the basic CPU types with without company name.
+	# Some are omitted here because they have special meanings below.
+       a29k | alpha | arm | c1 | c2 | c32 | c34 | c38 | fx80 | hp800 \
+            | hppa | hppa64 | i860 | m68000 | m68k \
+            | m88k | mips | mips64 | ns32k | power | power64 | pyramid \
+            | romp | rs6000 | sparc | sparc64 | tahoe | tron | vax)
+		basic_machine=$1
+		;;
+       i386 | i486 | i586)
+		basic_machine=i386
+		;;
+       *)
+		echo Invalid configuration \`$1\': machine \`$1\' not recognized 1>&2
+		exit 1
+		;;
+esac
+
+echo $basic_machine

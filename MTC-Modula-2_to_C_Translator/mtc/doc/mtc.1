@@ -1,0 +1,100 @@
+.TH MTC 1 "" "GMD-Forschungsstelle-Karlsruhe"
+.SH NAME
+mtc - Modula-2 to C Translator
+.SH SYNOPSIS
+\fBmtc\fP [ options ] [ file ]
+.SH DESCRIPTION
+\%\fIMtc\fP translates \%Modula-2 programs into readable C code.
+\%\fIMtc\fP implements the language \%Modula-2 as defined in N. Wirth's
+report (3rd edition)
+with a few minor restrictions (see below) and most language extensions
+implemented by \%\fIMOCKA\fP,
+the \%Modula-2 Compiler Karlsruhe. It produces K&R (not ANSI)
+C code with a few very common extensions like passing structures as value
+parameters.
+.sp 0.4v
+A definition or foreign module \fImodule\fP.md is translated into a C header file
+\fImodule\fP.h. An implementation or program module \fImodule\fP.mi is translated
+into the corresponding C source file \fImod\%ule\fP.c.
+Separate compilation is
+handled by reprocessing all transitively imported def\%i\%ni\%tion modules when
+translating a compilation unit. If \fIfile\fP is omitted \fImtc\fP reads from
+standard input.
+.sp 0.4v
+\%\fIMtc\fP is intended as a tool for translating finished programs from
+\%Modula-2 to C and not as a tool for program development.
+Therefore, the translator
+does not check the semantic correctness of the \%Modula-2 programs.
+.sp 0.4v
+For each foreign module an empty implementation module corresponding to it
+has to be translated to C, because the initialization routine
+produced for the dummy implementation module is used
+within the modules resp. C programs which import
+the foreign module.
+.sp 0.4v
+If the library function \fIalloca\fP is available and the C programs
+are compiled with the flag -D\fIStackAlloc\fP\^, then the memory
+space for open array value parameters will be allocated in the
+stack frame of the corresponding procedure. This temporary
+space will be freed automatically when the procedure returns.
+Otherwise, \fImalloc\fP and \fIfree\fP will be used to allocate and deallocate
+memory space for open array value parameters.
+.SH OPTIONS
+.IP -w 12
+Suppress warning diagnostics.
+.IP -i 12
+Generate header files for imported modules.
+.IP -c 12
+Generate type casts to make the C programs \%\fIlint\fP free.
+.IP -r 12
+Generate runtime checks.
+.IP -h 12
+Print help information.
+.IP -t 12
+Print test output (time).
+.IP -m 12
+Print test output (memory).
+.IP -d\fIdir\fP 12
+Allow import from modules in library \fIdir\fP.
+.IP -l\fIdir\fP 12
+Specify directory where \fImtc\fP finds its tables.
+.SH FILES
+.IP \fImodule\fP.md 12
+Source file of definition or foreign module \fImodule\fP.
+.IP \fImodule\fP.mi 12
+Source file of implementation or program module \fImodule\fP.
+.IP \fImodule\fP.h 12
+C header file produced for \fImodule\fP.md.
+.IP \fImodule\fP.c 12
+C source file produced for \fImodule\fP.mi.
+.IP SYSTEM.h 12
+Definition of standard constants, types, functions, and
+macros, which are used in the generated C programs.
+.IP SYSTEM.c 12
+Main program and implementation of standard functions.
+.SH SEE ALSO
+\fIEntwurf und Implementierung eines \(U:bersetzers von \%Modula-2 nach C\fP
+by M. Martin.
+.sp 0.2v
+\fIProgramming in Modula-2\fP (3rd edition) by N. Wirth.
+.sp 0.2v
+\fIMOCKA User Manual\fP by F. Engelmann.
+.sp 0.2v
+\fIThe C Programming Language\fP by B. W. Kernighan and D. M. Ritchie.
+.SH DIAGNOSTICS
+The translator reports lexical and syntactic errors, errors detected during
+the handling of separate compilation, and restrictions of the code generation.
+The translator does not check the semantic correctness of the \%Modula-2
+programs. The diagnostics produced by \fImtc\fP are intended to be
+self-explanatory.
+.SH BUGS
+Coroutines are not supported.
+.sp 0.2v
+Forward references within pointer declarations are limited to structured types.
+.sp 0.2v
+Comments are not translated from \%Modula-2 to C.
+.sp 0.2v
+In some very rare cases the translator has to evaluate constant expressions,
+because a literal translation is not possible. The translator will fail to do
+this, if the expression or one of
+its operands is not in the range \%MIN(INTEGER)\|..\|\%MAX(INTEGER).

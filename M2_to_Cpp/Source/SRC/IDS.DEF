@@ -1,0 +1,36 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Ids;
+(* Implements a list of identifier strings *)
+
+  FROM Defs IMPORT IdStr;
+
+  TYPE
+    IdPtr = POINTER TO IdDesc;
+    IdDesc = RECORD
+      name: IdStr;
+      next: IdPtr;
+    END;
+    List = RECORD               (* List type *)
+      first, last, curr: IdPtr;
+    END;
+
+  PROCEDURE Init(VAR l: List);
+  (* Initialize list 'l' *)
+
+  PROCEDURE Insert(VAR l: List; name: IdStr);
+  (* Insert 'name' into 'l' at the rear *)
+
+  PROCEDURE Replace(VAR l: List; name: IdStr; ins: List);
+  (* Searches through list 'l', the first occurence of 'name' is deleted
+     and list 'ins' is inserted in its place *)
+
+  PROCEDURE GetNext(VAR l: List; VAR name: IdStr);
+  (* Return the next element of 'l' in 'name'. If end of list is reached,
+     empty string is returned, and the next call to GetNext will return
+     the frist element of 'l' *)
+
+  PROCEDURE Kill(VAR l: List);
+  (* Dispose of list 'l' *)
+
+END Ids.

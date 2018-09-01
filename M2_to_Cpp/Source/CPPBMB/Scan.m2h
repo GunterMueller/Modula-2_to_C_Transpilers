@@ -1,0 +1,153 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Implementation of:       Scan (1.1)                                  *
+ *                          (see Scan.doc for full specification)       *
+ * Version:                 1.0                                         *
+ * Date:                    February 17, 2000                           *
+ * Conformance Test Passed: -                                           *
+ * Platform:                Every                                       *
+ * Requires:                Generic ISO C++ compiler                    *
+ *                                                                      *
+ * Authors:                 Tamas Cservenak & Zoran Budimac             *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {icervenak,zjb}@unsim.ns.ac.yu  *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Scan_m2h_
+#define _M2_Scan_m2h_
+
+#include <_m2sys.h>
+
+namespace Scan {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in oreder of reversed priority)
+   */
+
+   const CARDINAL noError         = 0; /* No Error */
+   const CARDINAL conversionError = 1; /* Error in conversion */
+   const CARDINAL overflowError   = 2; /* Overflow */
+   const CARDINAL wrongBaseError  = 3; /* base < 2 or base > 16 */
+
+   typedef _SubrangeType<CARDINAL, 2, 16> Base; /* Base for numbers */
+
+   BOOLEAN Bool(_ARRAYOF<CHAR> s);
+      /* Returns boolean representation of string 's', if possible.
+         Strings 's' begins with 'TRUE' or 'FALSE'.
+      */
+
+   INTEGER Int(_ARRAYOF<CHAR> s);
+      /* Returns integer representation of string 's', if possible.
+         String 's' begins with the fllowing form:
+         ['-'] digit {digit} (in EBNF), where digit = 0|1|2|...|8|9.
+      */
+
+   LONGINT LongInt(_ARRAYOF<CHAR> s);
+      /* Returns long integer representation of string 's', if possible.
+         String 's' begins with the fllowing form:
+         ['-'] digit {digit} (in EBNF), where digit = 0|1|2|...|8|9.
+      */
+
+   CARDINAL Card(_ARRAYOF<CHAR> s);
+      /* Returns cardinal representation of string 's', if possible.
+         String 's' begins with the following form: digit {digit} (in EBNF),
+         where digit = 0|1|2|...|8|9.
+      */
+
+   LONGCARD LongCard(_ARRAYOF<CHAR> s);
+      /* Returns long integer representation of string 's', if possible.
+         String 's' begins with the following form: digit {digit} (in EBNF),
+         where digit = 0|1|2|...|8|9.
+      */
+
+   REAL Real(_ARRAYOF<CHAR> s);
+      /* Returns real representation of string 's', if possible.
+         String 's' begins with the following form:
+         ['-'] digit {digit} ('.' [{digit}] | ['E' ['+'|'-'] digit {digit}])
+         (in EBNF) where digit = 0|1|2|...|8|9.
+
+         Absolute difference between number converted by this procedure
+         and number converted by the compiler must be less then 1.0E-30.
+      */
+
+   LONGREAL LongReal(_ARRAYOF<CHAR> s);
+      /* Returns long real representation of string 's', if possible.
+         String 's' begins with the following form:
+         ['-'] digit {digit} ['.' {digit}] ['E' ['+'|'-'] digit {digit}]
+         (in EBNF) where digit = 0|1|2|...|8|9.
+
+         Absolute difference between number converted by this procedure
+         and number converted by the compiler must be less then 1.0E-30.
+      */
+
+   INTEGER IntB(_ARRAYOF<CHAR> s, Base base);
+      /* Returns integer representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: ['-'] digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+      */
+
+   LONGINT LongIntB(_ARRAYOF<CHAR> s, Base base);
+      /* Returns long integer representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: ['-'] digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+      */
+
+   CARDINAL CardB(_ARRAYOF<CHAR> s, Base base);
+      /* Returns cardinal representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+      */
+
+   LONGCARD LongCardB(_ARRAYOF<CHAR> s, Base base);
+      /* Returns long integer representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+      */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+   struct _ModuleBody {
+      _ModuleBody()  { BEGIN(); }
+      ~_ModuleBody() { FINALLY(); }
+
+      void BEGIN();
+      void FINALLY();
+   };
+
+   _ModuleBody _body;
+
+} // Scan
+
+#endif

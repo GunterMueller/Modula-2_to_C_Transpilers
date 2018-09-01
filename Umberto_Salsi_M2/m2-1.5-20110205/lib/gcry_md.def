@@ -1,0 +1,54 @@
+DEFINITION MODULE gcry_md
+
+(* Message digest algorithms from the libgcrypt library. See
+http://www.gnupg.org for details. *)
+
+IMPORT gcry_common
+
+TYPE
+
+	HD = RECORD (* private *) END
+
+	ALGOS = (
+		NONE    = 0,
+		MD5     = 1,
+		SHA1    = 2,
+		RMD160  = 3,
+		MD2     = 5,
+		TIGER   = 6,  (* TIGER/192. *)
+		HAVAL   = 7,  (* HAVAL, 5 pass, 160 bit. *)
+		SHA256  = 8,
+		SHA384  = 9,
+		SHA512  = 10,
+		MD4     = 301,
+		CRC32   = 302,
+		CRC32_RFC1510 = 303,
+		CRC24_RFC2440 = 304
+	)
+
+	FLAGS = (
+		FLAG_SECURE = 1, (* Allocate all buffers in "secure" memory. *)
+		FLAG_HMAC   = 2  (* Make an HMAC out of this algorithm. *)
+	)
+
+
+FUNCTION Open(algo: ALGOS, flags: FLAGS): HD
+
+FUNCTION Write(h: HD, s: STRING)
+
+FUNCTION Close(h: HD): STRING
+
+
+(**********************************************************************
+	MODULE gcrypt_md_example
+	IMPORT m2, gcrypt_md, encode
+	VAR h: HD
+	BEGIN
+		h = Open(SHA1, 0)
+		Write(h, "Computing the digest is ")
+		Write(h, "really simple.")
+		print("digest = " + HexEncode( Close(h) ) + "\n")
+	END
+**********************************************************************)
+
+END

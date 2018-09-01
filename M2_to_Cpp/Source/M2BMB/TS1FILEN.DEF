@@ -1,0 +1,19 @@
+(* -------------------------------------------------------------------
+    This module is internally needed by the implementation of BMB
+    Cross Platform 'FileName' module. It contains operations for
+    deleting and renaming the files. Operations are characteristic for
+    80x86/MS-DOS platform and means for doing them in
+    Top Speed Modula-2 ver. 1.x.
+
+    by Zoran Budimac, December, 1996
+    ------------------------------------------------------------------ *)
+
+DEFINITION MODULE TS1FileNames;
+
+PROCEDURE Delete(name: ARRAY OF CHAR);
+   (* Delets the file with name 'name' *)
+
+PROCEDURE Rename(Name,newname: ARRAY OF CHAR);
+   (* Renames th efile with the name 'name' to the 'newname' *)
+
+END TS1FileNames.

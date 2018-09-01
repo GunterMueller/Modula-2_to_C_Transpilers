@@ -1,0 +1,6 @@
+(* file add14d.def *)
+(* see file test14d.mod *)
+DEFINITION MODULE add14d;
+ VAR
+    x: INTEGER;
+ END add14d.

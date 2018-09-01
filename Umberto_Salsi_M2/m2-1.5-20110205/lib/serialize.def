@@ -1,0 +1,72 @@
+DEFINITION MODULE serialize
+
+TYPE
+	SERBUF = RECORD
+		s: STRING
+		i: INTEGER
+	END
+
+
+FUNCTION OpenWrite(): SERBUF
+FUNCTION WriteBoolean(sb: SERBUF, b: BOOLEAN)
+FUNCTION WriteInteger(sb: SERBUF, i: INTEGER)
+FUNCTION WriteReal(sb: SERBUF, r: REAL)
+FUNCTION WriteString(sb: SERBUF, s: STRING)
+FUNCTION WriteArrayOfString(sb: SERBUF, a: ARRAY OF STRING)
+FUNCTION GetResult(b: SERBUF): STRING
+
+
+(*******
+FUNCTION WriteArray(sb: SERBUF, a: ARRAY OF E,
+	WriteE: FUNCTION (sb: SERBUF, e: E))
+# FIXME: Non esiste il tipo "FUNCTION".
+VAR i: INTEGER
+BEGIN
+	IF a = NIL THEN
+		WriteBoolean(sb, TRUE)
+		RETURN
+	END
+	WriteBoolean(sb, FALSE)
+	WriteInteger(sb, count(a))
+	FOR i=0 TO count(a)-1 DO
+		WriteE(sb, a[i])
+	END
+END
+
+
+FUNCTION ReadArray(sb: SERBUF, ReadE: FUNCTION (sb: SERBUF): E): ARRAY OF E
+VAR i: INTEGER
+BEGIN
+	IF ReadBoolean(sb) THEN
+		RETURN NIL
+	END
+	FOR i=0 TO ReadInteger(sb)-1 DO
+		# FIXME: il compilatore qui deve generare codice diverso a seconda
+		# che il tipo E sia semplice o puntatore.
+		a[i] = ReadE(sb)
+	END
+	RETURN a
+END
+
+FIXME: Per i RECORD le cose sono piu' difficili ancora, perche' non conosco
+a priori ne' il numero dei campi, ne' l'ordine, ne' il tipo.
+
+FUNCTION WriteR(sb: SERBUF, r: R)
+BEGIN
+END
+
+FUNCTION ReadR(sb:SERBUF): R
+BEGIN
+END
+
+*********)
+
+
+FUNCTION OpenRead(s: STRING): SERBUF
+FUNCTION ReadBoolean(sb: SERBUF): BOOLEAN
+FUNCTION ReadInteger(sb: SERBUF): INTEGER
+FUNCTION ReadReal(sb: SERBUF): REAL
+FUNCTION ReadString(sb: SERBUF): STRING
+FUNCTION ReadArrayOfString(sb: SERBUF): ARRAY OF STRING
+
+END

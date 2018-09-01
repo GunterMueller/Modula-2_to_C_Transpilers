@@ -1,0 +1,67 @@
+(* **************************************************************** *
+ *                 BMB Modula-2 Cross-Platform Library              *
+ *                                                                  *
+ * Implementation of:       FileRd (1.1)                            *
+ *                          (See FileRd.doc for full specification) *
+ * Version:                 1.0                                     *
+ * Date:                    February 27, 1996                       *
+ * Conformance Test Passed: -                                       *
+ * Platform:                DOS/80x86                               *
+ * Requires:                TopSpeed Modula-2 Compiler ver. 1.xx    *
+ *                                                                  *
+ * Author:                      Zoran Budimac                       *
+ *                              University of Novi Sad, Yugoslavia  *
+ *                              e-mail: zjb@unsim.ns.ac.yu          *
+ ****************************************************************** *)
+
+DEFINITION MODULE FileRd;
+IMPORT File, Scan;
+
+   PROCEDURE Bool(f: File.T): BOOLEAN;
+      (* Reads a boolean from file 'f', previously skipping all blanks *)
+
+   PROCEDURE Int(f: File.T): INTEGER;
+      (* Reads an integer from file 'f', previously skipping all blanks *)
+
+   PROCEDURE LongInt(f: File.T): LONGINT;
+      (* Reads a long integer from file 'f', previously skipping all blanks *)
+
+   PROCEDURE Card(f: File.T): CARDINAL;
+      (* Reads a cardinal from file 'f', previously skipping all blanks *)
+
+   PROCEDURE LongCard(f: File.T): LONGCARD;
+      (* Reads a long cardinal from file 'f', previously skipping all blanks *)
+
+   PROCEDURE Real(f: File.T): REAL;
+      (* Reads a real from file 'f', previously skipping all blanks *)
+
+   PROCEDURE LongReal(f: File.T): LONGREAL;
+      (* Reads a long real from file 'f', previously skipping all blanks *)
+
+   PROCEDURE IntB(f: File.T; base: Scan.Base): INTEGER;
+      (* Reads an integer from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE LongIntB(f: File.T; base: Scan.Base): LONGINT;
+      (* Reads a long integer from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE CardB(f: File.T; base: Scan.Base): CARDINAL;
+      (* Reads a cardinal from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE LongCardB(f: File.T; base: Scan.Base): LONGCARD;
+      (* Reads a long cardinal from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE Bin(f: File.T; VAR bin: ARRAY OF BYTE);
+      (* Fills in an array of bytes 'bin' from a file 'f' *)
+
+CONST
+   Char = File.RdChar;
+   Line = File.RdLine;
+   Ln   = File.RdLn;
+
+END FileRd.
+
+

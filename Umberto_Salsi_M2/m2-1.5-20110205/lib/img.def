@@ -1,0 +1,90 @@
+DEFINITION MODULE img
+(*
+	Create an image in GIF format. The image is stored in the file
+	"img-tmp.gif" of the current directory. Basically, this module
+	is used only for the examples of the WEB site www.icosaedro.it/m2
+	to give some graphic capabilities.
+*)
+
+TYPE IMG = FORWARD
+
+FUNCTION Open(VAR img: IMG, width: INTEGER, height: INTEGER)
+(*
+	Create a new IMG object that holds a GIF of the given size.
+	The image is initially black, the current color is black and
+	the drawing pen is located at (0,0). The origin is located
+	in the top-left corner.
+*)
+
+FUNCTION SetColor(img: IMG, red: INTEGER, green: INTEGER, blue: INTEGER)
+(*
+	Set the pen color. Each color component must be between 0 (darker)
+	and 255 (brightner).
+*)
+
+FUNCTION SetFont(img: IMG, font: INTEGER)
+(*
+	Set the font to be used by String():
+	0 = 5x8 points (default)
+	1 = 6x12
+	2 = 7x13 bold
+	3 = 8x16
+	4 = 9x15 bold
+*)
+
+FUNCTION MoveTo(img: IMG, x: INTEGER, y: INTEGER)
+FUNCTION Move(img: IMG, dx: INTEGER, dy: INTEGER)
+(*
+	Absolute and relative motion of the drawing pen.
+*)
+
+FUNCTION LineTo(img: IMG, x: INTEGER, y: INTEGER)
+FUNCTION Line(img: IMG, dx: INTEGER, dy: INTEGER)
+(*
+	Absolute and relative motion of the pen. Draw a line using the
+	current pen color.
+*)
+
+FUNCTION DashedLineTo(img: IMG, x: INTEGER, y: INTEGER)
+FUNCTION DashedLine(img: IMG, dx: INTEGER, dy: INTEGER)
+(*
+	Absolute and relative motion of the pen. Draw a dashed line
+	using the current pen color.
+*)
+
+FUNCTION Rect(img: IMG, w: INTEGER, h: INTEGER)
+(*
+	Draw a rectangle 'w' pixel wide, 'h' pixel tall using the current
+	pen color. The top-left corner is the current pen position. The
+	pen position isn't changed.
+*)
+
+FUNCTION FillRect(img: IMG, w: INTEGER, h: INTEGER)
+(*
+	Like Rect(), but the rectangle is filled with the current pen color.
+*)
+
+FUNCTION Circle(img: IMG, d: INTEGER)
+(*
+	Draw a circle of diameter 'd' pixel centered at the current
+	pen position.
+*)
+
+FUNCTION FillCircle(img: IMG, d: INTEGER)
+(*
+	Same as Circle(), but the circle is filled with the current
+	pen color.
+*)
+
+FUNCTION String(img: IMG, s: STRING)
+(*
+	Draw a string at the current pen position using the current
+	pen color.
+*)
+
+FUNCTION Close(img: IMG)
+(*
+	The file is closed.
+*)
+
+END

@@ -1,0 +1,28 @@
+DEFINITION MODULE MathLib0;
+(* sqrt,exp,ln,sin,cos,arctan,entier,real are retained for compatibility *)
+
+PROCEDURE sqrt(x:REAL):REAL;
+PROCEDURE longsqrt(x:LONGREAL):LONGREAL;
+
+PROCEDURE exp(x:REAL):REAL;
+PROCEDURE longexp(x:LONGREAL):LONGREAL;
+
+PROCEDURE ln(x:REAL):REAL;
+PROCEDURE longln(x:LONGREAL):LONGREAL;
+
+PROCEDURE sin(x:REAL):REAL;
+PROCEDURE longsin(x:LONGREAL):LONGREAL;
+
+PROCEDURE cos(x:REAL):REAL;
+PROCEDURE longcos(x:LONGREAL):LONGREAL;
+
+PROCEDURE arctan(x:REAL):REAL;
+PROCEDURE longarctan(x:LONGREAL):LONGREAL;
+
+PROCEDURE realconv(x:INTEGER):REAL;
+PROCEDURE longrealconv(x:LONGINT):LONGREAL;
+
+PROCEDURE entier(x:REAL):INTEGER;
+PROCEDURE longentier(x:LONGREAL):LONGINT;
+
+END MathLib0.

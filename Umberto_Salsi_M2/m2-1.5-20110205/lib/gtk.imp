@@ -1,0 +1,278 @@
+IMPLEMENTATION MODULE gtk
+
+(*
+
+	http://developer.gnome.org
+
+	Convention on function names
+	----------------------------
+
+	From M2 name to C name:
+
+		- add "gtk" in front
+		- add an underscore in front of any upper-case letter
+		- convert any upper-case letter to lower-case
+		Example: BoxPackStart() --> gtk_box_pack_start()
+
+	From C name to M2 name:
+
+		- remove the initial "gtk_"
+		- convert any letter following an underscore to uppercase
+		- remove all the unserscores
+
+	Example:  BoxPackStart()  M2<-->C  gtk_box_pack_start()
+
+
+	These linker options were mostly given by the command:
+
+		gtk-config --cflags --libs
+
+	Check your system for differences.
+
+	NOTA: se uso MK_ZSTRING(), ctrl che la stringa non sia NIL.
+*)
+
+(**** GNOME 1: ****)
+(****
+$$ linker options: -I/usr/include/gtk-1.2 -I/usr/include/glib-1.2
+$$ linker options: -I/usr/lib/glib/include -I/usr/X11R6/include
+$$ linker options: -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic
+$$ linker options: -lgmodule -lglib -ldl -lXext -lX11 -lm
+$#include <gtk/gtk.h>
+$#include <glib.h>
+****)
+
+(**** GNOME 2: ****)
+$$ linker options: -I/usr/include/atk-1.0
+$$ linker options: -I/usr/include/glib-2.0
+$$ linker options: -I/usr/include/gtk-2.0
+$$ linker options: -I/usr/include/pango-1.0
+$$ linker options: -I/usr/lib/glib-2.0/include
+$$ linker options: -I/usr/lib/gtk-2.0
+$$ linker options: -I/usr/lib/gtk-2.0/include
+$$ linker options: -L/usr/X11R6/lib
+$$ linker options: -L/usr/lib
+$$ linker options: -lX11
+$$ linker options: -lXext
+$$ linker options: -ldl
+$$ linker options: -lgdk-x11-2.0
+$$ linker options: -lgtk-x11-2.0
+$$ linker options: -lglib-2.0
+$$ linker options: -lgconf-2
+$$ linker options: -lgmodule
+$$ linker options: -lm
+$$ linker options: -rdynamic
+$#include <glib.h>
+$#include <gtk/gtk.h>
+
+
+$	char * ToZstring(STRING *s)
+$	{
+$		unsigned char *z;
+$
+$		if( s == NULL )
+$			return "NIL";
+$
+$		z = M2_MALLOC_ATOMIC(s->len + 1);
+$		memcpy(z, &s->s, s->len);
+$		z[s->len] = 0;
+$		return z;
+$	}
+
+
+FUNCTION Init(VAR args: ARRAY OF STRING)
+$ int argc = 2;
+$ char **argv;
+$ GMemVTable m;
+BEGIN
+	# FIXME: we must use args
+	mark(args)
+
+$	m.malloc = M2_MALLOC;
+$	m.realloc = M2_REALLOC;
+$	m.free = M2_FREE;
+$	m.calloc = NULL;
+$	m.try_malloc = NULL;
+$	m.try_realloc = NULL;
+$	g_mem_set_vtable(&m);
+$
+$	argv = M2_MALLOC(2 * sizeof(char *));
+$	argv[0] = "pippo";
+$	argv[1] = "x";
+$	gtk_init(&argc, &argv);
+END
+
+
+$#define gtk_WindowNew()  gtk_window_new(GTK_WINDOW_TOPLEVEL)
+
+$#define gtk_WidgetSetUsize(w, width, height) \
+$	gtk_widget_set_usize(w, width, height)
+
+$#define gtk_WindowSetTitle(w, t) \
+$	gtk_window_set_title(w, ToZstring(t))
+
+$#define gtk_WidgetShow(w) \
+$	gtk_widget_show(w)
+
+$#define gtk_SignalConnect(w, signal, func, data) \
+$	gtk_signal_connect(GTK_OBJECT(w), \
+$		ToZstring(signal), \
+$		GTK_SIGNAL_FUNC(func), \
+$		data)
+
+$#define gtk_SignalConnect2(w, signal, func, data) \
+$	gtk_signal_connect(GTK_OBJECT(w), \
+$		ToZstring(signal), \
+$		GTK_SIGNAL_FUNC(func), \
+$		data)
+
+$#define gtk_HboxNew(homogeneus, spacing) \
+$	gtk_hbox_new(homogeneus, spacing)
+
+$#define gtk_VboxNew(homogeneus, spacing) \
+$	gtk_vbox_new(homogeneus, spacing)
+
+$#define gtk_ContainerAdd(w, c) \
+$	gtk_container_add(w, c)
+
+$#define gtk_ContainerSetBorderWidth(w, border) \
+$	gtk_container_set_border_width(w, border)
+
+$#define gtk_ButtonNew() \
+$	gtk_button_new()
+
+$#define gtk_LabelNew(label) \
+$	gtk_label_new( ToZstring(label) )
+
+$#define gtk_ObjectSetData(w, s, d) \
+$	gtk_object_set_data(w, ToZstring(s), d)
+
+$#define gtk_ButtonNewWithLabel(label) \
+$	gtk_button_new_with_label( ToZstring(label) )
+
+$#define gtk_ButtonPressed(b) \
+$	gtk_button_pressed(b)
+
+$#define gtk_ButtonReleased(b) \
+$	gtk_button_released(b)
+
+$#define gtk_ButtonClicked(b) \
+$	gtk_button_clicked(b)
+
+$#define gtk_CheckButtonNew() \
+$	gtk_check_button_new()
+
+$#define gtk_CheckButtonNewWithLabel(label) \
+$	gtk_check_button_new_with_label( ToZstring(label) )
+
+(* Only on GTK 2
+$#define gtk_CheckButtonNewWithMnemonic(): Widget
+(* MACRO *)
+BEGIN
+$	return gtk_check_button_new_with_mnemonic()
+END
+*)
+
+$#define gtk_RadioButtonNew(group) \
+$	gtk_radio_button_new(group)
+
+$#define gtk_RadioButtonNewWithLabel(group, label) \
+$	gtk_radio_button_new_with_label(group, ToZstring( label ) )
+
+$#define gtk_RadioButtonGetGroup(radio_button) \
+$	gtk_radio_button_group(radio_button)
+#
+# FIXME: In 2.0 this name changed to gtk_radio_button_get_group().
+#
+
+$#define gtk_ToggleButtonSetActive(button, active) \
+$	gtk_toggle_button_set_active(button, active)
+
+$#define gtk_EntryNew() \
+$	gtk_entry_new()
+
+$#define gtk_EntryNewWithMaxLength(max) \
+$	gtk_entry_new_with_max_length(max)
+
+$#define gtk_EntrySetText(entry, text) \
+$	gtk_entry_set_text(entry, ToZstring(text) )
+
+$#define gtk_EntryGetText(entry) \
+$	new_STRING2( gtk_entry_get_text(entry) )
+
+$#define gtk_DrawingAreaNew() \
+$	gtk_drawing_area_new()
+
+$#define gtk_DrawingAreaSize(w, width, height) \
+$	gtk_drawing_area_size(w, width, height)
+
+$#define gtk_BoxPackStart(box, child, expand, fill, padding) \
+$	gtk_box_pack_start(box, child, expand, fill, padding)
+
+$#define gtk_BoxPackEnd(w, b, b1, b2, i) \
+$	gtk_box_pack_end(w, b, b1, b2, i)
+
+(**** NON CI SONO
+
+	FUNCTION ComboBoxNew(): Widget
+	(* MACRO *)
+	BEGIN
+	$	return gtk_combo_box_new();
+	END
+
+
+	FUNCTION ComboBoxGetActive(combo_box: Widget): INTEGER
+	(* MACRO *)
+	BEGIN
+	$	return gtk_combo_box_get_active(gtk_combo_box);
+	END
+
+
+	FUNCTION ComboBoxSetActive(combo_box: Widget, index: INTEGER): INTEGER
+	(* MACRO *)
+	BEGIN
+	$	gtk_combo_box_set_active(gtk_combo_box, gtk_index);
+	END
+
+****)
+
+$#define gtk_MenuBarNew() \
+$	gtk_menu_bar_new()
+
+$#define gtk_MenuBarAppend(menu, child) \
+$	gtk_menu_bar_append(menu, child)
+
+$#define gtk_MenuNew() \
+$	gtk_menu_new()
+
+$#define gtk_MenuSetTitle(menu, title) \
+$	gtk_menu_set_title(menu, ToZstring(title))
+
+$#define gtk_MenuItemNew() \
+$	gtk_menu_item_new()
+
+$#define gtk_MenuItemNewWithLabel(label) \
+$	gtk_menu_item_new_with_label( ToZstring(label) )
+
+$#define gtk_MenuItemSetSubmenu(menu, submenu) \
+$	gtk_menu_item_set_submenu(menu, submenu)
+
+$#define gtk_CheckMenuItemSetActive(item, active) \
+$	gtk_check_menu_item_set_active(item, active)
+
+$#define gtk_MenuAppend(menu, child) \
+$	gtk_menu_append(menu, child)
+
+$#define gtk_Main() \
+$	gtk_main()
+
+$#define gtk_MainQuit() \
+$	gtk_main_quit()
+
+$#define gtk_EventsPending() \
+$	gtk_events_pending()
+
+$#define gtk_MainIteration() \
+$	gtk_main_iteration()
+
+END

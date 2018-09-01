@@ -1,0 +1,68 @@
+IMPLEMENTATION MODULE net
+
+$#include <sys/socket.h>
+$#include <netdb.h>
+####$extern int h_errno;
+
+(* putline() attiva il flag socketNeedFlush dopo ogni output.
+getline() controlla questo flag prima di richiedere l'input dal server e,
+se attivo, invoca fflush() sul socket: questo perche' getline() tipicam.
+richiede la risposta, ma non ci puo' essere risposta se il server non ha
+ancora ricevuto la domanda... *)
+
+
+FUNCTION open_tcp(host: STRING, port: INTEGER): INTEGER
+RAISE ERROR
+
+(****
+	FIXME: gethostbyname() ritorna un codice di err. non traducibile
+	con strerror(): per esempio, se l'host non esiste stampa:
+	"No such file or directory (code 2)"
+****)
+
+VAR
+	s: INTEGER
+$	struct sockaddr_in server;
+$	struct hostent *hp;
+$	char *h;
+
+BEGIN
+	IF host = NIL THEN
+		HALT("NIL hostname")
+	END
+$	net_s = socket(PF_INET, SOCK_STREAM, 0);
+	IF s < 0 THEN
+		RAISE ERROR errno() "socket(): " + host + ", port " + itos(port)
+		+ ": " + strerror()
+		RETURN -1
+	END
+$	server.sin_family = AF_INET;
+$	MK_ZSTRING(h, net_host);
+$	hp = gethostbyname(h);
+$	if( hp == 0 ){
+$		close(net_s);
+$       errno = h_errno;
+		RAISE ERROR errno() "gethostbyname(): " + strerror()
+		RETURN -1
+$   }
+$	memcpy(&server.sin_addr, hp->h_addr, hp->h_length);
+$	server.sin_port = htons(net_port);
+$	if( connect(net_s, (struct sockaddr *)&server, sizeof server) == -1 ){
+$		close(net_s);
+		RAISE ERROR errno() "connect(): " + host + ":" + itos(port)
+			+ ": " + strerror()
+		RETURN -1
+$	}
+$   /*****
+$	socketStream = net_s;
+$	socketFile = fdopen(net_s, "rb+");
+$	if( socketFile == NULL ){
+$		close(net_s);
+$		return -1;
+$	}
+$	socketNeedFlush = 0;
+$   *****/
+	RETURN s
+END
+
+END

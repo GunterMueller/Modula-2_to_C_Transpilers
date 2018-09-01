@@ -1,0 +1,129 @@
+IMPLEMENTATION MODULE date
+
+IMPORT m2, str
+
+$#include <time.h>
+
+
+FUNCTION Date2String(a: DATE, fmt: FMT): STRING
+VAR y, m, d: STRING
+BEGIN
+	y = itos(a[y])   y = repeat("0", 4-length(y)) + y
+	m = itos(a[m])   m = repeat("0", 2-length(m)) + m
+	d = itos(a[d])   d = repeat("0", 2-length(d)) + d
+	IF fmt = european THEN
+		RETURN d + "/" + m + "/" + y
+	ELSIF fmt = us THEN
+		RETURN m + "/" + d + "/" + y
+	ELSE
+		RETURN y + "-" + m + "-" + d
+	END
+END
+
+
+FUNCTION String2Date(s: STRING, fmt: FMT): DATE
+VAR d, m, y: INTEGER  a: ARRAY OF STRING
+BEGIN
+	IF NOT match_array(s, "^([0-9]{1,4})[\\-/]([0-9]{1,4})[\\-]([0-9]{1,4})$", a)
+	THEN
+		RETURN NIL
+	END
+	IF fmt = european THEN
+		y = stoi(a[2])   m = stoi(a[1])   d = stoi(a[0])
+	ELSIF fmt = us THEN
+		y = stoi(a[2])   m = stoi(a[1])   d = stoi(a[0])
+	ELSE
+		y = stoi(a[0])   m = stoi(a[1])   d = stoi(a[2])
+	END
+	(* FIXME: check for ranges of validity *)
+	IF (y < y_min) OR (y > y_max)
+	OR (m < 1) OR (m > 12)
+	OR (d < 1) THEN
+		RETURN NIL
+	END
+	IF ((m = 4) OR (m = 6) OR (m = 9) OR (m = 11)) AND (d > 30)
+	OR (m <> 2) AND (d > 31) THEN
+		RETURN NIL
+	END
+	IF m = 2 THEN
+		IF (y MOD 4 = 0) AND (y MOD 100 <> 0)
+		OR (y MOD 100 = 0) AND (y MOD 400 = 0) THEN
+			(* leap year: *)
+			IF d > 29 THEN
+				RETURN NIL
+			END
+		ELSE
+			IF d > 28 THEN
+				RETURN NIL
+			END
+		END
+	END
+	RETURN {y, m, d}
+END
+
+
+FUNCTION Compare(a: DATE, b: DATE): INTEGER
+VAR d: INTEGER
+BEGIN
+	d = b[y] - a[y]
+	IF d <> 0 THEN  RETURN d  END
+	d = b[m] - a[m]
+	IF d <> 0 THEN  RETURN d  END
+	d = b[d] - a[d]
+	RETURN d
+END
+
+
+FUNCTION Diff(a: DATE, b: DATE): INTEGER
+	
+	FUNCTION nn(x: DATE): INTEGER
+	(* Giorni trascorsi dal 4000 a.C. circa fino a x *)
+	VAR y, m, d, a, b: INTEGER
+	BEGIN
+		y = x[y]   m = x[m]    d = x[d]
+		IF m < 3 THEN
+			y = y - 1
+			m = m + 12
+		END
+		a = y DIV 100
+		b = 2 - a + a DIV 4
+		RETURN rtoi(365.25*(itor(y)+4716.0))
+			+rtoi(30.6001*(itor(m)+1.0))+d+b-1524
+	END
+
+BEGIN
+	RETURN nn(b) - nn(a)
+END
+
+
+FUNCTION WeekDay(d: DATE): INTEGER
+VAR s, r: INTEGER
+BEGIN
+	IF d[m] < 3 THEN
+		d[m] = d[m]+12
+		d[y] = d[y]-1
+	END
+	s = d[d] + 2*d[m] + 3*(d[m]+1) DIV 5 + d[y] + d[y] DIV 4
+	IF d[y] > 1582 THEN
+		r = d[y] DIV 100 - d[y] DIV 400 - 2
+	ELSE
+		r = 0
+	END
+	RETURN (s - r + 5) MOD 7
+END
+
+
+FUNCTION Today(): DATE
+VAR y, m, d: INTEGER
+$ time_t t;
+$ struct tm tt;
+BEGIN
+$	t = time(NULL);
+$	localtime_r(&t, &tt);
+$	date_y = tt.tm_year + 1900;
+$	date_m = tt.tm_mon + 1;
+$	date_d = tt.tm_mday;
+	RETURN {y,m,d}
+END
+
+END

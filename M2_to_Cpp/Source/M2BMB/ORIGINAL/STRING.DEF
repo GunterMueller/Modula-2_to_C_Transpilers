@@ -1,0 +1,64 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       String (1.1)                              *
+ *                          (see String.doc for full specification!)  *
+ * Version:                 1.0                                       *
+ * Date:                    July 11, 1996                             *
+ * Conformance Test Passed: July 11, 1996                             *
+ * Platform:                Every                                     *
+ * Requires:                Generic Modula-2 Compiler                 *
+ * To do:                   Future implementations should more rely   *
+ *                          on direct memory manipulations (BMB       *
+ *                          module Mem)                               *
+ *                                                                    *
+ * Author:                      Tamas Cservenak                       *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: icervenak@unsim.ns.ac.yu      *
+ * Modifications:               Zoran Budimac                         *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: zjb@unsim.ns.ac.yu            *
+ * ------------------------------------------------------------------ *)
+
+DEFINITION MODULE String;
+
+CONST
+   (* Error codes. Function Error() returns one of these *)
+   noError            = 0;
+   noRoomError        = 1;
+   wrongPositionError = 2;
+
+PROCEDURE SubString(s, p: ARRAY OF CHAR; VAR pos: CARDINAL): BOOLEAN;
+
+PROCEDURE Caps(VAR s: ARRAY OF CHAR);
+
+PROCEDURE Append(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR);
+
+PROCEDURE Concat(VAR s: ARRAY OF CHAR; s1, s2: ARRAY OF CHAR);
+
+PROCEDURE Copy(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR);
+
+PROCEDURE Equal(s, p: ARRAY OF CHAR): BOOLEAN;
+
+PROCEDURE LEq(s, p: ARRAY OF CHAR): BOOLEAN;
+
+PROCEDURE GEq(s, p: ARRAY OF CHAR): BOOLEAN;
+
+PROCEDURE Length(s: ARRAY OF CHAR): CARDINAL;
+
+PROCEDURE Insert(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR; pos: CARDINAL);
+
+PROCEDURE Delete(VAR s: ARRAY OF CHAR; from, to: CARDINAL);
+
+PROCEDURE Slice(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR;
+                from, to: CARDINAL);
+
+PROCEDURE Error(): CARDINAL;
+
+TYPE
+   ErrorHandler = PROCEDURE (ARRAY OF CHAR);
+VAR
+   errorHandler : ErrorHandler;
+
+END String.
+

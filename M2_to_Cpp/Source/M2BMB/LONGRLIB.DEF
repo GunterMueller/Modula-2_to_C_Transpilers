@@ -1,0 +1,48 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       LongRLib (1.1)                            *
+ *                          (See LongRlib.doc for full specification!)*
+ * Version:                 1.0                                       *
+ * Date:                    February 28, 1995                         *
+ * Conformance Test Passed: -                                         *
+ * Platform:                DOS/80x86                                 *
+ * Requires:                TopSpeed Modula-2 Compiler ver. 1.xx      *
+ *                                                                    *
+ * Author:                      Zoran Budimac                         *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: zjb@unsim.ns.ac.yu            *
+ **********************************************************************)
+
+DEFINITION MODULE LongRLib;
+IMPORT MATHLIB;    (* TopSpeed Math Library *)
+
+CONST
+   (* Error codes. Function Error() returns one of these *)
+    noError         = 0;     (* No error ocurred *)
+    arithmeticError = 1;     (* Error in floating point opeartion *)
+
+CONST
+   Sin   = MATHLIB.Sin;
+   Cos   = MATHLIB.Cos;
+   SinH  = MATHLIB.SinH;
+   CosH  = MATHLIB.CosH;
+   Exp   = MATHLIB.Exp;
+   Log   = MATHLIB.Log;
+   Log10 = MATHLIB.Log10;
+   ATan  = MATHLIB.ATan;
+   Sqrt  = MATHLIB.Sqrt;
+
+   PROCEDURE ATanH(x: LONGREAL): LONGREAL;
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+END LongRLib.
+
+

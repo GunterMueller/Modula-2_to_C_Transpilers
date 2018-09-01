@@ -1,0 +1,150 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       Date (1.1)                                *
+ *                          (See Date.doc for full specification)     *
+ * Version:                 1.0                                       *
+ * Date:                    November 27, 1996                         *
+ * Conformance Test Passed: -                                         *
+ * Platform:                DOS/80x86                                 *
+ * Requires:                TopSpeed Modula-2 Compiler ver. 1.xx      *
+ *                                                                    *
+ * Author:                      Zoran Budimac                         *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: zjb@unsim.ns.ac.yu            *
+ **********************************************************************)
+DEFINITION MODULE Date;
+
+   TYPE
+       T = RECORD       (* A 'date' data type *)
+              day, month, year: CARDINAL;
+           END;
+       WeekDay = [0..6];
+
+   CONST
+      noError = 0;                (* No Error *)
+      noRoomError = 1;            (* No room in destination string *)
+      conversionError = 2;        (* Error in conversion from/to date *)
+      wrongDateError = 3;         (* Impossible date generated *)
+      priviledgeError = 4;        (* Violation of system privilegdes to set/get date *)
+
+   (* Accesing the date components *)
+
+   PROCEDURE Day(d: T): CARDINAL;
+      (* Returns the day of date 'd' *)
+
+   PROCEDURE Month(d: T): CARDINAL;
+      (* Returns month of date 'd' *)
+
+   PROCEDURE Year(d: T): CARDINAL;
+      (* Returns a year of date 'd' *)
+
+   PROCEDURE SetDay(VAR d: T; n: CARDINAL);
+      (* Sets day 'n' in date 'd'
+         + Sets error codes:
+           'wrongDateError' - if 'n' < 1 or 'n' > 31
+      *)
+
+   PROCEDURE SetMonth(VAR d: T; n: CARDINAL);
+      (* Sets month 'n' in date 'd'
+         + Sets error codes:
+           'wrongDateError' - if 'n' < 1 or 'n' > 12
+      *)
+
+   PROCEDURE SetYear(VAR d: T; n: CARDINAL);
+      (* Sets year 'n' in date 'd' *)
+
+   PROCEDURE Init(VAR d: T; dd, mm, yy: CARDINAL);
+      (* Initializes a date 'd' to 'dd' days, 'mm' months
+         and 'yy' years
+         + Sets error codes:
+           'wrongDateError' - if 'd' was not properly constructed
+      *)
+
+   PROCEDURE Copy(VAR d: T; d1: T);
+      (* Copies the date 'd1' into the date 'd' *)
+
+   (* Accessing the system date *)
+
+   PROCEDURE SetSystemDate(d: T);
+      (* Sets the system date to date 'd'
+         + Sets error codes:
+           'priviledgeError' - if 'd' cannot be set due to lack of
+                               priviledges
+      *)
+
+   PROCEDURE GetSystemDate(VAR d: T);
+      (* Gets the system date in 'd'
+         + Sets error codes:
+           'priviledgeError' - if 't' cannot be set due to lack of
+                               priviledges
+      *)
+
+   (* Utilities *)
+
+   PROCEDURE IsLeapYear(y: CARDINAL): BOOLEAN;
+      (* Returns TRUE if the year 'y' is leap *)
+
+   PROCEDURE DayOfWeek(d: T): WeekDay;
+      (* Returns a day of week for date 'd'. 0 is Sunday, ... *)
+
+   (* Conversion operations *)
+
+   PROCEDURE ToString(VAR str: ARRAY OF CHAR; d: T);
+      (* Converts the date 'd' to string 'str' in the following
+         format: "yyyy/mm/dd".
+         + Sets error codes:
+           'noRoomError' - if 'd' cannot fit in 'str'
+      *)
+
+   PROCEDURE FromString(VAR d: T; str: ARRAY OF CHAR);
+      (* Converts the string 'str' from format "yyyy/mm/dd" into
+         a date 'd'
+         + Sets error codes:
+           'conversionError' - if 'str' is not in proper format,
+           'wrongDateError'  - if constructed time is not valid
+      *)
+
+   PROCEDURE Days(d: T): LONGCARD;
+      (* Returns days corresponding to date 'd' *)
+
+   PROCEDURE FromDays(VAR d: T; days: LONGCARD);
+      (* Sets 'd' to a date corresponding to 'days' *)
+
+   (* Arithmetic operations *)
+
+   PROCEDURE Inc(VAR d1: T; days: LONGCARD);
+      (* Increments date 'd1' for 'days' *)
+
+   PROCEDURE Dec(VAR d1: T; days: LONGCARD);
+      (* Decrements date 'd1' for 'days' *)
+
+   PROCEDURE Add(VAR d: T; d1, d2: T);
+      (* Adds date 'd1' and 'd2' giving 'd' *)
+
+   PROCEDURE Sub(VAR d: T; d1, d2: T);
+      (* Subtracts date 'd2' from 'd1' giving 'd' *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code for previous operation from this module.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler. *)
+END Date.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+   - 'Copy' added
+*)
+

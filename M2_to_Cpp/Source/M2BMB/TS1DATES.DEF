@@ -1,0 +1,21 @@
+(* -------------------------------------------------------------------
+    This module is internally needed by the implementation of BMB
+    Cross Platform 'Date' module. It contains operations for getting
+    and setting the system date. Operations are characteristic for
+    80x86/MS-DOS platform and means for doing them in
+    Top Speed Modula-2 ver. 1.x.
+
+    by Zoran Budimac, November, 1996
+    ------------------------------------------------------------------ *)
+DEFINITION MODULE TS1Dates;
+IMPORT Date;
+
+PROCEDURE SetSD(t: Date.T; VAR ok: BOOLEAN);
+   (* Sets system date to 'd'. 'ok' is TRUE if everything went ok *)
+
+PROCEDURE GetSD(VAR t: Date.T; VAR ok: BOOLEAN);
+   (* Gets system date and puts it in 't'. 'ok' is TRUE if
+      everything went ok *)
+
+END TS1Dates.
+

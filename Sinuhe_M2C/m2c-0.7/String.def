@@ -1,0 +1,39 @@
+DEFINITION MODULE String;
+
+ (* String is characters up to first nul character or all array *)
+ (* If result of string operation(account for nul character)    *)
+ (*    is not placed fully in array then it is truncated        *)
+ (* Assign statement may be used for copying string const       *)
+ (* Remember: first char of string has number 0                 *)
+
+ PROCEDURE Length(VAR str:ARRAY OF CHAR):CARDINAL;
+  (* Return the number of chars in str (without nul character) *)
+
+ PROCEDURE Copy(VAR s1,s2:ARRAY OF CHAR);
+  (* Copy s2 to s1 *)
+
+ PROCEDURE Compare(VAR s1,s2:ARRAY OF CHAR):INTEGER;
+  (* Compare two strings; return:             *)
+  (*   <0 if s1<s2; =0 if s1=s2; >0 if s1>s2  *)
+
+ PROCEDURE Append(VAR s1,s2:ARRAY OF CHAR);
+  (* Append s2 to s1; result is in s1 *)
+
+ PROCEDURE Insert(VAR substr,str:ARRAY OF CHAR;inx:CARDINAL);
+  (* Insert the substr into str, starting at str[inx]         *)
+  (* if str[inx] lies beyond the length of str then appending *)
+
+ PROCEDURE Extract(VAR substr,str:ARRAY OF CHAR;inx,len:CARDINAL);
+  (* Extract the substr from str, starting  at str[inx]                    *)
+  (*   with long no more then len characters.                              *)
+  (* If str[inx] lies beyond the length of str then result is empty string *)
+
+ PROCEDURE Delete(VAR str:ARRAY OF CHAR;inx,len:CARDINAL);
+  (* Delete no more than len chars from str starting at str[inx] *)
+  (* If inx>=Length(str) do nothing                              *)
+
+ PROCEDURE Pos(VAR str,substr:ARRAY OF CHAR):INTEGER;
+  (* Return the index in str of the first occurence of the substr *)
+  (*   or -1 if there are no occurences                           *)
+
+END String.

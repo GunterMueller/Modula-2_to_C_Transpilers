@@ -1,0 +1,43 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Mem                                       *
+ * Description:           Memory manipulations                      *
+ *                        (see ShortMem.Doc as well)                *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  March 8, 1996                             *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Mem;
+
+   PROCEDURE Copy(dest, source: ADDRESS; n: LONGCARD);
+      (* Copies a block of memory of 'n' bytes from
+         'source' to 'dest' *)
+
+   PROCEDURE Fill(dest: ADDRESS; n: LONGCARD; val: BYTE);
+      (* Starting from 'dest' fills 'n' bytes with 'val' *)
+
+   PROCEDURE Equal(m1, m2: ADDRESS; n: LONGCARD): BOOLEAN;
+      (* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         and 'm2' are equal *)
+
+   PROCEDURE LEq(m1, m2: ADDRESS; n: LONGCARD): BOOLEAN;
+      (* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are less than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically  *)
+
+   PROCEDURE GEq(m1, m2: ADDRESS; n: LONGCARD): BOOLEAN;
+      (* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are greater than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically  *)
+
+END Mem.
+
+

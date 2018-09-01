@@ -1,0 +1,39 @@
+/* -------------------------------------------------------------------
+    This module is internally needed by the implementation of BMB
+    Cross Platform 'Date' module. It contains operations for getting
+    and setting the system date. Operations are characteristic for the
+    DOS platform and rely on the non standard, but common dos.h
+
+    by Milos Radovanovic, June 8, 2000
+    ------------------------------------------------------------------ */
+
+#ifndef _M2_DOSDates_m2h_
+#define _M2_DOSDates_m2h_
+
+#include <_m2sys.h>
+
+#include <Date.m2h>
+
+namespace DOSDates {
+
+   void SetSD(Date::T d, BOOLEAN& ok);
+   /* Sets system date to 't'. 'ok' is TRUE if everything went ok. */
+
+   void GetSD(Date::T& d, BOOLEAN& ok);
+   /* Gets system date and puts it in 't'. 'ok' is TRUE if
+      everything went ok.
+   */
+
+   struct _ModuleBody {
+      _ModuleBody()  { BEGIN(); }
+      ~_ModuleBody() { FINALLY(); }
+
+      void BEGIN();
+      void FINALLY();
+   };
+
+   _ModuleBody _body;
+
+} // DOSDates
+
+#endif

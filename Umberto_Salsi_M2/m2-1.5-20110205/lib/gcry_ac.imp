@@ -1,0 +1,214 @@
+IMPLEMENTATION MODULE gcry_ac
+
+IMPORT gcry_common, gcry_mpi
+
+
+(**** DATA SETS: ****)
+
+FUNCTION DataNew(VAR d: DATA)
+VAR
+$	int err;
+BEGIN
+	mark(d)
+	gcry_common.Init()
+$	err = gcry_ac_data_new((gcry_ac_data_t *)gcry_ac_d);
+$	if( err != 0 ){
+		HALT("data_new() failed")
+$	}
+END
+
+
+FUNCTION DataDestroy(VAR d: DATA)
+BEGIN
+$	gcry_ac_data_destroy((gcry_ac_data_t)gcry_ac_d);
+	d = NIL
+END
+
+
+FUNCTION DataLength(data: DATA): INTEGER
+BEGIN
+	mark(data)
+$	return gcry_ac_data_length((gcry_ac_data_t) gcry_ac_data);
+END
+
+
+FUNCTION GetDataValues(data: DATA): ARRAY OF DATA_VALUE
+VAR
+	n, i, err: INTEGER
+	dv: ARRAY OF DATA_VALUE
+	name: STRING
+	value: MPI
+$	char *name;
+BEGIN
+	mark(data)
+	gcry_common.Init()
+$	gcry_ac_n = gcry_ac_data_length((gcry_ac_data_t) gcry_ac_data);
+	FOR i=0 TO n-1 DO
+$		gcry_ac_err = gcry_ac_data_get_index((gcry_ac_data_t) gcry_ac_data,
+$			0, gcry_ac_i, (const char ** ) &name,
+$			(gcry_mpi_t * ) &gcry_ac_value);
+		IF err <> 0 THEN
+			HALT("gcry_ac.GetDataValues(): " + ErrorDesc(err))
+		END
+$		gcry_ac_name = new_STRING(name, strlen(name));
+		dv[i] = {name, value}
+	END
+	RETURN dv
+END
+
+
+(**** KEYS HANDLING: ****)
+
+FUNCTION Open(algo: ALGO): HANDLE
+VAR
+$	int err;
+$	gcry_ac_handle_t h;
+BEGIN
+	mark(algo)
+	gcry_common.Init()
+$	err = gcry_ac_open(&h, gcry_ac_algo, 0);
+$	if( err != 0 ){
+		HALT("gcry_ac.Open(): failed")
+$	}
+$	return (void *) h;
+END
+
+
+FUNCTION KeyPairGenerate(h: HANDLE, nbits: INTEGER): KEY_PAIR
+VAR
+	err: INTEGER
+	kp: KEY_PAIR
+BEGIN
+	mark(h)
+	mark(nbits)
+	gcry_common.Init()
+$	gcry_ac_err = gcry_ac_key_pair_generate((gcry_ac_handle_t) gcry_ac_h,
+$		(unsigned int) gcry_ac_nbits, NULL, (gcry_ac_key_pair_t * ) & gcry_ac_kp,
+$		NULL);
+	IF err <> 0 THEN
+		HALT("gcry_ac.KeyPairGenerate(): " + ErrorDesc(err))
+	END
+	RETURN kp
+END
+
+
+FUNCTION GetKey(kp: KEY_PAIR, which: KEY_TYPE): KEY
+VAR
+$	gcry_ac_key_t k;
+BEGIN
+	mark(kp)
+	mark(which)
+	gcry_common.Init()
+$	k = gcry_ac_key_pair_extract((gcry_ac_key_pair_t) gcry_ac_kp,
+$		gcry_ac_which);
+$	return (void * ) k;
+END
+
+
+FUNCTION GetKeyData(kp: KEY_PAIR, which: KEY_TYPE): ARRAY OF DATA_VALUE
+VAR
+	ds: DATA
+$	gcry_ac_key_t k;
+BEGIN
+	mark(kp)
+	mark(which)
+	gcry_common.Init()
+$	k = gcry_ac_key_pair_extract((gcry_ac_key_pair_t) gcry_ac_kp,
+$		gcry_ac_which);
+$	gcry_ac_ds = (RECORD *) gcry_ac_key_data_get(k);
+	RETURN GetDataValues(ds)
+END
+
+
+FUNCTION Encrypt(h: HANDLE, no_blinding: BOOLEAN, public_key: KEY,
+	data_plain: MPI): DATA
+VAR
+	err: INTEGER
+	enc: DATA
+BEGIN
+	mark(h)
+	mark(no_blinding)
+	mark(public_key)
+	mark(data_plain)
+$	gcry_ac_err = gcry_ac_data_encrypt((gcry_ac_handle_t) gcry_ac_h,
+$		(gcry_ac_no_blinding)? GCRY_AC_FLAG_NO_BLINDING : 0,
+$		(gcry_ac_key_t) gcry_ac_public_key,
+$		(gcry_mpi_t) gcry_ac_data_plain,
+$		(gcry_ac_data_t * ) &gcry_ac_enc);
+	IF err <> 0 THEN
+		HALT("gcry_ac.Encrypt(): " + ErrorDesc(err))
+	END
+	RETURN enc
+END
+
+
+FUNCTION Decrypt(h: HANDLE, no_blinding: BOOLEAN, secret_key: KEY,
+	data_encrypted: DATA): MPI
+VAR
+	err: INTEGER
+	plain: MPI
+BEGIN
+	mark(h)
+	mark(no_blinding)
+	mark(secret_key)
+	mark(data_encrypted)
+$	gcry_ac_err = gcry_ac_data_decrypt((gcry_ac_handle_t) gcry_ac_h,
+$		(gcry_ac_no_blinding)? GCRY_AC_FLAG_NO_BLINDING : 0,
+$		(gcry_ac_key_t) gcry_ac_secret_key,
+$		(gcry_mpi_t * ) &gcry_ac_plain,
+$		(gcry_ac_data_t) gcry_ac_data_encrypted);
+	IF err <> 0 THEN
+		HALT("gcry_ac.Decrypt(): " + ErrorDesc(err))
+	END
+	RETURN plain
+END
+
+
+FUNCTION Sign(h: HANDLE, secret_key: KEY, data: MPI): DATA
+VAR
+	err: INTEGER
+	signature: DATA
+BEGIN
+	mark(h)
+	mark(secret_key)
+	mark(data)
+$	gcry_ac_err = gcry_ac_data_sign((gcry_ac_handle_t) gcry_ac_h,
+$		(gcry_ac_key_t) gcry_ac_secret_key,
+$		(gcry_mpi_t) gcry_ac_data,
+$		(gcry_ac_data_t * ) &gcry_ac_signature);
+	IF err <> 0 THEN
+		HALT("gcry_ac.Sign(): " + ErrorDesc(err))
+	END
+	RETURN signature
+END
+
+
+FUNCTION Verify(h: HANDLE, public_key: KEY, data: MPI, signature: DATA): BOOLEAN
+VAR
+	err: INTEGER
+BEGIN
+	mark(h)
+	mark(public_key)
+	mark(data)
+	mark(signature)
+$	gcry_ac_err = gcry_ac_data_verify((gcry_ac_handle_t) gcry_ac_h,
+$		(gcry_ac_key_t) gcry_ac_public_key,
+$		(gcry_mpi_t) gcry_ac_data,
+$		(gcry_ac_data_t) gcry_ac_signature);
+$	if( gcry_ac_err == GPG_ERR_BAD_SIGNATURE )  return 0;
+	IF err <> 0 THEN
+		HALT("gcry_ac.Verify(): " + ErrorDesc(err))
+	END
+	RETURN TRUE
+END
+
+
+FUNCTION Close(VAR h: HANDLE)
+(* Release the handle. *)
+BEGIN
+$	gcry_ac_close((gcry_ac_handle_t) *gcry_ac_h);
+	h = NIL
+END
+
+
+END

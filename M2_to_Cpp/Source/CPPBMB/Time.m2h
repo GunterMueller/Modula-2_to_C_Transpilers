@@ -1,0 +1,158 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Implementation of:       Time (1.1)                                  *
+ *                          (see Time.doc for full specification)       *
+ * Version:                 1.0                                         *
+ * Date:                    February 17, 2000                           *
+ * Conformance Test Passed: -                                           *
+ * Platform:                DOS compatible                              *
+ * Requires:                Generic ISO C++ compiler                    *
+ *                                                                      *
+ * Author:                  Zoran Budimac                               *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: zjb@unsim.ns.ac.yu              *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Time_m2h_
+#define _M2_Time_m2h_
+
+#include <_m2sys.h>
+
+namespace Time {
+
+   /* It is assumed that time is in 24-hours format */
+
+   struct T {    /* The 'time' data type */
+      CARDINAL hour, min, sec, hun;
+   };
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError         = 0; /* No Error */
+   const CARDINAL noRoomError     = 1; /* No room in destination string */
+   const CARDINAL conversionError = 2; /* Error in conversion to time */
+   const CARDINAL wrongTimeError  = 3; /* Impossible time generated */
+   const CARDINAL priviledgeError = 4; /* Violation of system privilegdes to set/get time */
+
+   /* Accesing the time components */
+
+   CARDINAL Hund(T t);
+      /* Returns hundreds of time 't'. */
+
+   CARDINAL Sec(T t);
+      /* Returns seconds of time 't'. */
+
+   CARDINAL Min(T t);
+      /* Returns minutes of time 't'. */
+
+   CARDINAL Hour(T t);
+      /* Returns hours of time 't'. */
+
+   void SetHund(T& t, CARDINAL n);
+      /* Sets hundreds 'n' of time 't'. */
+
+   void SetSec(T& t, CARDINAL n);
+      /* Sets seconds 'n' to time 't'. */
+
+   void SetMin(T& t, CARDINAL n);
+      /* Sets minutes 'n' to time 't'. */
+
+   void SetHour(T& t, CARDINAL n);
+      /* Sets hours 'n' to time 't'. */
+
+   void Init(T& t, CARDINAL hh, CARDINAL mm, CARDINAL ss, CARDINAL hd);
+      /* Sets hours of time 't' to 'hh', minutes to 'mm',
+         seconds to 'ss' and hundereds to 'hd'.
+      */
+
+   void Copy(T& t, T t1);
+      /* Copies the time 't1' into the time 't'. */
+
+   /* Accessing the system clock */
+
+   void SetSystemTime(T t);
+      /* Sets the system clock to time 't'. */
+
+   void GetSystemTime(T& t);
+      /* Gets the system time in 't'. */
+
+   /* Conversion operations */
+
+   void ToString(_ARRAYOF<CHAR>& str, T t);
+      /* Converts the time 't' to string in the following
+         format: "hh:mm:ss.hs". Every number (hh, mm, ss, hs)
+         takes exactly two places.
+      */
+
+   void FromString(T& t, _ARRAYOF<CHAR> str);
+      /* Converts the string from format "hh:mm:ss.hs" into
+         a time 't'. Numbers do not have to occupy two places,
+         and string must have at least hh:mm (the rest is considered
+         as zero if ommited).
+      */
+
+   LONGCARD Hundts(T t);
+      /* Returns hundreds corresponding to time 't'. */
+
+   void FromHundts(T& t, LONGCARD hundts);
+      /* Sets 't' to a time corresponding to 'hundts'. */
+
+   /* Arithmetic operations */
+
+   void Inc(T& t, LONGCARD hun);
+      /* Increments time 't' for 'hun' hundreds. */
+
+   void Dec(T& t, LONGCARD hun);
+      /* Decrements time 't' for 'hun' hundreds. */
+
+   void Add(T& t, T t1, T t2);
+      /* Adds time 't1' and 't2' giving 't'. */
+
+   void Sub(T& t, T t1, T t2);
+      /* Subtracts time 't2' from 't1' giving 't'. */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+   struct _ModuleBody {
+      _ModuleBody()  { BEGIN(); }
+      ~_ModuleBody() { FINALLY(); }
+
+      void BEGIN();
+      void FINALLY();
+   };
+
+   _ModuleBody _body;
+
+} // Time
+
+#endif

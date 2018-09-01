@@ -1,0 +1,27 @@
+DEFINITION MODULE unx
+
+FUNCTION getenviron(): ARRAY OF STRING
+
+FUNCTION getenv(name: STRING): STRING
+(* Return NIL if the envvar is not set. *)
+
+FUNCTION putenv(name: STRING, value: STRING)
+RAISE ERROR
+
+FUNCTION setenv(name: STRING, value: STRING, overwrite: INTEGER)
+RAISE ERROR
+
+FUNCTION unsetenv(name: STRING)
+
+FUNCTION clearenv()
+
+FUNCTION fork(): INTEGER
+RAISE ERROR
+
+FUNCTION Exec(filename: STRING, args: ARRAY OF STRING)
+RAISE ERROR
+
+FUNCTION system(cmd: STRING): INTEGER
+RAISE ERROR
+
+END

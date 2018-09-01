@@ -1,0 +1,19 @@
+DEFINITION MODULE RealConv;
+ TYPE
+  RealConvStatus=(Done,OutOfRange,BadNumber);
+ VAR
+  RCStatus:RealConvStatus;
+
+ PROCEDURE LongRealToStr(r:LONGREAL;VAR s:ARRAY OF CHAR);
+  (* Convert a long real to a string, if possible *)
+
+ PROCEDURE StrToLongReal(VAR s:ARRAY OF CHAR;VAR r:LONGREAL);
+  (* Convert a string to a long real, if possible *)
+
+ PROCEDURE StrToReal(VAR s:ARRAY OF CHAR;VAR r:REAL);
+  (* Convert a string to a real, if possible *)
+
+ PROCEDURE StrToShortReal(VAR s:ARRAY OF CHAR;VAR r:SHORTREAL);
+  (* Convert a string to a short real, if possible *)
+
+END RealConv.

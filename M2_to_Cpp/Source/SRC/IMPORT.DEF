@@ -1,0 +1,39 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Import;
+(* Implements storing and using information about qualified and unquailfied
+   imports. The internal data structure is a list of module names and
+   queues of imported identifiers *)
+
+  FROM Defs IMPORT IdStr;
+
+  PROCEDURE Init;
+  (* Initialize the internal data structure *)
+
+  PROCEDURE AddModule(VAR s: IdStr);
+  (* Add 's' (which represents a module) to the internal data structure,
+     to the rear of the list *)
+  
+  PROCEDURE AddImported(VAR s: IdStr);
+  (* Add 's' (which represents an imported identifier) to the queue at
+     the rear of the list *)
+
+  PROCEDURE NextModule(VAR s: IdStr);
+  (* Return the next module name in the list in 's'. If end of list is
+     reached, empty string is returned, and the next call to NextModule
+     will return the frist module name in the list *)
+  
+  PROCEDURE NextImported(VAR s: IdStr);
+  (* Return the next imported identifier from module returned by NextModule
+     in 's' *)
+
+  PROCEDURE IsQualified(): BOOLEAN;
+  (* Is module returned by NextModule imported qualified? *)
+  
+  PROCEDURE HasModule(VAR s: IdStr): BOOLEAN;
+  (* Was module named 's' imported in any way? *)
+
+  PROCEDURE Kill;
+  (* Dispose of the internal data structure *)
+
+END Import.

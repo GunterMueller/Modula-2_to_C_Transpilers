@@ -1,0 +1,1984 @@
+\input texinfo  @c -*-texinfo-*-
+@comment %**start of header
+@setfilename modula-2.info
+@settitle The Programming Language Modula-2
+@setchapternewpage odd
+@comment %**end of header
+@titlepage
+@sp 5
+       Niklaus Wirth
+@sp 10
+@center Report on
+@sp 2
+@center the Programming Language Modula-2
+@sp 5
+       Fourth Edition
+@sp 1
+       1988  Springer-Verlag
+@end titlepage
+
+@node Top,,(dir),(dir)
+
+@ifinfo
+
+      Niklaus Wirth
+
+
+
+
+
+
+			      Report on
+		   the Programming Language Modula-2
+
+
+
+
+
+
+      Fourth Edition
+
+      1988 Springer Verlag
+
+
+@end ifinfo
+
+@menu
+* Introduction::
+* Syntax::
+* Vocabulary and representation::
+* Declarations and scope rules::
+* Constant declarations::
+* Type declarations::
+* Variable declarations::
+* Expressions::
+* Statements::
+* Procedure declarations::
+* Modules::
+* System-dependent facilities::
+* Processes::
+* Compilation units::
+@end menu
+
+@node Introduction,Syntax,Top,Top
+@comment  node-name,  next,  previous,  up
+@chapter Introduction
+
+@comment 1. Introduction
+
+Modula-2 grew out of a practical need for a general, efficiently
+implementable systems programming language for minicomputers. Its
+ancestors are Pascal and Modula. From the latter it is inherited the
+name, the important module concept, and a systematic, modern syntax,
+from Pascal most of the rest. This includes in particular the data
+structures, i.e. arrays, records, variant records, sets, and pointers.
+Structured statements include the familiar if, case, repeat, while, for,
+and with statements. Their syntax is such that every structure ends with
+an explicit termination symbol.
+
+The language is essentially machine-independent, with the exception of
+limitations due to wordsize. This appears to be in contradiction to the
+notion of a system-programming language, in which it must be possible to
+express all operations inherent in the underlying computer. The dilemma
+is resolved with the aid of the module concept.  Machine-dependent items
+can be introduced in specific modules, and their use can thereby
+effectively be confined and isolated. In particular, the language
+provides the possibility to relax rules about data type compatibility in
+these cases. In a capable system-programming language it is possible to
+express input/output conversion procedures, file handling routines,
+storage allocators, process schedulers etc. Such facilities must
+therefore not be included as elements of the language itself, but appear
+as (so-called low-level) modules which are components of most programs
+written. Such a collection of standard modules is therefore an essential
+part of a Module-2 implementation.
+
+The concept of processes and their synchronization with signals as
+included in Modula is replaced by the lower-level notion of
+coroutines in Modula-2. It is, however, possible to formulate a
+(standard) module that implements such processes and signals. The
+advantage of not including them in the language itself is that the
+programmer may select a process scheduling algorithm tailored to his
+particular needs by programming that module on his own. Such a
+scheduler can even be entirely omitted in simple (but frequent) cases,
+e.g. when concurrent processes occur as device drivers only.
+
+A modern system programming language should in particular also
+facilitate the construction of large programs, possibly designed by
+several people. The modules written by individuals should have
+well-specified interfaces that can be declared independently of their
+actual implementations. Modula-2 supports this idea by providing
+separate definition and implementation modules. The former define all
+objects exported from the corresponding implementation module; in some
+cases, such as procedures and types, the definition module specifies
+only those parts that are relevant to the interface, i.e. to the user or
+client of the module. This report is not intended as a programmer's
+tutorial. It is intentionally kept concise, and (we hope) clear. Its
+function is to serve as a reference for programmers, implementors, and
+manual writers, and as an arbiter, should they find disagreement.
+
+@node Syntax,Vocabulary and representation,Introduction,Top
+@comment  node-name,  next,  previous,  up
+@chapter Syntax
+
+@comment 2. Syntax
+
+A language is an infinite set of sentences, namely the sentences well
+formed according to its syntax. In Modula-2 these sentences are called
+compilation units. Each unit is a finite sequence of symbols from a
+finite vocabulary. The vocabulary of Module-2 consists of identifiers,
+numbers, strings, operators, and delimiters. They are called lexical
+symbols and are composed of sequences of characters. (Not the
+distinction between symbols and characters.)
+
+To describe the syntax, an extended Backus-Naur Formalism called EBNF is
+used. Angular brackets [] denote optionality of the enclosed sentential
+form, and curly brackets () denote its repetition (possibly 0 times).
+Syntactic entities (not-terminal symbols) are denoted by English word
+expressing their intuitive meaning. Symbols of the language vocabulary
+(terminal symbols) are string enclosing in quote marks or words written
+in capital letters, so-called reserved words.  Syntactic rules
+(productions) are designated by a $ sign at the left Margin of the line.
+
+@node Vocabulary and representation,Declarations and scope rules,Syntax,Top
+@comment  node-name,  next,  previous,  up
+@chapter Vocabulary and representation
+
+@comment 3. Vocabulary and representation
+
+The representation of symbols in terms of characters depends on the
+underlying character set. The ASCII set is used in this paper, and the
+following lexical rules must be observed. Blanks must not occur within
+symbols (except in strings). Blanks and line breaks are ignored unless
+they are essential to separate two consecutive symbols.
+
+@enumerate
+@item
+Identifiers are sequences of letters and digits. The first
+character must be a letter.
+@refill
+@example
+$ ident = letter@{letter|digit@}.
+
+@end example
+Examples:
+@example
+
+  x scan Modula ETH GetSymbol firstLetter
+@end example
+ 
+@item
+Numbers are (unsigned) integers or real numbers. Integers
+are sequences of digits. If the number is followed by the
+letter B, it is taken as an octal number; if it is
+followed by the letter H, it is taken as a hexadecimal
+number; if it is followed by the letter C, it denotes the
+character with given (octal) ordinal number and is of type
+CHAR (@pxref{Basic types}), i.e. is a character constant.
+@refill
+
+An integer i in the range 0<=i<=MaxInt can be considered
+as either of type INTEGER or CARDINAL; if it is in the
+range MaxInt<=i<=MaxCard, it is of type CARDINAL. For
+16-bit computers: MaxInt=32767, MaxCard=65535.
+@refill
+
+A real number always contains a decimal point. Optionally
+it may also contain a decimal scale factor. The letter E
+is pronounced as "ten to the power of". A real number is
+of type REAL.@refill
+
+@example
+$ number = integer | real.
+$ integer = digit@{digit@} | 
+$    octalDigit@{octalDigit@}("B"|"C")|
+$    digit@{hexDigit@}"H".
+$ real = digit@{digit@}"."@{digit@}[ScaleFactor].
+$ ScaleFactor = "E"["+"|"-"]digit@{digit@}.
+$ hexDigit = digit|"A"|"B"|"C"|"D"|"E"|"F".
+$ digit = octalDigit|"8"|"9".
+$ octalDigit = "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7".
+ 
+@end example
+Examples:
+@example
+
+  1980 37648 7BCH 33C 12.3 45.67E-8
+@end example
+ 
+@item
+Strings are sequences of characters enclosed in quote
+marks. Both double quotes and single quotes (apostrophes)
+may be used as quote marks.  However, the opening and
+closing marks must be the same character, and this
+character cannot occur within the string. A string must
+not extend over the end of a line.
+@refill
+
+@example
+$ string = "'"@{character@}"'"|'"'@{character@}'"'
+@end example
+
+A string consisting of n characters is of type
+(@pxref{Array types})
+@refill
+@example
+ARRAY [0.@:.@:n] OF CHAR
+ 
+@end example
+Examples:
+@example
+
+  "MODULA" "Don't worry!" 'codeword "Barbarossa"'
+@end example
+
+@item
+Operators and delimiters are the special characters,
+character pairs, or reserved words listed below. These
+reserved words consist exclusively of capital letters and
+must not be used in the role of identifiers. The symbols #
+and <> are synonyms, and so are &, AND, and ~, NOT.@refill
+
+@example
++      =      AND         FOR             QUALIFIED
+-      #      ARRAY       FROM            RECORD
+*      <      BEGIN       IF              REPEAT
+/      >      BY          IMPLEMENTATION  RETURN
+:=     <>     CASE        IMPORT          SET
+&      <=     CONST       IN              THEN
+.      >=     DEFINITION  LOOP            TO
+,      .@:.@:     DIV         MOD             TYPE
+;      :      DO          MODULE          UNTIL
+(      )      ELSE        NOT             VAR
+[      ]      ELSIF       OF              WHILE
+@{      @}      END         OR              WITH
+^      |      EXIT        POINTER
+~             EXPORT      PROCEDURE
+@end example
+
+@item
+Comments may be inserted between any two symbols in a
+program.  They are arbitrary character sequences opened by
+the bracket (* and closed by *).  Comments may be nested,
+and they do not affect the meaning of a program.@refill
+@end enumerate
+
+@node Declarations and scope rules,Constant declarations,Vocabulary and representation,Top
+@comment  node-name,  next,  previous,  up
+@chapter Declarations and scope rules
+
+@comment 4. Declarations and scope rules
+
+Every identifier occurring in a program must be introduced by a
+declaration, unless it is a standard identifier. The latter are
+considered to be predeclared, and they are valid in all parts of a
+program. For this reason they are called pervasive. Declarations also
+serve to specify certain permanent properties of an object, such as
+whether it is a constant, a type, a variable, a procedure, or a module.
+
+The identifier is then used to refer to the associated object. This is
+possible in those parts of a program only which are within the so-called
+scope of the declaration. In general, the scope extends over the entire
+block (procedure or module declaration) to which the declaration belongs
+and to which the object is local. The scope rule is augmented by the
+following cases:
+
+@enumerate
+@item
+If an identifier x defined by a declaration D1 is used in
+another declaration (not statement) D2, then D1 must
+textually precede D2.
+@refill
+
+@item
+A type T1 can be used in a declaration of a pointer type T
+(@pxref{Pointer types}) which textually precedes the
+declaration of T1, if both T and T1 are declared in the
+same block.  This is a relaxation of rule 1.
+@refill
+
+@item
+If an identifier defined in a module M1 is exported, the
+scope expands over the block which contains M1. If M1 is a
+compilation unit (@pxref{Compilation units}), it extends
+to all those units which import M1.
+@refill
+
+@item
+Field identifiers of a record declaration (@pxref{Record
+types}) are valid only in field designators and in with
+statements referring to a variable of that record
+type.@refill
+@end enumerate
+
+An identifier may be qualified. In this case it is prefixed by another
+identifier which designates the module (@pxref{Modules}) in which the
+qualified identifier is defined. The prefix and the identifier are
+separated by a period. Standard identifiers appear below.
+ 
+@example
+$ qualident = ident@{"."ident@}.
+
+ ABS         (@pxref{Standard procedures})
+ BITSET      (@pxref{Set types})
+ BOOLEAN     (@pxref{Basic types})
+ CAP         (@pxref{Standard procedures})
+ CARDINAL    (@pxref{Basic types})
+ CHAR        (@pxref{Basic types})
+ CHR         (@pxref{Standard procedures})
+ DEC         (@pxref{Standard procedures})
+ EXCL        (@pxref{Standard procedures})
+ FALSE       (@pxref{Basic types})
+ FLOAT       (@pxref{Standard procedures})
+ HALT        (@pxref{Standard procedures})
+ HIGH        (@pxref{Standard procedures})
+ INC         (@pxref{Standard procedures})
+ INCL        (@pxref{Standard procedures})
+ INTEGER     (@pxref{Basic types})
+ LONGINT     (@pxref{Basic types})
+ LONGREAL    (@pxref{Basic types})
+ MAX         (@pxref{Standard procedures})
+ MIN         (@pxref{Standard procedures})
+ NIL         (@pxref{Pointer types})
+ ODD         (@pxref{Standard procedures})
+ ORD         (@pxref{Standard procedures})
+ PROC        (@pxref{Procedure types})
+ REAL        (@pxref{Basic types})
+ SIZE        (@pxref{Standard procedures})
+ TRUE        (@pxref{Basic types})
+ TRUNC       (@pxref{Standard procedures})
+ VAL         (@pxref{Standard procedures})
+@end example
+
+@node Constant declarations,Type declarations,Declarations and scope rules,Top 
+@comment  node-name,  next,  previous,  up
+@chapter Constant declarations
+
+@comment 5. Constant declarations
+
+A constant declaration associates an identifier with a constant value.
+
+@example
+$ ConstantDeclaration = ident"="ConstExpression.
+$ ConstExpression = expression.
+@end example
+
+A constant expression is an expression which can be evaluated by a mere
+textual scan without actually executing the program. Its operands are
+constants. (@pxref{Expressions}).
+
+Examples of constant declarations are
+
+@example
+  N     =100
+  limit =2*N-1
+  all   = @{0.@:.@:WordSize@}
+  bound = MAX(INTEGER)-N
+@end example
+
+@node Type declarations,Variable declarations,Constant declarations,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Type declarations
+
+@comment 6. Type declarations
+
+A data type determines a set of values which variables of that type may
+assume, and it associates an identifier with the type. In the case of
+structured types, it also defines the structure of variables of this
+type. There are three different structures, namely arrays, records, and
+sets.
+
+@example
+$ TypeDeclaration = ident"="type.
+$ type = SimpleType | ArrayType | RecordType |
+$        SetType| PointerType | ProcedureType.
+$ SimpleType = qualident | enumeration |
+$              SubrangeType.
+
+@end example
+Examples:
+@example
+
+  Color       = (red,green,blue)
+  Index       = [1.@:.@:80]
+  Card        = ARRAY Index OF CHAR
+  Node        = RECORD key: CARDINAL;
+                  left, right: TreePtr
+                  END
+  Tint        = SET OF Color
+  TreePtr     = POINTER TO Node
+  Function    = PROCEDURE(CARDINAL): CARDINAL
+@end example
+
+@menu
+* Basic types::
+* Enumerations::
+* Subrange types::
+* Array types::
+* Record types::
+* Set types::
+* Pointer types::
+* Procedure types::
+@end menu
+
+@node Basic types,Enumerations,Type declarations,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Basic types
+
+@comment 6.1. Basic types
+
+The following basic types are predeclared and denoted by standard
+identifiers:
+
+@enumerate
+@item
+INTEGER comprises the integers between MIN(INTEGER) and
+MAX(INTEGER).@refill
+
+@item
+CARDINAL comprises the integers between 0 and MAX(CARDINAL).@refill
+
+@item
+BOOLEAN comprises the truth values TRUE or FALSE.@refill
+
+@item
+CHAR denotes the character set provided by the used computer
+system.@refill
+
+@item
+REAL (and LONGREAL) denote finite sets of real numbers.@refill
+
+@item
+LONGINT comprises the integers between MIN(LONGINT) and
+MAX(LONGINT).@refill
+@end enumerate
+
+@node Enumerations,Subrange types,Basic types,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Enumerations
+
+@comment 6.2. Enumerations
+
+An enumeration is a list of identifiers that denote the values which
+constitute a data type. These identifiers are used as constants in the
+program. They, and no other values, belong to this type. The values are
+ordered, and the ordering relation is defined by their sequence in the
+enumeration. The ordinal number of the first value is 0.
+
+@example
+$ enumeration = "("IdentList")".
+$ IdentList = ident@{","ident@}.
+
+@end example
+Examples of enumerations:
+@example
+
+  (red,green,blue)
+  (club,diamond,heart,spade)
+  (Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday)
+@end example
+
+@node Subrange types,Array types,Enumerations,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Subrange types
+
+@comment 6.3. Subrange types
+
+A type T may be defined as a subrange of another, basic or enumeration
+type T1 (except REAL) by specification of the least and the highest
+value in the subrange.
+
+@example
+$ SubrangeType = [ident]
+$   "["ConstExpression".@:.@:"ConstExpression"]".
+@end example
+
+The first constant specifies the lower bound, and must not be greater
+than the upper bound. The type T1 of the bounds is called the base type
+of T, and all operators applicable to operands of type T1 are also
+applicable to operands of type T. However, a value to be assigned to a
+variable of a subrange type must lie within the specified interval. The
+base type can be specified by an identifier preceding the bounds. If it
+is omitted, and if the lower bound is a non-negative integer , the base
+type of the subrange is taken to be CARDINAL; if it is a negative
+integer, it is INTEGER.
+
+A type T1 is said to be compatible with a type T0, if it is declared
+either as T1=T0 or as a subrange of T0, or if T0 is subrange of T1, or
+if T0 and T1 are both subranges of the same (base) type.
+
+Examples of subranges types:
+@example
+
+  [0.@:.@:N-1]
+  ["A".@:.@:"Z"]
+  [Monday.@:.@:Friday]
+@end example
+
+@node Array types,Record types,Subrange types,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Array types
+
+@comment 6.4. Array types
+
+An array is a structure consisting of a fixed number of components which
+are all of the same type, called the component type. The elements of the
+array are designated by indices, values belonging to the index type. The
+array type declaration specifies the component type as well as the index
+type. The latter must be an enumeration, a subrange type, or one of the
+basic types BOOLEAN or CHAR.
+
+@example
+$ ArrayType = ARRAY SimpleType
+$     @{","SimpleType@} OF type.
+@end example
+ 
+@noindent
+A declaration of the form
+         
+@example
+ARRAY T1,T2,@dots{},Tn OF T
+@end example
+
+@noindent
+with n index types T1@dots{}Tn must be understood as an abbreviation for
+the declaration
+
+@example
+ARRAY T1 OF
+  ARRAY T2 OF
+    @dots{}
+      ARRAY Tn OF T
+
+@end example
+Examples of array types:
+@example
+
+  ARRAY [0.@:.@:N-1] OF CARDINAL
+  ARRAY [1.@:.@:10],[1.@:.@:20] OF [0.@:.@:99]
+  ARRAY [-10.@:.@:+10] OF BOOLEAN
+  ARRAY WeekDay OF Color
+  ARRAY Color OF WeekDay
+@end example
+
+@node Record types,Set types,Array types,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Record types
+
+@comment 6.5. Record types
+
+A record type is a structure consisting of a fixed number of components
+of possibly different types. The record type declaration specifies for
+each component, called field, its type and an identifier which denotes
+the field. The scope of these field identifiers is the record definition
+itself, and they are also accessible within field designators
+(@pxref{Operands}) referring to components of record variables, and
+within with statements.
+
+A record type may have several variant sections, in which case the first
+field of the section is called the tag field. Its value indicates which
+variant is assumed by the section. Individual variant structures are
+identified by case labels. These labels are constants of the type
+indicated by the tag field.
+ 
+@example
+$ RecordType = RECORD FieldListSequence END.
+$ FieldListSequence = FieldList@{";"FieldList@}.
+$ FieldList = [IdentList":"type |
+$     CASE [ident]":"qualident OF variant
+$     @{"|"variant@}[ELSE FieldListSequence] END].
+$ variant = [CaseLabelList":"FieldListSequence].
+$ CasaLabelList = CaseLabels @{","CaseLabels@}.
+$ CaseLabels = ConstExpression
+      [".@:.@:"ConstExpression].
+ 
+@end example
+Examples of record types:
+@example
+
+  RECORD day:[1.@:.@:31];
+    month: [1.@:.@:12];
+    year: [0.@:.@:2000]
+  END
+
+  RECORD
+    name,firstname: ARRAY [0.@:.@:9] OF CHAR;
+    age: [0.@:.@:99];
+    salary: REAL
+  END
+
+  RECORD x,y: T0;
+    CASE tag0: Color OF
+      red:  a:Tr1; b:Tr2 |
+      green:  c:Tg1; d:Tg2 |
+      blue:  e:Tb1; f:Tb2
+    END
+    z:T0;
+    CASE Tag1: BOOLEAN OF
+      TRUE: u,v: INTEGER |
+      FALSE: r,s: CARDINAL
+    END
+  END
+@end example
+
+The example above contains two variant sections. The variant of the
+first section is indicated by the value of the tag field tag0, the one
+of the second section by the tag field tag1.
+
+@node Set types,Pointer types,Record types,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Set types
+
+@comment 6.6. Set types
+
+A set type defined as SET OF T comprises all sets of values of its base
+type T. This must be a subrange of the integers between 0 and N-1, or a
+(subrange of an) enumeration type with at most N values, where N is a
+small constant determined by implementation, usually the computer's
+wordsize or a small multiple thereof.
+
+@example
+$ SetType = SET OF SimpleType.
+@end example
+
+The standard type BITSET is defined as follows, where W is a
+constant defined by implementation, usually the wordsize of the
+computer.
+
+@example
+BITSET = SET OF [0.@:.@:W-1]
+@end example
+ 
+@node Pointer types,Procedure types,Set types,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Pointer types
+
+@comment 6.7. Pointer types
+
+Variables of a pointer type P assume as values pointers to variables of
+another type T. The pointer type P is said to be bound to T. A pointer
+value is generated by a call to an allocation procedure in a storage
+management module.
+ 
+@example
+$ PointerType = POINTER TO type.
+@end example
+
+Besides such pointer values, a pointer variable may assume the value
+NIL, which can be thought as pointing to no variable at all.
+
+@node Procedure types,,Pointer types,Type declarations    
+@comment  node-name,  next,  previous,  up
+@section Procedure types
+
+@comment 6.8. Procedure types
+
+Variables of a procedure type T may assume as their value a procedure P.
+The (types of the) formal parameters of P must be the same as those
+indicated in the formal type list of T. The same holds for the result
+type in the case of a function procedure.
+
+Restriction: P must not be declared local to another procedure, and
+neither can it be a standard procedure.
+
+@example
+$ ProcedureType = PROCEDURE [FormalTypeList].
+$ FormalTypeList = "("[[VAR] FormalType
+$     @{","[VAR] FormalType@}]")"[":"qualident].
+@end example
+
+@noindent
+The standard type PROC denotes a parameterless procedure:
+           
+@example
+PROC = PROCEDURE
+@end example
+
+@node Variable declarations,Expressions,Type declarations,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Variable declarations
+
+@comment 7. Variable declarations
+
+Variable declarations serve to introduce variables and associate them
+with a unique identifier and a fixed data type and structure.  Variables
+whose identifiers appear in the same list all obtain the same type.
+
+@example
+$ VariableDeclaration = IdentList":"type.
+@end example
+
+The data type determines the set of values that a variable may assume
+and the operators that are applicable; it also defines the structure of
+the variable.
+
+Examples of variable declarations
+      (@pxref{Type declarations}):
+@example
+
+  i,j:    CARDINAL
+  k:      INTEGER
+  p,q:    BOOLEAN
+  s:      BITSET
+  F:      Function
+  a:      ARRAY Index Of CARDINAL
+  w:      ARRAY [0.@:.@:7] OF
+	       RECORD ch: CHAR;
+	         count: CARDINAL
+	       END
+@end example
+
+@node Expressions,Statements,Variable declarations,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Expressions
+
+@comment 8. Expressions
+
+Expressions are constructs denoting rules of computation for obtaining
+values of variables and generating new values by the application of
+operators. Expressions consist of operands and operators. Parentheses may
+be used to express specific associations of operators and operands.
+
+@menu
+* Operands::
+* Operators::
+@end menu
+
+@node Operands,Operators,Expressions,Expressions    
+@comment  node-name,  next,  previous,  up
+@section Operands
+
+@comment 8.1. Operands
+
+With the exception of literal constants, i.e. numbers, character
+strings, and sets (@pxref{Constant declarations}), operands are denoted
+by designators. A designator consists of an identifier referring to the
+constant, variable, or procedure to be designated.  This identifier may
+possibly be qualified by module identifiers (@pxref{Declarations and
+scope rules}), (@pxref{Modules}), and it may be followed by selectors,
+if the designated object is an element of a structure. If the structure
+is an array A, then the designator A[E] denotes that component of A
+whose index is the current value of the expression E. The index type of
+A must be assignment compatible with the type of E
+(@pxref{Assignments}). A designator of the form
+
+@noindent
+A[E1,E2,@dots{},En]   stands for   A[E1][E2]@dots{}[En].
+
+@noindent
+If the structure is a record R, then the designator R.f denotes the
+record field f of R.
+
+@noindent
+The designator P^ denotes the variable which is referenced by the
+pointer P.
+
+@example
+$ designator = qualident
+$    @{"."ident | "["ExpList"]" | "^"@}.
+$ ExpList = expression@{","expression@}.
+@end example
+
+If the designated object is a variable, then the designator refers to
+the variable's current value. If the object is a function procedure, a
+designator without parameter list refers to that procedure. If it is
+followed by a (possibly empty) parameter list, the designator implies an
+activation of the procedure and stands for the value resulting from its
+execution, i.e. for the "returned" value. The (types of these) actual
+parameters must correspond to the formal parameters as specified in the
+procedure's declaration (@pxref{Procedure declarations}).
+
+Examples of designators (@pxref{Variable declarations}):
+@example
+
+  k                (INTEGER)
+  a[i]             (CARDINAL)
+  w[3].ch          (CHAR)
+  t^.key           (CARDINAL)
+  t^.left^.right   (TreePtr)
+@end example
+
+@node Operators,,Operands,Expressions    
+@comment  node-name,  next,  previous,  up
+@section Operators
+
+@comment 8.2. Operators
+
+The syntax of expressions specifies operator precedences according to
+four classes of operators. The operator NOT has the highest prcits
+execution , i.e. for the "returned" value. The (types of these) actual
+parameters must correspond to the formal parameters as specified in the
+procedure's declaration (see operators of the same precedence are
+executed from left to right.
+
+@example
+$ expression = SimpleExpression
+$     [relation SimpleExpression].
+$ relation = "=" | "#" | "<" |
+$          "<=" | ">" | ">=" | IN.
+$ SimpleExpression = ["+"|"-"] term
+$            @{ AddOperator term@}.
+$ AddOperator = "+" | "-" | OR.
+$ term = factor @{MulOperator factor@}.
+$ MulOperator = "*" | "/" | DIV | MOD | AND.
+$ factor = number | string | set |
+$      designator[ActualParameters] |
+$      "("expression")" | NOT factor.
+$ set = [qualident] "@{" [ element
+$       @{ "," element @}] "@}".
+$ element = expression [ ".@:.@:" expression].
+$ ActualParameters = "(" [ExpList] ")".
+@end example
+
+The available operators are listed in the following tables.  In some
+instances, several different operations are designated by the same
+operator symbol. In these cases, the actual operation is identified by
+the types of the operands.
+
+@menu
+* Arithmetic operators::
+* Logical operators::
+* Set operators::
+* Relations::
+@end menu
+
+@node Arithmetic operators,Logical operators,Operators,Operators    
+@comment  node-name,  next,  previous,  up
+@subsection Arithmetic operators
+
+@comment 8.2.1. Arithmetic operators
+
+@example
+  symbol       operation
+---------------------------
+    +           addition
+    -           subtraction
+    *           multiplication
+    /           real division
+   DIV          integer division
+   MOD          modulus
+@end example
+
+These operators (except /) apply to operands of type INTEGER, CARDINAL,
+or subranges thereof. Both operands must be either of type CARDINAL or a
+subrange with base type CARDINAL, in which case the result is of the
+type CARDINAL, or they must both be of type INTEGER or a subrange with
+base type INTEGER, in which case the result is of type INTEGER.
+
+The operators +, -, and * also apply to operands of type REAL. In
+this case, both operands must be of type REAL, and the result is then
+also of type REAL. The division operator / applies to REAL operands
+only. When used as operators with a single operands only, - denotes
+sign inversion and + denotes the identity operation. Sign inversion
+applies to operands of type INTEGER or REAL. The operations DIV and
+MOD are defined by the following rules:
+
+@example
+x DIV y is equal to the truncated quotient of x/y
+x MOD y is equal to the remainder of the division x DIV y
+x = (x DIV y)*y + (x MOD y),  0 <= (x MOD y) < y
+@end example
+
+@node Logical operators,Set operators,Arithmetic operators,Operators    
+@comment  node-name,  next,  previous,  up
+@subsection Logical operators
+
+@comment 8.2.2. Logical operators
+
+@example
+ symbol        operation
+-------------------------
+   OR          logical conjunction
+   AND         logical disjunction
+   NOT         negation
+@end example
+
+@noindent
+These operators apply to BOOLEAN operands and yield a BOOLEAN result.
+
+@example
+p OR q    means  "if p then TRUE, otherwise q"
+p AND q   means  "if p then q, otherwise FALSE"
+@end example
+
+@node Set operators,Relations,Logical operators,Operators    
+@comment  node-name,  next,  previous,  up
+@subsection Set operators
+
+@comment 8.2.3. Set operators
+
+@example
+  symbol        operation
+--------------------------
+    +           set union
+    -           set difference
+    *           set intersection
+    /           symmetric set difference
+@end example
+
+These operations apply to operands of any set type and yield a result of
+the same type.
+
+@example
+ x IN (s1+s2)   iff   (x IN s1) OR (x IN s2)
+ x IN (s1-s2)   iff   (x IN s1) AND NOT (x IN s2)
+ x IN (s1*s2)   iff   (x IN s1) AND (x IN s2)
+ x IN (s1/s2)   iff   (x IN s1) # (x IN s2)
+@end example
+ 
+@node Relations,,Set operators,Operators    
+@comment  node-name,  next,  previous,  up
+@subsection Relations
+
+@comment 8.2.4. Relations
+
+Relations yield a Boolean result. The ordering relations apply to the
+basic types INTEGER, CARDINAL, BOOLEAN, CHAR, REAL, to enumerations, and
+to subrange types.
+
+@example
+ symbol         relation
+-------------------------
+   =            equal
+   #            unequal
+   <            less
+   <=           less or equal  (set inclusion)
+   >            greater
+   >=           greater or equal (set inclusion)
+   IN           contained in   (set membership)
+@end example
+
+The relations = and # also apply to sets and pointers. If applied to
+sets, <= and >= denote (improper) inclusion. The relation IN denotes set
+membership. In an expression of the form x IN s, the expression s must
+be of type SET OF T, where t is (compatible with) the type of x.
+
+Examples of expressions (@pxref{Variable declarations}):
+@example
+
+  980                       (CARDINAL)
+  k DIV 3                   (INTEGER)
+  NOT p OR q                (BOOLEAN)
+  (i+j)*(i-j)               (CARDINAL)
+  s-@{8,9,13@}                (BITSET)
+  a[i]+a[j]                 (CARDINAL)
+  a[i+j]*a[i-j]             (CARDINAL)
+  (0<=k)&(k<100)            (BOOLEAN)
+  t^.key=0                  (BOOLEAN)
+  @{13.@:.@:15@}<=s               (BOOLEAN)
+  i IN @{0,5.@:.@:8,15@}          (BOOLEAN)
+@end example
+
+@node Statements,Procedure declarations,Expressions,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Statements
+
+@comment 9. Statements
+ 
+Statements denote actions. There are elementary and structured
+statements. Elementary statements are not composed of any parts that
+themselves statements. They are the assignment, the procedure call, and
+the return and exit statements. Structured statements are composed of
+parts that are themselves statements. These are used to express
+sequencing, and conditional, selective, and repetitive execution.
+
+@example
+$ statement = [ assignment | ProcedureCall |
+$      IfStatement | CaseStatement |
+$      WhileStatement | RepeatStatement |
+$      LoopStatement | ForStatement |
+$      WithStatement | EXIT |
+$      RETURN [ expression ] ].
+@end example
+
+A statement may also be empty, in which case it denotes no action.  The
+empty statement is included in order to relax punctuation rules in
+statement sequences.
+
+@menu
+* Assignments::
+* Procedure calls::
+* Statement sequences::
+* If statements::
+* Case statements::
+* While statements::
+* Repeat statements::
+* For statements::
+* Loop statements::
+* With statements::
+* Return and exit statements::
+@end menu
+
+@node Assignments,Procedure calls,Statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section Assignments
+
+@comment 9.1. Assignments
+
+The assignments serves to replace the current value of a variable by a
+new value indicated by an expression. The assignment operator is written
+as ":=" and pronounced as "becomes".
+
+@example
+$ assignment = designator ":=" expression.
+@end example
+
+The designator to the left of the assignment operator denotes a
+variable. After an assignment is executed, the variable has the value
+obtained by evaluating the expression. The old value is lost
+(overwritten). The type of the variable must be assignment compatible
+with the type of the expression. Operand types are said to be assignment
+compatible, if either they are compatible or both are INTEGER or
+CARDINAL or subranges with base types INTEGER or CARDINAL.
+
+A string of length n1 can be assigned to an array variable with n2>n1
+elements of type CHAR. In this case, the string value is extended with a
+null character (0C). A string of length 1 is compatible with the type
+CHAR.
+
+Examples of assignments:
+@example
+
+  i:=k
+  p:=i=j
+  j:=log2(i+j)
+  F:=log2
+  s:=@{2,3,5,7,11,13@}
+  a[i]:=(i+j)*(i-j)
+  t^.key:=i
+  w[i+1].ch:="A"
+@end example
+
+@node Procedure calls,Statement sequences,Assignments,Statements    
+@comment  node-name,  next,  previous,  up
+@section Procedure calls
+
+@comment 9.2. Procedure calls
+
+A procedure call serves to activate a procedure. The procedure call may
+contain a list of actual parameters which are substituted in place of
+their corresponding formal parameters defined in the procedure
+declaration (@pxref{Procedure declarations}). The correspondence is
+established by the positions of the parameters in the list of actual and
+formal parameters respectively. There exist two kinds of parameters:
+variable and value parameters.
+
+In the case of variable parameters, the actual parameter must be a
+designator denoting a variable. If it designates a component of
+structured variable, the selector is evaluated when the formal/actual
+parameter substitution takes place, i.e. before the execution of the
+procedure. If the parameter is a value parameter, the corresponding
+actual parameter must be an expression. This expression is evaluated
+prior to the procedure activation, and the resulting value is assigned
+to the formal parameter which now constitute a local variable. The types
+of corresponding actual and formal parameters must be compatible in the
+case of variable parameters and assignment compatible in the case of
+value parameters.
+
+@example
+$ ProcedureCall = designator [ActualParameters].
+
+@end example
+Examples of procedure calls:
+@example
+
+  Read(i)    (@pxref{Procedure declarations})
+  Write(j*2+1,6)
+  INC(a[i])
+@end example
+
+@node Statement sequences,If statements,Procedure calls,Statements    
+@comment  node-name,  next,  previous,  up
+@section Statement sequences
+
+@comment 9.3. Statement sequences
+
+Statement sequences denote the sequence of actions specified by the
+component statements which are separated by semicolons.
+
+@example
+$ StatementSequence = statement @{ ";" statement @}.
+@end example
+
+@node If statements,Case statements,Statement sequences,Statements    
+@comment  node-name,  next,  previous,  up
+@section If statements
+
+@comment 9.4. If statements
+
+@example
+$ IfStatement = IF expression THEN StatementSequence
+$       @{ ELSIF expression THEN StatementSequence @}
+$       [ ELSE StatementSequence ] END.
+@end example
+ 
+The expressions following the symbols IF and ELSIF are of type BOOLEAN.
+They are evaluated in the sequence of their occurrence, until one yields
+the value TRUE. Then its associated statement sequence is executed. If
+an ELSE clause is present, its associated statement sequence is executed
+if and only if all Boolean expressions yielded the value FALSE.
+
+Example:
+@example
+
+  IF(ch>="A")&(ch<="Z") THEN ReadIdentifier
+  ELSIF(ch>="0")&(ch<="9") THEN ReadNumber
+  ELSIF ch='"' THEN ReadString('"')
+  ELSIF ch="'" THEN ReadString("'")
+  END
+@end example
+
+@node Case statements,While statements,If statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section Case statements
+
+@comment 9.5. Case statements
+
+Case statements specify the selection and execution of a statement
+sequence according to the value of an expression. First the case
+expression is evaluated, then the statement sequence is executed whose
+case label list contains the obtained value. The type of the case
+expression must be a basic type (except REAL), an enumeration type, or a
+subrange type, and all labels must be compatible with this type, Case
+labels are constants, and no value must occur more than once. If the
+value of the expression does not occur as a label of any case, the
+statement sequence following the symbol ELSE is selected.
+
+@example
+$ CaseStatement = CASE expression OF case
+$    @{ "|" case @}[ ELSE StatementSequence ] END.
+$ case = [ CaseLabelList ":" StatementSequence ].
+
+@end example
+Example:
+@example
+
+  CASE i OF
+    0: p:=p OR q; x:=x+y|
+    1: p:=p OR q; x:=x-y|
+    2: p:=p AND q; x:=x*y
+  END
+@end example
+
+@node While statements,Repeat statements,Case statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section While statements
+
+@comment 9.6. While statements
+
+While statement specify the repeated execution of a statement sequence
+depending on the value of a Boolean expression.  The expression
+is evaluated before each subsequent execution of the statement
+sequence. The repetition stops as soon as this evaluation yields the
+value FALSE.
+
+@example
+$ WhileStatement = WHILE expression DO
+$        StatementSequence END.
+
+@end example
+Examples:
+@example
+
+  WHILE j>0 DO
+    j:=j DIV 2; i:=i+1
+  END
+
+  WHILE i#j DO
+    IF i>j THEN i:=i-j
+    ELSE j:=j-i
+    END
+  END
+
+  WHILE (t#NIL)&(t^.key#i) DO
+    t:=t^.left
+  END
+@end example
+
+@node Repeat statements,For statements,While statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section Repeat statements
+
+@comment 9.7. Repeat statements
+
+Repeat statements specify the repeated execution of statement sequence
+depending on the value of a Boolean expression. The expression is
+evaluated after each execution of the statement sequence , and the
+repetition stops as soon as it yields the value TRUE. Hence, the
+statement sequence is executed at least once.
+
+@example
+$ RepeatStatement = REPEAT StatementSequence
+$       UNTIL expression.
+
+@end example
+Example:
+@example
+
+  REPEAT k:=i MOD j; i:=j; j:=k
+  UNTIL j=0
+@end example
+
+@node For statements,Loop statements,Repeat statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section For statements
+
+@comment 9.8. For statements
+
+The for statement indicates that a statement sequence is to be
+repeatedly executed while a progression of values is assigned to a
+variable. This variable is called the control variable of the for
+statement. It cannot be a component of a structured variable, it cannot
+be imported, nor can it be a parameter. Its value should not be changed
+by the statement sequence.
+
+@example
+$ ForStatement = FOR ident ":=" expression
+$          TO expression [ BY ConstExpression ]
+$          DO StatementSequence END.
+@end example
+ 
+@noindent
+The for statement
+
+@example
+FOR v:=A TO B BY C DO SS END
+@end example
+
+@noindent
+expresses repeated execution of the statement sequence SS with
+successively assuming the values A, A+C, A+2C, @dots{}, A+nC, where A+nC
+is the last term not exceeding B. v is called the control variable, A
+the starting value, B the limit, and C the increment. A and B must be
+compatible with v; C must be a constant of type INTEGER or CARDINAL.  If
+no increment is specified, it is assumed to be 1.@refill
+
+Examples:
+@example
+ 
+  FOR i:=1 TO 80 DO j:=j+a[i] END
+  FOR i:=80 TO 2 BY -1 DO a[i]:=a[i-1] END
+@end example
+
+@node Loop statements,With statements,For statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section Loop statements
+
+@comment 9.9. Loop statement
+
+A loop statement specifies the repeated execution of a statement
+sequence. It is terminated by the execution of any exit statement within
+that sequence.
+
+@example
+$ LoopStatement = LOOP StatementSequence END
+
+@end example
+Example:
+@example
+
+  LOOP
+    IF t1^.key>x THEN t2:=t1^.left; p:=TRUE
+    ELSE t2:=t1^.right; p:=FALSE
+    END;
+    IF t2=NIL THEN
+       EXIT
+    END;
+    t1:=t2
+  END
+@end example
+
+While, repeat, and for statements can be expressed by loop statements
+containing a single exit statement. Their use is recommended as they
+characterize the most frequently occurring situations where termination
+depends either on a single condition at either the beginning or end of
+the repeated statement sequence, or on reaching the limit of an
+arithmetic progression. The loop statement is, however, necessary to
+express the continuous repetition of cyclic processes, where no
+termination is specified. It is also useful to express situation
+exemplified above. Exit statements are contextually, although not
+syntactically bound to the loop statement which contains them.
+
+@node With statements,Return and exit statements,Loop statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section With statements
+
+@comment 9.10. With statements
+
+The with statement specifies a record variable and a statement sequence.
+In these statements the qualification of field identifiers may be
+omitted, if they are no refer to the variable specified in with clause.
+If the designator denotes a component of a structured variable, the
+selector is evaluated once (before the statement sequence). The with
+statement opens a new scope.
+
+@example
+$ WithStatement = WITH designator DO
+$        StatementSequence END.
+
+@end example
+Example:
+@example
+
+  WITH t^ DO
+    key:=0; left:=NIL; right:=NIL
+  END
+@end example
+
+@node Return and exit statements,,With statements,Statements    
+@comment  node-name,  next,  previous,  up
+@section Return and exit statements
+
+@comment 9.11. Return and exit statements
+
+A return statement consists of the symbol RETURN, possibly followed by
+an expression. It indicates the termination of a procedure ( or a module
+body), and the expression specifies the value returned as result of a
+function procedure. Its type must be assignment compatible with the
+result type specified in the procedure heading (@pxref{Procedure
+declarations}).
+
+Function procedures require the presence of a return statement
+indicating the result value. There may be several, although only one
+will be executed. In proper procedures, a return statement is implied by
+the end of the procedure body. An explicit return statement therefore
+appears as an additional, probably exceptional termination point.
+
+An exit statement consists of the symbol EXIT, and it specifies
+termination of the enclosing loop statement and continuation with the
+statement following that loop statement (@pxref{Loop statements}).
+
+@node Procedure declarations,Modules,Statements,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Procedure declarations
+
+@comment 10. Procedure declarations
+
+Procedure declarations consists of a procedure heading and a block which
+is said to be the procedure body. The heading specifiers the procedure
+identifier and the formal parameters. The block contains declarations
+and statements. The procedure identifier is repeated at the end of the
+procedure declaration.
+
+There are two kinds of procedures, namely proper procedures and function
+procedures. The latter are activated by a function designator as a
+constituent of an expression, and yield a result that is an operand in
+the expression. Proper procedures are activated by a procedure call. The
+function procedure is distinguished in the declaration by indication of
+the type of its result following the parameter list. Its body must
+contain a RETURN statement which defines the result of the function
+procedure.
+
+All constants, variables, types, modules and procedures declared within
+the block that constitutes the procedure body are local to the
+procedure. The values of the local variables, including those defined
+within local module, are undefined upon entry to the procedure. Since
+procedures may be declared as local objects too, procedure declarations
+may be nested. Every object is said to be declared at a certain level of
+nesting. If it is declared local to a procedure at level k, it has
+itself level k+1. Objects declared in the module that constitutes a
+compilation unit (@pxref{Compilation units}) are defined to be at level
+0.
+
+In addition to its formal parameters and local objects, also the objects
+declared in the environment of the procedure are known and accessible in
+the procedure (with the exception of those objects that have the same
+name as objects declared locally).
+
+The use of the procedure identifier in a call within its declaration
+implies recursive activation of the procedure.
+
+@example
+$ ProcedureDeclaration = ProcedureHeading ";"
+$               block ident.
+$ ProcedureHeading = PROCEDURE ident
+$          [ FormalParameters ].
+$ block = @{ declaration @}
+$    [ BEGIN StatementSequence ] END.
+$ declaration = CONST @{ ConstantDeclaration ";" @} |
+$          TYPE @{ TypeDeclaration ";"@} |
+$          VAR @{ VariableDeclaration ";"@} |
+$          ProcedureDeclaration ";" |
+$          ModuleDeclaration ";".
+@end example
+
+
+@menu
+* Formal parameters::
+* Standard procedures::
+@end menu
+
+
+@node Formal parameters,Standard procedures,Procedure declarations,Procedure declarations    
+@comment  node-name,  next,  previous,  up
+@section Formal parameters
+
+@comment 10.1. Formal parameters
+
+Formal parameters are identifiers which denote actual parameters
+specified in the procedure call. The correspondence between formal and
+actual parameters is established when the procedure is called. There are
+two kinds of parameters, namely value and variable parameters. The kind
+is indicated in the formal parameter list. Value parameters stand for
+local variables to which the result of the evaluation of the
+corresponding actual parameter is assigned as initial value. Variable
+parameters correspond to actual parameters that are variables, and they
+stand for these variables. Variable parameters are indicated by the
+symbol VAR, value parameters by the absence of the symbol VAR.
+   Formal parameters are local to the procedure, i.e. their scope is the
+program text which constitutes the procedure declaration.
+
+@example
+$ FormalParameters = "("[FPSection@{";"FPSection@}]")"
+$            [":"qualident].
+$ FPSection = [ VAR ] IdentList ":" FormalType.
+$ FormalType = [ ARRAY OF ] qualident.
+@end example
+
+The type of each formal parameter is specified in the parameter list. In
+the case of variable parameters it must be identical with its
+corresponding actual parameter (@pxref{Procedure calls}, for
+exceptions), (@pxref{System-dependent facilities}, for exceptions); in
+the case of value parameters the formal type must be assignment
+compatible with the actual type (@pxref{Assignments}).  If the parameter
+is an array, the form
+
+@example
+ARRAY OF T
+@end example
+
+@noindent
+may be used, where the specification of the actual index bounds is
+omitted. The parameter is then said to be an open array parameter.  T
+must be the same as the element type of the actual array, and the index
+range is mapped onto the integers 0 to N-1, where N is the number of
+elements. The formal array can be accessed elementwise only, or it may
+occur as actual parameter whose formal parameter is without specified
+index bounds. A function procedure without parameters has an empty
+parameter list. It must be called by a function designator whose actual
+parameter list is empty too.
+
+Restriction: if a formal parameter specifies a procedure type, then the
+corresponding actual parameter must be either a procedure declared at
+level 0 or a variable (or parameter) of that procedure type. It cannot
+be a standard procedure.
+
+Examples of procedure declarations:
+@example
+
+  PROCEDURE Read(VAR x:CARDINAL);
+    VAR i:CARDINAL; ch:CHAR;
+  BEGIN i:=0;
+    REPEAT ReadChar(ch)
+    UNTIL(ch>="0")&(ch<="9");
+    REPEAT i:=10*i+(ORD(ch)-ORD("0"));
+      ReadChar(ch)
+    UNTIL(ch<"0") OR (ch>"9");
+    x:=i
+  END Read
+
+  PROCEDURE Write(x,n:CARDINAL);
+    VAR i:CARDINAL;
+	buf:ARRAY [1.@:.@:10] OF CARDINAL;
+  BEGIN i:=0;
+    REPEAT INC(i); buf[i]:=x MOD 10; x:=x DIV 10
+    UNTIL x=0
+    WHILE n>i DO
+      WriteChar(" "); DEC(n)
+    END;
+    REPEAT WriteChar(CHR(buf[i]+ORD("0")));
+      DEC(i)
+    UNTIL i=0;
+  END Write
+
+  PROCEDURE log2(x:CARDINAL):CARDINAL;
+    VAR y:CARDINAL; (* assume x>0 *)
+  BEGIN x:=x-1; y:=0;
+    WHILE x>0 DO
+      x:=x DIV 2; y:=y+1
+    END;
+    RETURN y
+  END log2
+@end example
+
+@node Standard procedures,,Formal parameters,Procedure declarations    
+@comment  node-name,  next,  previous,  up
+@section Standard procedures
+
+@comment 10.2. Standard procedures
+
+Standard procedures are predefined. Some are generic procedures that
+cannot be explicitly declared, i.e. they apply to classes of operand
+types or have several possible parameter list forms. Standard procedures
+are
+
+@example
+ABS(x)      absolute value;
+            result type = argument type.
+  
+CAP(ch)     if ch is a lower case letter,
+            the corresponding capital letter;
+            if ch is a capital letter, the same letter.
+     
+CHR(x)      the character with ordinal number x. 
+            CHR(x)=VAL(CHAR,x)
+
+FLOAT(x)    x of type INTEGER represented 
+            as a value of type REAL.
+
+HIGH(a)     high index bound of array a.
+
+MAX(T)      the maximum value of type T.
+
+MIN(T)      the minimum value of type T.
+ 
+ODD(x)      x MOD 2 # 0
+
+ORD(x)      ordinal number (of type CARDINAL) 
+            of x in the set of values defined 
+            by type T of x. T is any enumeration
+            type, CHAR, INTEGER, or CARDINAL.
+
+SIZE(T)     the number of storage units required 
+            by a variable of type T.
+
+TRUNC(x)    real number x truncated to its 
+            integral part (of type INTEGER).
+
+VAL(T,x)    the value with ordinal number x 
+            and with type T. T is any enumeration type, 
+            or CHAR, INTEGER, or CARDINAL.
+            VAL(T,ORD(x))=x, if x of type T.
+
+DEC(x)      x:=x-1
+
+DEC(x,n)    x:=x-n
+
+EXCL(s,i)   s:=s-@{i@}
+
+HALT        terminate program execution
+
+INC(x)      x:=x+1
+
+INC(x,n)    x:=x+n
+
+INCL(s,i)   s:=s+@{i@}
+@end example
+ 
+The procedures INC and DEC also apply to operands x of enumeration types
+and of type CHAR. In these cases they replace x by its (n-th) successor
+or predecessor.
+
+@node Modules,System-dependent facilities,Procedure declarations,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Modules
+
+@comment 11. Modules
+
+A module constitutes a collection of declarations and a sequence of
+statements. They are enclosed in the bracket MODULE and END. The module
+heading contains the module identifier, and possibly a number of import
+lists and an export list. The former specify all identifiers of objects
+that are declared outside but used within the module and therefore have
+to be imported. The export list specifies all identifiers of objects
+declared within the module and used outside.  Hence, a module
+constitutes a wall around its local objects whose transparency is
+strictly under control of the programmer.
+
+Objects local to a module are said to be at same scope level as the
+module. They can be considered as being local to the procedure enclosing
+the module but residing within a more restricted scope. The module
+identifier is repeated at the end of the declaration.
+
+@example
+$ ModuleDeclaration = MODULE ident [priority]
+$     ";" @{import@} [export] block ident.
+$ priority = "[" ConstExpression "]".
+$ export = EXPORT [QUALIFIED] IdentList ";".
+$ import = [FROM ident] IMPORT IdentList ";".
+@end example
+
+The statement sequence that constitutes the module body is executed when
+the procedure to which the module is local is called. If several modules
+are declared, then these bodies are executed in sequence in which the
+modules occur. These bodies serve to initialize local variables and must
+be considered as prefixes to the enclosing procedure's statement part.
+
+If an identifier occurs in the import (export) list, then the denoted
+object may be used inside (outside) the module as if the module brackets
+did not exist. If, however, the symbol EXPORT is followed by the symbol
+QUALIFIED, then the listed identifiers must be prefixed with the
+module's identifier when used outside the module.  This case is called
+qualified export, and is used when modules are designed which are to be
+used in coexistence with other modules not known a priori. Qualified
+export serves to avoid clashes of identical identifiers exported from
+different modules (and presumably denoting different objects).
+
+A module may feature several import lists which may be prefixed with the
+symbol FROM and a module identifier. The FROM clause has the effect of
+unqualifying the imported identifiers. Hence they may be used within the
+module as if they had been exported in normal, i.e.  non-qualified mode.
+
+If a record type is exported, all its field identifiers are exported
+too. The same holds for the constant identifiers in the case of an
+enumeration type.
+
+@noindent
+Examples of module declarations:
+
+The following module serves to scan a text and to copy it into an output
+character sequence. Input is obtained characterwise by a procedure inchr
+and delivered by a procedure outchr. The characters are given in the
+ASCII code; control characters are ignored, with the exception of LF
+(line feed) and FS (file separator). They are both translated into a
+blank and cause the Boolean variables eoln (end of line) and eof (end of
+file) to be set respectively. FS is assumed to be preceded by LF.
+
+@example
+MODULE LineInput;
+  IMPORT inchr,outchr;
+  EXPORT read, NewLine, NewFile, eoln, eof, lno;
+  CONST LF=12C; CR=15C; FS=34C;
+
+  VAR lno:CARDINAL;(*line number *)
+    ch: CHAR;   (*last character read *)
+    eof,eoln: BOOLEAN;
+
+  PROCEDURE NewFile;
+  BEGIN
+      If NOT eof THEN
+	 REPEAT inchr(ch) UNTIL ch=FS;
+      END;
+      eof:=FALSE; eoln:=FALSE; lno:=0
+  END NewFile;
+
+  PROCEDURE NewLine;
+  BEGIN
+      IF NOT eoln THEN
+      REPEAT inchr(ch) UNTIL ch=LF;
+	outchr(CR); outchr(LF)
+      END;
+      eoln:=FALSE;
+      INC(lno)
+  END NewLine;
+       
+  PROCEDURE read(VAR x:CHAR);
+  BEGIN (* assume NOT eoln AND NOT eof *)
+    LOOP inchr(ch); outchr(ch);
+      IF ch>=" " THEN
+	 x:=ch; EXIT
+      ELSIF ch=LF THEN
+	x:=" "; eoln:=TRUE; EXIT
+      ELSIF ch=FS THEN
+	x:=" "; eoln:=TRUE; eof:=TRUE; EXIT
+      END
+    END
+  END read;
+BEGIN eof:=TRUE; eoln:=TRUE
+END LineInput
+@end example
+
+The next example is a module which operates a disk track reservation
+table, and protects it from unauthorized access. A function procedure
+NewTrack yields the number of a free track which is becoming reserved.
+Tracks can be released by calling procedure ReturnTrack.
+
+@example
+MODULE TrackReservation;
+       
+  EXPORT NewTrack, ReturnTrack;
+       
+  CONST ntr=1024; (* no. of tracks *)
+    w=16;       (* word size *)
+    m=ntr DIV w;
+
+  VAR i: INTEGER;
+    free: ARRAY [0.@:.@:m-1] OF BITSET;
+
+  PROCEDURE NewTrack(): INTEGER;
+    (* reserves a new track and yields its index as result,
+       if a free track is found, and -1 otherwise *)
+    VAR i,j: INTEGER; found: BOOLEAN;
+  BEGIN found:=FALSE; i:=m;
+    REPEAT DEC(i); j:=w;
+      REPEAT DEC(j);
+	IF j IN free[i] THEN found:=TRUE; END
+      UNTIL found OR (j=0)
+    UNTIL found OR (i=0);
+    IF found THEN EXCL(free[i],j); RETURN i*w+j
+    ELSE RETURN -1
+    END
+  END NewTrack;
+
+  PROCEDURE ReturnTrack(k: INTEGER);
+  BEGIN (* assume 0<=k<ntr *)
+    INCL(free[k DIV w],k MOD w)
+  END ReturnTrack;
+
+BEGIN (* mark all tracks free *)
+  FOR i:=0 TO m-1 DO free[i]:=@{0.@:.@:w-1@} END
+END TrackReservation
+@end example
+
+
+@node System-dependent facilities,Processes,Modules,Top    
+@comment  node-name,  next,  previous,  up
+@chapter System-dependent facilities
+
+@comment 12. System-dependent facilities
+
+Modula-2 offers certain facilities that are necessary to program
+low-level operations referring directly to objects particular of a given
+computer and/or implementation.  These include for example facilities
+for accessing devices that are controlled by the computer, and
+facilities to break the data type compatibility rules otherwise imposed
+by the language definition.  Such facilities are to be used with utmost
+care, and it is strongly recommended to restrict their use to specific
+modules(called low-level modules). Most of them appear in the form of
+data types and procedures imported from the standard module SYSTEM. A
+low-level module is therefore explicitly characterized by the identifier
+SYSTEM appearing in its import list.
+
+Note: Because the objects imported from the module SYSTEM obey special
+rules, this module must be known to the compiler. It is therefore called
+a pseudo module and need not be supplied as a separate definition module
+(@pxref{Compilation units}).
+
+The facilities exported from the module SYSTEM are specified by
+individual implementations. Normally, the types WORD and ADDRESS, and
+the procedures ADR, TSIZE, NEWPROCESS, TRANSFER, are among them
+(@pxref{Processes}).
+
+The type WORD represents an individually accessible storage unit.  No
+operation except assignment is defined on this type. However, if a
+formal parameter of a procedure is of type WORD, the corresponding
+actual parameter may be of any type that uses one storage word in the
+given implementation. If a formal parameter has the type ARRAY OF WORD,
+its corresponding actual parameter may be of any type; in particular it
+may be a record type to be interpreted as an array of words.
+
+@noindent
+The type ADDRESS is defined as
+
+@example
+ADDRESS = POINTER TO WORD
+@end example
+
+It is compatible with all pointer types, and also with the type
+CARDINAL, Therefore, all operators for integer arithmetic apply to
+operands of this type. Hence, the type ADDRESS can be used to perform
+address computations and to export the results as pointers.  If a formal
+parameter is of type ADDRESS, the corresponding actual parameter may be
+of any pointer type, even if the formal parameter is a VAR parameter.
+The following example of a primitive storage allocator demonstrates a
+typical usage of the type ADDRESS.
+
+@example
+MODULE Storage;
+  FROM SYSTEM IMPORT ADDRESS;
+  EXPORT Allocate;
+
+  VAR lastused: ADDRESS;
+         
+  PROCEDURE Allocate(VAR a: ADDRESS; n: CARDINAL);
+  BEGIN a:= lastused; lastused:=lastused+n
+  END Allocate;
+
+BEGIN lastused:=0
+END Storage
+@end example
+
+The function ADR(x) denotes the storage address of variable x and is of
+type ADDRESS. TSIZE(T) is the number of storage units assigned to any
+variable of type T. TSIZE is of an arithmetic type depending on
+implementation.
+
+Besides those exported from the pseudo-module SYSTEM, there are two
+other facilities whose characteristics are system-dependent. The first
+is the possibility to use a type identifier T as a name denoting the
+type transfer function from the type of the operand to the type T.
+Evidently, such functions are data representation dependent, and they
+involve no explicit conversion instructions.
+
+The second, non-standard facility may be provided in variable
+declarations. It allows to specify the absolute address of a variable
+and to override the allocation scheme of a compiler. This facility is
+intended for access to storage locations with specific purpose and fixed
+address, such as e.g. device registers on computers with "memory-mapped
+I/O". This address is specified as a constant integer expression
+enclosed in brackets immediately following the identifier in the
+variable declaration. The choice of an appropriate data type is left to
+the programmer. For examples, refer to 13.2.
+
+
+@node Processes,Compilation units,System-dependent facilities,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Processes
+
+@comment 13. Processes
+
+Modula-2 is designed primarily for implementation on a conventional
+single-processor computer. For multiprogramming it offers only some
+basic facilities which allow the specification of quasi-concurrent
+processes and of genuine concurrency for peripheral devices.  The word
+process is here used with the meaning of coroutine.  Coroutines are
+processes that are executed by a (single) processor one at a time.
+
+
+@menu
+* Creating a process and transfer of control::
+* Device processes and interrupts::
+@end menu
+
+@node Creating a process and transfer of control,Device processes and interrupts,Processes,Processes    
+@comment  node-name,  next,  previous,  up
+@section Creating a process and transfer of control
+
+@comment 13.1. Creating a process and transfer of control
+
+@noindent
+A new process is created by a call to
+
+@example
+PROCEDURE NEWPROCESS(P: PROC; A: ADDRESS;
+		     n: CARDINAL; VAR p1: ADDRESS)
+    
+P   denotes the procedure which constitutes the process,
+A   is a base address of the process' workspace,
+n   is the size of this workspace,
+p1  is the result parameter.
+@end example
+
+A new process with P as program and A as workspace of size n is assigned
+to p1. This process is allocated, but not activated. P must be a
+parameterless procedure declared at level 0.
+
+@noindent
+A transfer of control between two processes is specified by a call to
+
+@example
+PROCEDURE TRANSFER(VAR p1,p2: ADDRESS)
+@end example
+
+This call suspends the current process, assigns it to p1, and resumes
+the process designated by p2. Evidently, p2 must have been assigned a
+process by an earlier call to either NEWPROCESS or TRANSFER. Both
+procedures must be imported from the module SYSTEM. A program
+terminates, when control reaches the end of a procedure which is the
+body of a process.
+
+@noindent
+Note: assignment to p1 occurs after identification of the new process
+p2; hence, the actual parameters may be identical.
+
+@node Device processes and interrupts,,Creating a process and transfer of control,Processes    
+@comment  node-name,  next,  previous,  up
+@section Device processes and interrupts
+
+@comment 13.2. Device processes and interrupts
+
+If a process contains an operation of a peripheral device, then the
+processor may be transferred to another process after the operation of
+the device has been initiated, thereby leading to a concurrent execution
+of that other process with the device process. Usually, termination of
+the device's operation is signalled by an interrupt of the main
+processor. In terms of Modula-2, an interrupt is a transfer operation.
+This interrupt transfer is (in Modula-2 implemented on the PDP-11)
+preprogrammed by and combined with the transfer after device initiation.
+This combination is expressed by a call to
+
+@example
+PROCEDURE IOTRANSFER(VAR p1,p2: ADDRESS; va: CARDINAL)
+@end example
+
+In analogy to TRANSFER, this call suspends the calling device process,
+assigns it to p1, resumes (transfers to) the suspended process p2, and
+in addition causes the interrupt transfer occurring upon device
+completion to assign the interrupted process to p2 and to resume the
+device process p1. va is the interrupt vector address assigned to the
+device. The procedure IOTRANSFER must be imported from the module
+SYSTEM, and should be considered as PDP-11 implementation-specific.
+
+It is necessary that interrupts can be postponed (disabled) at certain
+times, e.g. when variables common to the cooperating processes are
+accessed, or when other, possibly time-critical operations have
+priority. Therefore, every module is given a certain priority level, and
+every device capable of interrupting is given a priority level.
+Execution of a program can be interrupted, if and only if the
+interrupting device has a priority that is greater than the priority
+level of the module containing the statement currently being executed.
+Whereas the device priority is defined by the hardware, the priority
+level of each module is specified by its heading. If an explicit
+specification is absent, the level in any procedure is that of the
+calling program. IOTRANSFER must be used within modules with a specified
+priority only.
+
+@node Compilation units,,Processes,Top    
+@comment  node-name,  next,  previous,  up
+@chapter Compilation units
+
+@comment 14. Compilation units
+
+A text which is accepted by the compiler as a unit is called a
+compilation unit. There are three kinds of compilation units: main
+modules, definition modules, and implementation modules. A main module
+constitutes a main program and consists of a so-called program module.
+In particular, it has no export list. Imported objects are defined in
+other (separately compiled) program parts which themselves are
+subdivided into two units, called definition module and implementation
+module.
+
+The definition module specifies the names and properties of objects that
+are relevant to clients, i.e. other modules which imported from it. The
+implementation module contains local objects and statements that need
+not be known to a client. In particular the definition module contains
+constant, type, and variable declarations, and specifications of
+procedure headings. The corresponding implementation module contains the
+complete procedure declarations, and possibly further declarations of
+objects not exported. Definition and implementation modules exist in
+pairs. Both may contain import lists, and all objects declared in the
+definition module are available in corresponding implementation module
+without explicit import.
+
+@example
+$ DefinitionModule = DEFINITION MODULE ident ";"
+$         @{import@} @{definition@} END ident ".".
+$ definition = CONST @{ConstantDeclaration ";"@} |
+$              TYPE @{ident ["="type] ";"@} |
+$              VAR @{VariableDeclaration ";"@} |
+$              ProcedureHeading ";".
+$ ProgramModule = MODULE ident [priority] ";"
+$          @{import@} block ident ".".
+$ CompilationUnit = DefinitionModule |
+$          [IMPLEMENTATION] ProgramModule.
+@end example
+
+The definition module evidently represents the interface between the
+implementation module on one side and its clients on the other side.
+The definition module contains those declarations which are relevant to
+the client modules, and presumably no other ones. Hence, the definition
+module acts as the implementation module's (extended) export list, and
+all its declared objects are exported.
+
+Definition modules imply the use of qualified export. Type definitions
+may consist of the full specification of the type ( in this case its
+export is said to be transparent), or they may consist of the type
+identifier only. In this case the full specification must appear in the
+corresponding implementation module , and its export is said to be
+opaque. The type is known in the importing client modules by its name
+only , and all its properties are hidden. Therefore, procedures
+operating on operands of this type, and in particular operating on its
+components, must be defined in the same implementation module which
+hides the type's properties. Opaque export is restricted to pointers and
+to subranges of standard types.  Assignment and test for equality are
+applicable to all opaque types.
+
+As in local modules, the body of an implementation module acts as an
+initialization facility for its local objects. Before its execution, the
+imported modules are initialized in the order in which they are listed.
+If circular references occur among modules, their order of
+initialization is not defined.
+
+@contents
+@bye
+
+ 

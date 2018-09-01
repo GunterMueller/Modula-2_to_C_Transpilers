@@ -1,0 +1,64 @@
+DEFINITION MODULE m3d
+
+(*
+
+                      y|
+                       |
+                       |
+                       |
+                       |
+                       |
+                       |               x
+                       +----------------
+                      /
+                     /
+                    /
+                   /                     
+                  /z                     
+
+*)
+
+TYPE
+
+	POINT = RECORD
+		x, y, z: REAL
+	END
+
+	RT = RECORD
+		(* Orthonormal matrix: *)
+		rxx, rxy, rxz: REAL
+		ryx, ryy, ryz: REAL
+		rzx, rzy, rzz: REAL
+		(* Translation: *)
+		tx, ty, tz: REAL
+	END
+
+
+FUNCTION PointCopy(p: POINT): POINT
+(* Return a copy of the given POINT. *)
+
+FUNCTION Zero(): RT
+(* Return the zero transformation of roto-translation. *)
+
+FUNCTION Unit(): RT
+(* Return the identity transformation of roto-translation. *)
+
+FUNCTION Translation(p: POINT): RT
+(* Return the translation from the origin to the given point. *)
+
+FUNCTION Rotation_x(angle: REAL): RT
+FUNCTION Rotation_y(angle: REAL): RT
+FUNCTION Rotation_z(angle: REAL): RT
+(* Return the rotation transformation around the x,y,z axis of the given
+angle (in radiants). *)
+
+FUNCTION Scale(s: REAL): RT
+(* Rescale all the coordinates to the given factor. *)
+
+FUNCTION Product(a: RT, b: RT): RT
+(* Trasformation composition. `b' is applied first, then `a' is applied. *)
+
+FUNCTION Transform(t: RT, p: POINT): POINT
+(* Return the point `p' transformed as per the given roto-translation `t'. *)
+
+END

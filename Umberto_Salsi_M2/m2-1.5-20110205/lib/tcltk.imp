@@ -1,0 +1,90 @@
+IMPLEMENTATION MODULE tcltk
+
+$$ linker options: -ltcl
+$$ linker options: -ltk
+$$ linker options: -lm
+
+IMPORT m2
+
+(*
+	References:
+
+	www.tcl.tk
+	http://aspn.activestate.com/ASPN/Tcl
+
+	TODO:
+
+	- let to open several windows
+	- better event loop handling
+*)
+
+$#include <tk.h>
+$#include <signal.h>
+$#include <string.h>
+
+$	Tcl_Interp *tcltk_interp;
+
+
+FUNCTION Init()
+VAR err: INTEGER
+BEGIN
+$	tcltk_interp = Tcl_CreateInterp();
+$	tcltk_err = Tcl_Init( (Tcl_Interp *) tcltk_interp );
+$	tcltk_err = Tk_Init( (Tcl_Interp *) tcltk_interp );
+	IF err <> 0 THEN
+		error("tcltk.Init(): error\n")
+		exit(1)
+	END
+END
+
+
+FUNCTION Finalize()
+BEGIN
+$	Tcl_Finalize();
+END
+
+
+FUNCTION Eval(s: STRING)
+VAR
+	err: INTEGER
+	descr: STRING
+$	char *s, *descr;
+BEGIN
+	IF s = NIL THEN
+		RETURN
+	END
+$   s = alloca(tcltk_s->len + 1);
+$	memcpy(s, tcltk_s->s, tcltk_s->len);
+$	s[tcltk_s->len] = 0;
+$	tcltk_err = Tcl_Eval(tcltk_interp, s);
+$	descr = (char *) Tcl_GetStringResult(tcltk_interp);
+$	tcltk_descr = new_STRING(descr, strlen(descr));
+	IF err <> 0 THEN
+		error("tcltk.Eval(" + s + "): " + descr + "\n")
+		exit(1)
+	END
+END
+
+
+FUNCTION GetVar(name: STRING): STRING
+$ char *n;
+BEGIN
+	IF name = NIL THEN
+		RETURN NIL
+	END
+$	n = alloca(tcltk_name->len);
+$	memcpy(n, tcltk_name->s, tcltk_name->len);
+$	n[tcltk_name->len] = 0;
+$	n = (char *) Tcl_GetVar((Tcl_Interp *) tcltk_interp, n, 0);
+$	if( n == NULL )  return NULL;
+$	return new_STRING(n, strlen(n));
+END
+
+
+FUNCTION DoOneEvent()
+BEGIN
+$	while( Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT) == 1 ) ;
+$	usleep(100000);
+END
+
+END

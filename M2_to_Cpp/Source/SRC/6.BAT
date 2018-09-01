@@ -1,0 +1,1 @@
+gxx c2.cpp -o c2dj2.exe -O2 -funsigned-char --pedantic

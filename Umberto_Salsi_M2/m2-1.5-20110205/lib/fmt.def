@@ -1,0 +1,92 @@
+DEFINITION MODULE fmt
+(*
+	General formatting utilities for numbers and strings. For every
+	function, the 'f' argument is a string containing the formatting
+	parameters. A NIL or empty string mean that the default values are
+	used. Spaces in the formatting string are ignored and may be used
+	for better readability.
+*)
+
+FUNCTION Boolean(b: BOOLEAN, true: STRING, false: STRING): STRING
+(*
+	Return the string 'false' if b=FALSE, return the string 'true'
+	otherwise. Example:
+
+		print("Your name is " + Boolean(length(name) > 0, name, "NOT SET"))
+*)
+
+FUNCTION Integer(f: STRING, i: INTEGER): STRING
+(*
+	Return the integer number 'i' formatted as per 'f'. 'f' may contain
+	zero or more of the following parameters:
+
+	wN  if the resulting string is shorter than N chars, pad with spaces
+	    to the right up to N chars
+	PX  pad using X rather than a space
+	r   right justify: pad to the left rather than to the right
+	z   pad with '0' to the front rather than with spaces (override 'right')
+	+   force a "+" in front of positive numbers (override 'S')
+	S   force a blank space in front of positive numbers (override '+')
+	bN  use base N rather than 10; 2<=N<=36
+	U   when the base is >10, use upper-case letters rather than lower-case
+	    letters
+
+	Examples:
+
+		Integer("w4 z b16", 512) ==> "0200"
+		"Chapter" + Integer("w15 r P.", 12) ==> "Chapter.............12"
+*)
+
+FUNCTION Real(f: STRING, r: REAL): STRING
+(*
+	Return the real number 'r' formatted as per 'f'. 'f' may contain
+	zero or more of the following parameters:
+
+	wN  if the resulting string is shorter than N chars, pad with spaces
+	    to the right up to N chars
+	PX  pad using X rather than a space
+	r   right justify: pad to the left rather than to the right (override 'z')
+	pN  set precision to N digits; 0 is treated as 1; default 6 digits
+	e   always use the scientific notation "1.234e[+/-]xx" with at least two
+	    digits in the exponent; if the precision is set to 0, no decimal
+	    point and no decimal digists are given; the total number of
+	    significant digits given is 1+precision
+	f   use the fixed notation "123.456" if possible; if the precision is
+	    set to 0, no decimal point and no decimal digits are given
+	g   use the style 'e' or 'f'; the precision is the total number of
+	    significant digits given; a precision of 0 it is treated as 1.
+	    The style 'e' is used if the exponent from its conversion is less
+	    than -4 or greater than or equal to the  precision; trailing
+	    zeros are removed from the fractional part of the result;
+	    a decimal point appears only if it is followed by at least one digit.
+	z   pad with '0' to the front rather than with spaces (override 'r')
+	+   force a "+" in front of positive numbers (override 'S')
+	S   force a blank space in front of positive numbers (override '+')
+	U   use uppercase "E" rather than "e" in scientific notation
+
+	Numbers are rounded before being converted to the decimal notation.
+	The meaning of the "precision" parameter depend on the style 'e', 'f'
+	or 'g' chosen. Use 3*math.precision() to get a guess of the maximum
+	number of significant digits available in your system. The style 'g'
+	is the default. Examples:
+
+		Real("e p2", 1e6) ==> "1.00e+06"
+		Real("f p2", 1e6) ==> "1000000.00"
+		Real("g p20", 1.0/3.0) ==> "0.33333333333333331483"
+*)
+
+FUNCTION String(f: STRING, s: STRING): STRING
+(*
+	The NIL string is treated as the empty string "".
+
+	wN  if the resulting string is shorter than N chars, pad with spaces
+	    to the right up to N chars
+	PX  pad using X rather than a space
+	r   right justify: pad to the left rather than to the right
+
+	Example:
+
+		String("w5 r", "x") ==> "    x"
+*)
+
+END

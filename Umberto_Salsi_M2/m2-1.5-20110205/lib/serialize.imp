@@ -1,0 +1,273 @@
+IMPLEMENTATION MODULE serialize
+
+IMPORT m2
+
+
+FUNCTION Short(s: STRING, maxlen: INTEGER): STRING
+BEGIN
+	IF s = NIL THEN
+		RETURN "<NIL>"
+	ELSIF length(s) > maxlen THEN
+		RETURN s[0,maxlen] + "[...]"
+	ELSE
+		RETURN s
+	END
+END
+
+
+FUNCTION OpenWrite(): SERBUF
+VAR sb: SERBUF
+BEGIN
+	sb[s] = NIL
+	sb[i] = 0
+	RETURN sb
+END
+
+
+FUNCTION WriteBoolean(sb: SERBUF, b: BOOLEAN)
+VAR s: STRING
+BEGIN
+	IF b THEN
+		s = "B1"
+	ELSE
+		s = "B0"
+	END
+	sb[s] = sb[s] + s
+END
+
+
+FUNCTION WriteInteger(sb: SERBUF, i: INTEGER)
+BEGIN
+	sb[s] = sb[s] + "I" + itos(i) + ";"
+END
+
+
+FUNCTION WriteReal(sb: SERBUF, r: REAL)
+VAR s: STRING
+BEGIN
+	s = "R" + rtos(r) + ";"
+	sb[s] = sb[s] + s
+	sb[i] = sb[i] + length(s)
+END
+
+
+FUNCTION WriteString(sb: SERBUF, s: STRING)
+VAR w: STRING
+BEGIN
+	IF s = NIL THEN
+		sb[s] = sb[s] + "SN"
+		sb[i] = sb[i] + 2
+		RETURN
+	END
+	w = "S" + itos(length(s)) + "," + s + ";"
+	sb[s] = sb[s] + w
+	sb[i] = sb[i] + length(w)
+END
+
+
+FUNCTION WriteArrayOfString(sb: SERBUF, a: ARRAY OF STRING)
+VAR i: INTEGER
+BEGIN
+	IF a = NIL THEN
+		WriteBoolean(sb, TRUE)
+		RETURN
+	END
+	WriteBoolean(sb, FALSE)
+	WriteInteger(sb, count(a))
+	FOR i=0 TO count(a)-1 DO
+		WriteString(sb, a[i])
+	END
+END
+
+
+(*******
+FUNCTION WriteArray(sb: SERBUF, a: ARRAY OF E,
+	WriteE: FUNCTION (sb: SERBUF, e: E))
+# FIXME: Non esiste il tipo "FUNCTION".
+VAR i: INTEGER
+BEGIN
+	IF a = NIL THEN
+		WriteBoolean(sb, TRUE)
+		RETURN
+	END
+	WriteBoolean(sb, FALSE)
+	WriteInteger(sb, count(a))
+	FOR i=0 TO count(a)-1 DO
+		WriteE(sb, a[i])
+	END
+END
+
+
+FUNCTION ReadArray(sb: SERBUF, ReadE: FUNCTION (sb: SERBUF): E): ARRAY OF E
+BEGIN
+	IF ReadBoolean(sb) THEN
+		RETURN NIL
+	END
+	FOR i=0 TO ReadInteger(sb)-1 DO
+		# FIXME: il compilatore qui deve generare codice diverso a seconda
+		# che il tipo E sia semplice o puntatore.
+		a[i] = ReadE(sb)
+	END
+	RETURN a
+END
+
+FIXME: Per i RECORD le cose sono piu' difficili ancora, perche' non conosco
+a priori ne' il numero dei campi, ne' l'ordine, ne' il tipo.
+*********)
+
+FUNCTION GetResult(b: SERBUF): STRING
+BEGIN
+	IF b = NIL THEN
+		RETURN NIL
+	END
+	RETURN b[s]
+END
+
+
+FUNCTION OpenRead(s: STRING): SERBUF
+VAR sb: SERBUF
+BEGIN
+	IF s = NIL THEN
+		error("serialize.OpenRead(): can't read NIL string\n")
+		exit(1)
+	END
+	sb[s] = s
+	sb[i] = 0
+	RETURN sb
+END
+
+
+FUNCTION ReadBoolean(sb: SERBUF): BOOLEAN
+VAR s: STRING  b: BOOLEAN
+BEGIN
+	s = sb[s][sb[i],sb[i]+2]
+	IF s = "B0" THEN
+		b = FALSE
+	ELSIF s = "B1" THEN
+		b = TRUE
+	ELSE
+		error("serialize.ReadBoolean(): parse failed - found `"
+		+ Short(sb[s][sb[i],length(sb[s])], 10) + "'\n")
+		exit(1)
+	END
+	sb[i] = sb[i] + 2
+	RETURN b
+END
+
+
+FUNCTION ReadInteger(sb: SERBUF): INTEGER
+VAR j: INTEGER  s: STRING
+BEGIN
+	s = sb[s]
+	j = sb[i]
+	IF s[j] <> "I" THEN
+		error("serialize.ReadInteger(): parse failed - found `"
+		+ Short(s[j,length(s)], 10) + "'\n")
+		exit(1)
+	END
+	REPEAT
+		j = j+1
+	UNTIL (j >= length(s)) OR (s[j] = ";")
+	IF s[j] <> ";" THEN
+		error("serialize.ReadInteger(): parse failed\n")
+		exit(1)
+	END
+	s = s[sb[i]+1, j]
+	sb[i] = j+1
+	RETURN stoi(s)
+END
+
+
+FUNCTION ReadReal(sb: SERBUF): REAL
+VAR j: INTEGER  s: STRING
+BEGIN
+	s = sb[s]
+	j = sb[i]
+	IF s[j] <> "I" THEN
+		error("serialize.ReadReal(): parse failed - found `"
+		+ Short(s[j,length(s)], 10) + "'\n")
+		exit(1)
+	END
+	REPEAT
+		j = j+1
+	UNTIL (j >= length(s)) OR (s[j] = ";")
+	IF s[j] <> ";" THEN
+		error("serialize.ReadReal(): parse failed\n")
+		exit(1)
+	END
+	s = s[sb[i]+1, j]
+	sb[i] = j+1
+	RETURN stor(s)
+END
+
+
+FUNCTION ReadString(sb: SERBUF): STRING
+
+	FUNCTION err(msg: STRING)
+	VAR s: STRING
+	BEGIN
+		s = sb[s]
+		error("serialize.ReadString(): " + msg + " - found "
+		+ Short(s[sb[i],length(s)], 20) + "\n")
+		exit(1)
+	END
+
+VAR s: STRING  i, j, len: INTEGER
+BEGIN
+	s = sb[s]
+	i = sb[i]
+	IF s[i] <> "S" THEN
+		err("missing `S'")
+	END
+	i = i + 1
+	IF s[i] = "N" THEN
+		sb[i] = i+1
+		RETURN NIL
+	END
+	IF match(s[i], "^[0-9]$") THEN
+		j = i
+		REPEAT
+			i = i+1
+		UNTIL NOT match(s[i], "^[0-9]$")
+		len = stoi(s[j,i])
+		IF s[i] <> "," THEN
+			err("missing `,' after string length")
+		END
+		i = i+1
+		j = i+len
+		IF s[j] <> ";" THEN
+			err("missing `;'")
+		END
+		sb[i] = j+1
+		RETURN s[i,j]
+	END
+	err("expected `N' or number after `S'")
+	RETURN NIL (* gcc -Wall *)
+END
+
+
+FUNCTION ReadArrayOfString(sb: SERBUF): ARRAY OF STRING
+VAR i: INTEGER  a: ARRAY OF STRING
+BEGIN
+	IF ReadBoolean(sb) THEN
+		RETURN NIL
+	END
+	FOR i=0 TO ReadInteger(sb)-1 DO
+		a[i] = ReadString(sb)
+	END
+	RETURN a
+END
+
+
+(******
+FUNCTION WriteR(sb: SERBUF, r: R)
+BEGIN
+END
+
+FUNCTION ReadR(sb:SERBUF): R
+BEGIN
+END
+******)
+
+
+END

@@ -1,0 +1,116 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        DirEntry                                    *
+ * Description:             Directory and file scanning operations      *
+ * Implementation level:    Low-level (Necessary module)                *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 16, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_DirEntry_m2h_
+#define _M2_DirEntry_m2h_
+
+#include <_m2sys.h>
+
+#include <Date.m2h>
+#include <Time.m2h>
+
+namespace DirEntry {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError;           /* No error */
+   const CARDINAL unknownError;      /* Any error not described below */
+   const CARDINAL noRoomError;       /* Internal or external storage buffer exceeded */
+   const CARDINAL pathNotFoundError; /* Specified directory path cannot be found */
+   const CARDINAL priviledgeError;   /* Violation of system privilegdes to set/get time */
+
+   class T;     /* Directory entry */
+
+   /* Accessing the dir entry components */
+
+   void Name(_ARRAYOF<CHAR>& name, T e);
+      /* Gets file or directory name from entry 'e'.
+       + Sets error codes:
+           'noRoomError; if string 'dir' is not large enough.
+      */
+
+   void CrTime(Time::T& t, T e);
+      /* Gets creation time of directory entry 'e'. */
+
+   void CrDate(Date::T& d, T e);
+      /* Gets creation date of directory entry 'e'. */
+
+   void ModTime(Time::T& t, T e);
+      /* Gets last modification time of directory entry 'e'. */
+
+   void ModDate(Date::T& d, T e);
+      /* Gets last modification date of directory entry 'e'. */
+
+   /* If both of those dates and times are not supported by
+      current file system, then "Cr" and "Mod" functions return
+      same values for time (date)
+   */
+
+   LONGCARD Size(T e);
+      /* Returns a size of field from directory entry 'e'. If it is
+         a directory then returns 0.
+      */
+
+   void SetPath(_ARRAYOF<CHAR> filename);
+      /* Sets the file name pattern to be searched for in the calls
+         of 'Found'.
+       + Sets error codes:
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   BOOLEAN Found(T& e);
+      /* Returns TRUE if direntry 'e' is found for 'filename'.
+       + Sets error codes:
+           'unknownError'    - platform specific (file-)system error.
+           'priviledgeError'
+      */
+      /* ZJB : Ne valja opis... */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // DirEntry
+
+#endif

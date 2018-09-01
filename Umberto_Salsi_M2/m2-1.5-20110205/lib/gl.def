@@ -1,0 +1,156 @@
+DEFINITION MODULE gl
+
+FUNCTION ClearColor(red: REAL, green: REAL, blue: REAL, alpha: REAL)
+
+CONST
+	(* Lighting *)
+	LIGHTING                 = 0x0B50
+	LIGHT0                   = 0x4000
+	LIGHT1                   = 0x4001
+	LIGHT2                   = 0x4002
+	LIGHT3                   = 0x4003
+	LIGHT4                   = 0x4004
+	LIGHT5                   = 0x4005
+	LIGHT6                   = 0x4006
+	LIGHT7                   = 0x4007
+	SPOT_EXPONENT            = 0x1205
+	SPOT_CUTOFF              = 0x1206
+	CONSTANT_ATTENUATION     = 0x1207
+	LINEAR_ATTENUATION       = 0x1208
+	QUADRATIC_ATTENUATION    = 0x1209
+	AMBIENT                  = 0x1200
+	DIFFUSE                  = 0x1201
+	SPECULAR                 = 0x1202
+	SHININESS                = 0x1601
+	EMISSION                 = 0x1600
+	POSITION                 = 0x1203
+	SPOT_DIRECTION           = 0x1204
+	AMBIENT_AND_DIFFUSE      = 0x1602
+	COLOR_INDEXES            = 0x1603
+	LIGHT_MODEL_TWO_SIDE     = 0x0B52
+	LIGHT_MODEL_LOCAL_VIEWER = 0x0B51
+	LIGHT_MODEL_AMBIENT      = 0x0B53
+	FRONT_AND_BACK           = 0x0408
+	SHADE_MODEL              = 0x0B54
+	FLAT                     = 0x1D00
+	SMOOTH                   = 0x1D01
+	COLOR_MATERIAL           = 0x0B57
+	COLOR_MATERIAL_FACE      = 0x0B55
+	COLOR_MATERIAL_PARAMETER = 0x0B56
+	NORMALIZE                = 0x0BA1
+
+
+FUNCTION ShadeModel(mask: INTEGER)
+FUNCTION Viewport(x: INTEGER, y: INTEGER, width: INTEGER, height: INTEGER)
+
+CONST
+	(* Matrix Mode: *)
+	MATRIX_MODE = 0x0BA0
+	MODELVIEW   = 0x1700
+	PROJECTION  = 0x1701
+	TEXTURE     = 0x1702
+
+FUNCTION MatrixMode(mask: INTEGER)
+
+FUNCTION LoadIdentity()
+
+FUNCTION Ortho(left: REAL, right: REAL, bottom: REAL, top: REAL,
+	near_val: REAL, far_val: REAL)
+
+CONST
+	(* glPush/PopAttrib bits: *)
+	CURRENT_BIT         = 0x00000001
+	POINT_BIT           = 0x00000002
+	LINE_BIT            = 0x00000004
+	POLYGON_BIT         = 0x00000008
+	POLYGON_STIPPLE_BIT = 0x00000010
+	PIXEL_MODE_BIT      = 0x00000020
+	LIGHTING_BIT        = 0x00000040
+	FOG_BIT             = 0x00000080
+	DEPTH_BUFFER_BIT    = 0x00000100
+	ACCUM_BUFFER_BIT    = 0x00000200
+	STENCIL_BUFFER_BIT  = 0x00000400
+	VIEWPORT_BIT        = 0x00000800
+	TRANSFORM_BIT       = 0x00001000
+	ENABLE_BIT          = 0x00002000
+	COLOR_BUFFER_BIT    = 0x00004000
+	HINT_BIT            = 0x00008000
+	EVAL_BIT            = 0x00010000
+	LIST_BIT            = 0x00020000
+	TEXTURE_BIT         = 0x00040000
+	SCISSOR_BIT         = 0x00080000
+	ALL_ATTRIB_BITS     = 0x000FFFFF
+
+
+FUNCTION Clear(mask: INTEGER)
+
+FUNCTION PushMatrix()
+
+FUNCTION Rotate(angle: REAL, x: REAL, y: REAL, z: REAL)
+
+FUNCTION Color(r: REAL, g: REAL, b: REAL)
+
+CONST
+	(* Primitives: *)
+	POINTS         = 0x0000
+	LINES          = 0x0001
+	LINE_LOOP      = 0x0002
+	LINE_STRIP     = 0x0003
+	TRIANGLES      = 0x0004
+	TRIANGLE_STRIP = 0x0005
+	TRIANGLE_FAN   = 0x0006
+	QUADS          = 0x0007
+	QUAD_STRIP     = 0x0008
+	POLYGON        = 0x0009
+
+
+FUNCTION Begin(mode: INTEGER)
+
+FUNCTION End()
+
+FUNCTION PopMatrix()
+
+FUNCTION Vertex3(x: REAL, y: REAL, z: REAL)
+
+CONST
+	(* Polygons: *)
+	POINT                 = 0x1B00
+	LINE                  = 0x1B01
+	FILL                  = 0x1B02
+	CW                    = 0x0900
+	CCW                   = 0x0901
+	FRONT                 = 0x0404
+	BACK                  = 0x0405
+	POLYGON_MODE          = 0x0B40
+	POLYGON_SMOOTH        = 0x0B41
+	POLYGON_STIPPLE       = 0x0B42
+	EDGE_FLAG             = 0x0B43
+	CULL_FACE             = 0x0B44
+	CULL_FACE_MODE        = 0x0B45
+	FRONT_FACE            = 0x0B46
+	POLYGON_OFFSET_FACTOR = 0x8038
+	POLYGON_OFFSET_UNITS  = 0x2A00
+	POLYGON_OFFSET_POINT  = 0x2A01
+	POLYGON_OFFSET_LINE   = 0x2A02
+	POLYGON_OFFSET_FILL   = 0x8037
+
+
+FUNCTION PolygonMode(face: INTEGER, mode: INTEGER)
+
+FUNCTION FrontFace(mode: INTEGER)
+
+FUNCTION CullFace(mode: INTEGER)
+
+FUNCTION Enable(cap: INTEGER)
+
+FUNCTION Disable(cap: INTEGER)
+
+FUNCTION Frustum(left: REAL, right: REAL, bottom: REAL, top: REAL, near_val: REAL, far_val: REAL)
+
+FUNCTION Scale(x: REAL, y: REAL, z: REAL)
+
+FUNCTION Flush()
+
+FUNCTION Translate(x: REAL, y: REAL, z: REAL)
+
+END

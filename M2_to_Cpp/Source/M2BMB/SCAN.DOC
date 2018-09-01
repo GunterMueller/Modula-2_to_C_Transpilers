@@ -1,0 +1,183 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Scan                                      *
+ * Description:           Conversion from strings to data types     *
+ * Implementation level:  Mid-level (Useful module)                 *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  July 15, 1996                             *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Scan;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in oreder of reversed priority)
+   *)
+
+CONST
+
+      noError;                 (* No Error *)
+      conversionError;         (* Error in conversion *)
+      overflowError;           (* Overflow *)
+      wrongBaseError;          (* base < 2 or base > 16 *)
+
+TYPE
+   Base = [2..16];             (* Base for numbers *)
+
+   PROCEDURE Bool(s: ARRAY OF CHAR): BOOLEAN;
+      (* Returns boolean representation of string 's', if possible.
+         Strings 's' begins with 'TRUE' or 'FALSE'.
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with 'TRUE' nor 'FALSE'
+      *)
+
+   PROCEDURE Int(s: ARRAY OF CHAR): INTEGER;
+      (* Returns integer representation of string 's', if possible.
+         String 's' begins with the fllowing form:
+         ['-'] digit {digit} (in EBNF), where digit = 0|1|2|...|8|9
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError' - if MIN(INTEGER) < result < MAX(INTEGER)
+      *)
+
+   PROCEDURE LongInt(s: ARRAY OF CHAR): LONGINT;
+      (* Returns long integer representation of string 's', if possible.
+         String 's' begins with the fllowing form:
+         ['-'] digit {digit} (in EBNF), where digit = 0|1|2|...|8|9
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError' - if MIN(LONGINT) < result < MAX(LONGINT)
+      *)
+
+   PROCEDURE Card(s: ARRAY OF CHAR): CARDINAL;
+      (* Returns cardinal representation of string 's', if possible.
+         String 's' begins with the following form: digit {digit} (in EBNF),
+         where digit = 0|1|2|...|8|9
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError' - if MIN(CARDINAL) < result < MAX(CARDINAL)
+      *)
+
+   PROCEDURE LongCard(s: ARRAY OF CHAR): LONGCARD;
+      (* Returns long integer representation of string 's', if possible.
+         String 's' begins with the following form: digit {digit} (in EBNF),
+         where digit = 0|1|2|...|8|9
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError' - if MIN(LONGCARD) < result < MAX(LONGCARD)
+      *)
+
+   PROCEDURE Real(s: ARRAY OF CHAR): REAL;
+      (* Returns real representation of string 's', if possible.
+         String 's' begins with the following form:
+         ['-'] digit {digit} ('.' [{digit}] | ['E' ['+'|'-'] digit {digit}])
+         (in EBNF) where digit = 0|1|2|...|8|9.
+
+         Absolute difference between number converted by this procedure
+         and number converted by the compiler must be less then 1.0E-30.
+
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError' - if MIN(REAL) < result < MAX(REAL)
+      *)
+
+   PROCEDURE LongReal(s: ARRAY OF CHAR): LONGREAL;
+      (* Returns long real representation of string 's', if possible.
+         String 's' begins with the following form:
+         ['-'] digit {digit} ['.' {digit}] ['E' ['+'|'-'] digit {digit}]
+         (in EBNF) where digit = 0|1|2|...|8|9.
+
+         Absolute difference between number converted by this procedure
+         and number converted by the compiler must be less then 1.0E-30.
+
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError' - if MIN(REAL) < result < MAX(REAL)
+      *)
+
+   PROCEDURE IntB(s: ARRAY OF CHAR; base: Base): INTEGER;
+      (* Returns integer representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: ['-'] digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError'   - if MIN(INTEGER) < result < MAX(INTEGER)
+           'wrongBaseError'  - if 'base' < 1, 'base' > 16
+      *)
+
+   PROCEDURE LongIntB(s: ARRAY OF CHAR; base: Base): LONGINT;
+      (* Returns long integer representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: ['-'] digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError'   - if MIN(LONGINT) < result < MAX(LONGINT)
+           'wrongBaseError'  - if 'base' < 1, 'base' > 16
+      *)
+
+   PROCEDURE CardB(s: ARRAY OF CHAR; base: Base): CARDINAL;
+      (* Returns cardinal representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError'   - if MIN(CARDINAL) < result < MAX(CARDINAL)
+           'wrongBaseError'  - if 'base' < 1, 'base' > 16
+      *)
+
+   PROCEDURE LongCardB(s: ARRAY OF CHAR; base: Base): LONGCARD;
+      (* Returns long integer representation of string 's', if possible.
+         's' contains the number in base 'base', and begins with
+         the following form: digit {digit} (in EBNF), where
+         digit = {n1|n2|...|nk}, n1, ..., nk are digits less than 'base'.
+         + Sets error codes:
+           'conversionError' - if 's' does not begin with appropriate form
+           'overflowError'   - if MIN(LONGCARD) < result < MAX(LONGCARD)
+           'wrongBaseError'  - if 'base' < 1, 'base' > 16
+      *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+END Scan.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - 'overflow' and 'wrong base' errors added
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+   - 'base' in IntB, CardB, LongIntB, and LongCardB has been restricted
+      to [2..16]
+*)
+
+

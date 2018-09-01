@@ -1,0 +1,101 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        FileWr                                      *
+ * Description:             Output operations on files                  *
+ * Implementation level:    High-level (Utility module)                 *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 17, 2000                           *
+ *                                                                      *
+ * Author:                  Zoran Budimac                               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: zjb@unsim.ns.ac.yu              *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_FileWr_m2h_
+#define _M2_FileWr_m2h_
+
+#include <_m2sys.h>
+
+#include <File.m2h>
+
+namespace FileWr {
+
+   void Bool(File::T f, BOOLEAN b, CARDINAL field);
+      /* Writes a boolean 'b' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void Int(File::T f, INTEGER n, CARDINAL field);
+      /* Writes an integer 'n' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongInt(File::T f, LONGINT n, CARDINAL field);
+      /* Writes a long integer 'n' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void Card(File::T f, CARDINAL n, CARDINAL field);
+      /* Writes a long integer 'n' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongCard(File::T f, LONGCARD n, CARDINAL field);
+      /* Writes a long cardinal 'n' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void Real(File::T f, REAL n, CARDINAL field);
+      /* Writes a real 'n' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongReal(File::T f, LONGREAL n, CARDINAL field);
+      /* Writes a long real 'n' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void IntB(File::T f, INTEGER n, CARDINAL base, CARDINAL field);
+      /* Writes an integer 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongIntB(File::T f, LONGINT n, CARDINAL base, CARDINAL field);
+      /* Writes a long integer 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void CardB(File::T f, CARDINAL n, CARDINAL base, CARDINAL field);
+      /* Writes a long integer 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongCardB(File::T f, LONGCARD n, CARDINAL base, CARDINAL field);
+      /* Writes a long cardinal 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted).
+      */
+
+   template <class _BYTEARRAY1>
+   void Bin(File::T f, _BYTEARRAY1 bin);
+      /* Writes an array of bytes 'bin' to a file 'f'. */
+
+   void Char(File::T f, CHAR ch);
+      /* Writes a character to file 'f'. */
+
+   void Str(File::T f, _ARRAYOF<CHAR> s);
+      /* Writes a string 's' to file 'f'. */
+
+   void Ln(File::T f);
+      /* Writes a 'new line' to file 'f'. */
+
+} // FileWr
+
+#endif

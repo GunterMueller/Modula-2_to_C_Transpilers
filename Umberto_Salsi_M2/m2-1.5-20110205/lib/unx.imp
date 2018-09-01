@@ -1,0 +1,138 @@
+IMPLEMENTATION MODULE unx
+
+#IMPORT m2
+
+FUNCTION getenviron(): ARRAY OF STRING
+VAR e: ARRAY OF STRING
+BEGIN
+$	char **s = environ;
+$	int i = 0;
+$
+$	while( *s != NULL ){
+$		assign_ARRAY_OF_STRING(&unx_e, i++, new_STRING(*s, strlen(*s)));
+$		s++;
+$	}
+	RETURN e
+END
+
+FUNCTION getenv(name: STRING): STRING
+(* FIXME: dovrei controllare se la stringa e' valida, cioe' non ci
+devono essere codici \x00 *)
+$	char *n, *v;
+BEGIN
+	mark(name)
+$	if( unx_name == NULL )  die("unx.getenv(): argument is NULL");
+$	MK_ZSTRING(n, unx_name);
+$	v = getenv(n);
+$	if( v == NULL )  return NULL;
+$	return new_STRING(v, strlen(v));
+END
+
+
+FUNCTION putenv(n: STRING, v: STRING)
+RAISE ERROR
+$	char *s;
+BEGIN
+$	if( unx_n == NULL )  die("unx.putenv(n, ...): n is NULL");
+$	if( unx_v == NULL )  die("unx.putenv(..., v): v is NULL");
+$	s = M2_MALLOC_ATOMIC(unx_n->len + 1 + unx_v->len + 1); /* "name=value\x00" */
+$	if( s == NULL )  die("unx.putenv(): out of memory");
+$	memcpy(s, unx_n->s, unx_n->len);
+$	s[unx_n->len] = '=';
+$	memcpy(s + unx_n->len+1, unx_v->s, unx_v->len);
+$	s[unx_n->len + 1 + unx_v->len] = 0;
+$	if( putenv(s) == -1 ){
+		RAISE ERROR 1 "putenv(\"" + n + "\", \"" + v
+			+ "): Insufficient space to allocate new environment"
+$	}
+END
+
+FUNCTION setenv(n: STRING, v: STRING, overwrite: INTEGER)
+RAISE ERROR
+$	char *nz, *vz;
+BEGIN
+$	if( unx_n == NULL )  die("unx.setenv(n, ...): n e' NULL");
+$	if( unx_v == NULL )  die("unx.setenv(..., v): v e' NULL");
+$	MK_ZSTRING(nz, unx_n);
+$	MK_ZSTRING(vz, unx_v);
+$	if( setenv(nz, vz, unx_overwrite) == -1 ){
+		RAISE ERROR 1 "setenv(\"" + n + "\", \"" + v + ", " + itos(overwrite)
+			+ "): Insufficient space to allocate new environment"
+$	}
+END
+
+
+FUNCTION unsetenv(n: STRING)
+$	char *z;
+BEGIN
+	mark(n)
+$	MK_ZSTRING(z, unx_n);
+$	unsetenv(z);
+END
+
+
+FUNCTION clearenv()
+BEGIN
+$	clearenv();
+END
+
+
+FUNCTION fork(): INTEGER
+RAISE ERROR
+VAR pid: INTEGER
+BEGIN
+$	unx_pid = fork();
+	IF pid = -1 THEN
+		RAISE ERROR errno() "fork(): " + strerror()
+	END
+	RETURN pid
+END
+
+
+FUNCTION Exec(filename: STRING, args: ARRAY OF STRING)
+RAISE ERROR
+VAR
+	i, n: INTEGER
+	s: STRING
+$	char *f, **argv;
+BEGIN
+$	fflush(stdout);
+$	fflush(stderr);
+	n = count(args)
+$	argv = alloca((unx_n + 2) * sizeof(char *));
+$	MK_ZSTRING(f, unx_filename);
+$	argv[0] = f;
+	FOR i=0 TO n-1 DO
+		s = args[i]
+		#log("    " + s)
+		IF s = NIL THEN
+			RAISE ERROR 1 "Exec(" + StringToLiteral(filename)
+			+ ", ...): argument no. " + itos(i) + " is NIL"
+			RETURN
+		END
+$		MK_ZSTRING(argv[unx_i + 1], unx_s);
+	END
+$	argv[unx_n + 1] = 0;
+$	execvp(f, argv);
+	RAISE ERROR 2 "Exec(" + StringToLiteral(filename)
+	+ ", ...): " + strerror()
+END
+
+
+FUNCTION system(cmd: STRING): INTEGER
+RAISE ERROR
+VAR err: INTEGER
+$	char *s;
+BEGIN
+	IF cmd = NIL THEN   RETURN 0   END
+$	MK_ZSTRING(s, unx_cmd);
+$	unx_err = system(s);
+$	if( unx_err == -1 ){
+		RAISE ERROR -1 "system(\"" + cmd + "\"): failed to execute the command"
+$	}
+	RETURN err
+END
+
+
+
+END

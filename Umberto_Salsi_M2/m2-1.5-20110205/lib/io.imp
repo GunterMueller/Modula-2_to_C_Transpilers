@@ -1,0 +1,801 @@
+IMPLEMENTATION MODULE io
+
+IMPORT buffer
+
+TYPE
+
+	FILE = RECORD
+		fd: INTEGER  # file descriptor
+		unbuffered: BOOLEAN
+		non_blocking: BOOLEAN
+		b: ADDRESS # C FILE pointer (only if buffered)
+		mode: INTEGER # 1=read, 2=write, 3=r/w
+		flags: INTEGER
+		out_buffer: STRING
+		out_written: INTEGER
+	END
+
+$#include <fcntl.h>
+$#include <stdio.h>
+$#include <sys/stat.h>
+
+# select() and timeval on GNU and other old systems:
+###$#include <sys/types.h>
+###$#include <unistd.h>
+
+# select() and timeval on POSIX:
+$#include <sys/select.h>
+
+(* from: bits/fcntl.h:
+	O_ACCMODE          0003
+	O_RDONLY             00
+	O_WRONLY             01
+	O_RDWR               02
+	O_CREAT            0100 /* not fcntl */
+	O_EXCL             0200 /* not fcntl */
+	O_NOCTTY           0400 /* not fcntl */
+	O_TRUNC           01000 /* not fcntl */
+	O_APPEND          02000
+	O_NONBLOCK        04000
+	O_NDELAY        O_NONBLOCK
+	O_SYNC           010000
+	O_FSYNC          O_SYNC
+	O_ASYNC          020000
+*)
+
+
+CONST INVAL_ZSTRING = ": pathfile NIL or containing a NUL character"
+
+
+FUNCTION Open(VAR f: FILE, fn: STRING, fl: STRING)
+RAISE ERROR
+VAR
+	fd: INTEGER
+	b: ADDRESS
+	mode: INTEGER
+	flags: INTEGER
+	c: STRING
+$	int g, i, io_unbuffered;
+$	char *n, *m;
+BEGIN
+	mark(fl)
+	f = NIL
+	IF InvalidZString(fn) THEN
+		RAISE ERROR EINVAL StringToLiteral(fn) + INVAL_ZSTRING
+		RETURN
+	END
+$	io_mode = 0;
+$	io_flags = 0;
+$	io_unbuffered = 0;
+$	if( io_fl != NULL ){
+$		for( i = 0; i < io_fl->len; i++ ){
+$			switch( io_fl->s[i] ){
+$
+$			case 'r': io_mode |= 1; break;
+$			case 'w': io_mode |= 2; break;
+$
+$			case 'U': io_unbuffered = 1; break;
+$
+$			case 'a': io_flags |= O_APPEND; break;
+$			case 'c': io_flags |= O_CREAT; break;
+$			case 'e': io_flags |= O_EXCL; break;
+$			case 'n': io_flags |= O_NONBLOCK; break;
+$			case 's': io_flags |= O_SYNC; break;
+$			case 't': io_flags |= O_TRUNC; break;
+$			case 'y': io_flags |= O_NOCTTY; break;
+$			case 'f':
+$#ifdef O_NOFOLLOW
+$				io_flags |= O_NOFOLLOW;
+$#endif
+$				break;
+$			default:
+$				io_c = new_STRING(io_fl->s + i, 1);
+				RAISE ERROR EINVAL "unknown flag " + StringToLiteral(c)
+				RETURN
+$			}
+$		}
+$	}
+$	if( io_mode == 0 ){
+		RAISE ERROR EINVAL "required mode w, r or rw"
+		RETURN
+$	} else if( io_mode == 1 )
+$		g = O_RDONLY;
+$	else if( io_mode == 2 )
+$		g = O_WRONLY;
+$	else
+$		g = O_RDWR;
+$	g |= io_flags;
+$	MK_ZSTRING(n, io_fn);
+$	io_fd = open(n, g, 0777);
+	IF fd = -1 THEN
+		RAISE ERROR errno() StringToLiteral(fn) + ": " + strerror()
+		RETURN
+	END
+	f[fd] = fd
+	f[unbuffered] = TRUE
+$	if( g & O_NONBLOCK ){
+$		if( ! io_unbuffered ){
+			RAISE ERROR EINVAL "non-blocking mode require unbuffered"
+			RETURN
+$		}
+		f[non_blocking] = TRUE
+$	}
+	f[b] = NIL
+	f[mode] = mode
+	f[flags] = flags
+	#f[out_buffer] = NIL
+	#f[out_written] = 0
+$	if( io_unbuffered )  return;
+
+$	if( io_mode == 1 ){
+$		m = "r";
+$	} else if( io_mode == 2 ){
+$		if( io_flags & O_APPEND )
+$			m = "a";
+$		else
+$			m = "w";
+$	} else {
+$		if( io_flags & O_APPEND )
+$			m = "a+";
+$		else
+$			m = "r+";
+$	}
+$
+$	io_b = (void *)fdopen(io_fd, m);
+	IF b = NIL THEN
+		RAISE ERROR errno() fn + ": " + strerror()
+		f = NIL
+		RETURN
+	END
+
+	f[unbuffered] = FALSE
+	f[b] = b
+END
+
+
+FUNCTION Write(f: FILE, s: STRING)
+RAISE ERROR
+VAR
+	fd, n, w: INTEGER
+	b: ADDRESS
+	t: STRING
+BEGIN
+	IF f = NIL THEN
+		RAISE ERROR EINVAL "NIL file"
+		RETURN
+	END
+	IF f[mode] & 2 = 0 THEN
+		RAISE ERROR EINVAL "file open in read mode"
+		RETURN
+	END
+	IF (length(s) = 0) AND (f[out_buffer] = NIL) THEN
+		RETURN
+	END
+	IF f[fd] = -1 THEN
+		RAISE ERROR EINVAL "file just closed"
+		RETURN
+	END
+	IF f[unbuffered] THEN
+
+		fd = f[fd]
+
+		IF f[out_buffer] <> NIL THEN
+			(* Write the buffer f[out_buffer]: *)
+			t = f[out_buffer]
+			w = f[out_written]
+			LOOP
+$				io_n = TEMP_FAILURE_RETRY( write(io_fd, &io_t->s[io_w],
+$					io_t->len - io_w) );
+				IF n < 0 THEN
+					RAISE ERROR errno() strerror()
+					RETURN
+				END
+				w = w + n
+				IF w = length(t) THEN
+					f[out_buffer] = NIL
+					f[out_written] = 0
+					EXIT
+				ELSE
+					f[out_written] = w
+					RETURN
+				END
+			END
+		END
+
+		(* Write the given string s: *)
+		w = 0
+		LOOP
+			IF w = length(s) THEN
+				RETURN
+			END
+$			io_n = TEMP_FAILURE_RETRY( write(io_fd, &io_s->s[io_w],
+$				io_s->len - io_w) );
+			IF n < 0 THEN
+				IF (errno() = EWOULDBLOCK) AND (w > 0) THEN
+					f[out_buffer] = s
+					f[out_written] = w
+				ELSE
+					RAISE ERROR errno() strerror()
+				END
+				RETURN
+			END
+			w = w + n
+		END
+
+	ELSE
+
+		b = f[b]
+$		io_n = TEMP_FAILURE_RETRY( fwrite(io_s->s, io_s->len, 1,
+$			(FILE * )io_b) );
+		IF n = 0 THEN
+			RAISE ERROR errno() strerror()
+			RETURN
+		END
+
+	END
+END
+
+
+FUNCTION Written(f: FILE): BOOLEAN
+BEGIN
+	IF (f = NIL) OR (f[fd] = -1) THEN
+		RETURN TRUE
+	END
+	RETURN f[out_buffer] = NIL
+END
+
+
+FUNCTION Read(f: FILE, max: INTEGER): STRING
+RAISE ERROR
+VAR
+	fd, n: INTEGER
+	b: ADDRESS
+$	char *buf;
+BEGIN
+	IF f = NIL THEN
+		RAISE ERROR EINVAL "NIL file"
+		RETURN NIL
+	END
+	IF f[mode] & 1 = 0 THEN
+		RAISE ERROR EINVAL "file open in write mode"
+		RETURN NIL
+	END
+	IF f[fd] = -1 THEN
+		RAISE ERROR EINVAL "file just closed"
+		RETURN NIL
+	END
+	IF max < 0 THEN
+		RAISE ERROR EINVAL "argument `max' must be positive or zero"
+	END
+	IF max = 0 THEN
+		RETURN NIL
+	END
+
+$	buf = alloca(io_max);
+
+	IF f[unbuffered] THEN
+
+		fd = f[fd]
+$		io_n = TEMP_FAILURE_RETRY( read(io_fd, buf, io_max) );
+		IF n < 0 THEN
+			RAISE ERROR errno() strerror()
+			RETURN NIL
+		END
+		IF n = 0 THEN
+			RETURN NIL
+		END
+
+	ELSE
+
+		b = f[b]
+$		io_n = TEMP_FAILURE_RETRY( fread(buf, 1, io_max, (FILE *)io_b) );
+		IF n = 0 THEN
+$			if( feof((FILE *)io_b) ){
+				RETURN NIL
+$			} else if( ferror((FILE *)io_b) ){
+				RAISE ERROR errno() strerror()
+				RETURN NIL
+$			} else {
+				HALT("unexpected condition: no more data, no EOF, no error")
+				RETURN NIL
+$			}
+		ELSIF n < max THEN
+$			if( ferror((FILE *)io_b) ){
+				RAISE ERROR errno() strerror()
+				RETURN NIL
+$			}
+		END
+
+	END
+
+$	return new_STRING(buf, io_n);
+END
+
+
+VAR line: BUFFER
+
+FUNCTION ReadLine(f: FILE): STRING
+RAISE ERROR
+VAR
+	c: STRING
+BEGIN
+	IF f = NIL THEN
+		RAISE ERROR EINVAL "NIL file"
+		RETURN NIL
+	END
+	IF f[mode] & 1 = 0 THEN
+		RAISE ERROR EINVAL "file open in write mode"
+		RETURN NIL
+	END
+	IF f[fd] = -1 THEN
+		RAISE ERROR EINVAL "file just closed"
+		RETURN NIL
+	END
+	line->Empty()
+	LOOP
+		TRY
+			c = Read(f, 1)
+		ELSE
+			RAISE ERROR ERROR_CODE ERROR_MESSAGE
+			RETURN line->ToString()
+		END
+		IF c = NIL THEN
+			IF line->Length() = 0 THEN
+				RETURN NIL
+			ELSE
+				RETURN line->ToString()
+			END
+		ELSIF c = "\n" THEN
+			IF line->Length() = 0 THEN
+				RETURN ""
+			ELSE
+				RETURN line->ToString()
+			END
+		END
+		line->AddString(c)
+	END
+END
+
+
+FUNCTION Close(VAR f: FILE)
+RAISE ERROR
+VAR
+	fd: INTEGER
+	b: ADDRESS
+	err: INTEGER
+BEGIN
+	IF f = NIL THEN
+		RAISE ERROR EINVAL "NIL file"
+		RETURN
+	END
+	IF f[fd] = -1 THEN
+		RAISE ERROR EINVAL "file just closed"
+		RETURN
+	END
+	IF f[unbuffered] THEN
+
+		fd = f[fd]
+$		io_err = TEMP_FAILURE_RETRY( close(io_fd) );
+		IF err = -1 THEN
+			RAISE ERROR errno() strerror()
+		END
+
+	ELSE
+
+		b = f[b]
+$		if( fclose((FILE *) io_b) ){
+			RAISE ERROR errno() strerror()
+$		}
+	
+	END
+	f[fd] = -1
+	f = NIL
+END
+
+
+FUNCTION parse_mode(m: STRING): INTEGER
+VAR
+	mode, b: INTEGER
+	c, who: STRING
+	i: INTEGER
+
+	FUNCTION next()
+	BEGIN
+		IF i >= length(m) THEN
+			c = NIL
+		ELSE
+			c = m[i]
+		END
+		i = i + 1
+	END
+
+BEGIN
+	IF length(m) = 0 THEN
+		RETURN 0
+	END
+	mode = 0
+	next()
+	LOOP
+		IF (c <> "u") AND (c <> "g") AND (c <> "o") THEN
+			RETURN -1
+		END
+		who = c
+		next()
+		IF c <> "=" THEN
+			RETURN -1
+		END
+		next()
+		WHILE (c = "r") OR (c = "w") OR (c = "x") DO
+			IF    c = "r" THEN b = 4
+			ELSIF c = "w" THEN b = 2
+			ELSE b = 1
+			END
+			IF    who = "u" THEN b = b << 6
+			ELSIF who = "g" THEN b = b << 3
+			END
+			mode = mode | b
+			next()
+		END
+		IF c = NIL THEN
+			RETURN mode
+		ELSIF c = "," THEN
+			next()
+		ELSE
+			RETURN -1
+		END
+	END
+END
+
+
+FUNCTION GetMask(): STRING
+VAR
+	u: INTEGER
+
+	FUNCTION if(b: INTEGER, s: STRING): STRING
+	BEGIN
+		IF (u&b) = 0 THEN
+			RETURN NIL
+		ELSE
+			RETURN s
+		END
+	END
+
+BEGIN
+$	io_u = umask(0);   umask(io_u);
+	u = ~u
+	RETURN
+		"u=" + if(4<<6, "r") + if(2<<6, "w") + if(1<<6, "x")
+	 + ",g=" + if(4<<3, "r") + if(2<<3, "w") + if(1<<3, "x")
+	 + ",o=" + if(4,    "r") + if(2,    "w") + if(1,    "x")
+END
+
+
+FUNCTION SetMask(mode: STRING)
+VAR x: INTEGER
+BEGIN
+	x = parse_mode(mode)
+	IF x = -1 THEN
+		HALT("invalid mode " + StringToLiteral(mode))
+	END
+$	umask(~io_x);
+END
+
+
+TYPE
+	POOLSET = RECORD
+
+		read_max: INTEGER       # max fd; -1 = no fd in read_fs
+		read_fs: ADDRESS        # file descr.s we are interested to pool
+		read_ready_fs: ADDRESS  # file descr.s resulting ready for reading
+
+		write_max: INTEGER      # max fd; -1 = no fd in write_fs
+		write_fs: ADDRESS       # fd we are interested to pool
+		write_ready_fs: ADDRESS # fd resulting ready for writing
+
+		sec, usec: INTEGER      # timeout
+		timeout: BOOLEAN        # last Wait() terminated by timeout?
+	END
+
+
+FUNCTION PoolSetNew(): POOLSET
+VAR ps: POOLSET
+BEGIN
+	ps[read_max] = -1
+	ps[write_max] = -1
+	RETURN ps
+END
+
+
+FUNCTION SetTimeout(VAR ps: POOLSET, sec: INTEGER, usec: INTEGER)
+BEGIN
+	IF (sec < 0) OR (usec < 0) OR (usec > 999999) THEN
+		# ignore invalid range:
+		RETURN
+	END
+	IF ps = NIL THEN
+		ps = PoolSetNew()
+	END 
+	ps[sec] = sec
+	ps[usec] = usec
+END
+
+
+FUNCTION Wait(ps: POOLSET)
+VAR
+	read_fs, write_fs, read_ready_fs, write_ready_fs: ADDRESS
+	read_max, write_max, max, sec, usec, n: INTEGER
+$	struct timeval tv;
+$	struct timeval *tvp;
+BEGIN
+	mark(n)
+	IF ps = NIL THEN
+		RETURN
+	END
+	read_max = ps[read_max]
+	write_max = ps[write_max]
+	sec = ps[sec]
+	usec = ps[usec]
+	IF (read_max = -1) AND (write_max = -1) AND (sec = 0) AND (usec = 0) THEN
+		# FIXME: is this a fatal error?
+		ps[timeout] = FALSE
+		RETURN
+	END
+
+	max = read_max
+	IF write_max > max THEN
+		max = write_max
+	END
+
+	IF read_max >= 0 THEN
+		read_fs = ps[read_fs]
+		read_ready_fs = ps[read_ready_fs]
+		IF read_ready_fs = NIL THEN
+$			io_read_ready_fs = M2_MALLOC_ATOMIC( sizeof( fd_set ) );
+			ps[read_ready_fs] = read_ready_fs
+		END
+$		memcpy(io_read_ready_fs, io_read_fs, sizeof( fd_set ) );
+$		FD_ZERO((fd_set * )io_read_fs);
+		ps[read_max] = -1
+	END
+
+	IF write_max >= 0 THEN
+		write_fs = ps[write_fs]
+		write_ready_fs = ps[write_ready_fs]
+		IF write_ready_fs = NIL THEN
+$			io_write_ready_fs = M2_MALLOC_ATOMIC( sizeof( fd_set ) );
+			ps[write_ready_fs] = write_ready_fs
+		END
+$		memcpy(io_write_ready_fs, io_write_fs, sizeof( fd_set ) );
+$		FD_ZERO((fd_set * )io_write_fs);
+		ps[write_max] = -1
+	END
+
+	IF (sec = 0) AND (usec = 0) THEN
+$		tvp = NULL;
+	ELSE
+$		tv.tv_sec = io_sec;
+$		tv.tv_usec = io_usec;
+$		tvp = &tv;
+	END
+
+$	io_n = TEMP_FAILURE_RETRY( select(io_max + 1,
+$		io_read_ready_fs, io_write_ready_fs,
+$		NULL, tvp) );
+
+	IF n = -1 THEN
+		HALT( strerror() )
+	END
+
+	ps[timeout] = n=0
+END
+
+
+FUNCTION Timeout(ps: POOLSET): BOOLEAN
+BEGIN
+	RETURN (ps = NIL) OR ps[timeout]
+END
+
+
+FUNCTION Readable(VAR ps: POOLSET, f: FILE): BOOLEAN
+VAR
+	fd: INTEGER
+	fs: ADDRESS
+BEGIN
+	IF (f = NIL) OR (f[fd] = -1) THEN
+		RETURN FALSE
+	END
+	IF f[mode] & 1 = 0 THEN
+		#RAISE ERROR EINVAL "file open in write-only mode"
+		RETURN FALSE
+	END
+
+	IF ps = NIL THEN
+		ps = PoolSetNew()
+	END
+
+	fd = f[fd]
+	IF ps[read_fs] = NIL THEN
+$		io_fs = M2_MALLOC_ATOMIC( sizeof(fd_set) );
+$		FD_ZERO((fd_set * ) io_fs);
+		ps[read_fs] = fs
+	ELSE
+		fs = ps[read_fs]
+	END
+$	FD_SET(io_fd, (fd_set * ) io_fs);
+	IF fd > ps[read_max] THEN
+		ps[read_max] = fd
+	END
+
+	fs = ps[read_ready_fs]
+	IF fs = NIL THEN
+		RETURN FALSE
+	END
+	fd = f[fd]
+$	if( FD_ISSET(io_fd, (fd_set * ) io_fs) ){
+$		FD_CLR(io_fd, (fd_set * ) io_fs);
+$		return TRUE;
+$	} else {
+$		return FALSE;
+$	}
+END
+
+
+FUNCTION Writable(VAR ps: POOLSET, f: FILE): BOOLEAN
+VAR
+	fd: INTEGER
+	fs: ADDRESS
+BEGIN
+	IF (f = NIL) OR (f[fd] = -1) THEN
+		RETURN FALSE
+	END
+	IF f[mode] & 2 = 0 THEN
+		#RAISE ERROR EINVAL "file open in read-only mode"
+		RETURN FALSE
+	END
+
+	IF ps = NIL THEN
+		ps = PoolSetNew()
+	END
+
+	fd = f[fd]
+	IF ps[write_fs] = NIL THEN
+$		io_fs = M2_MALLOC_ATOMIC( sizeof(fd_set) );
+$		FD_ZERO((fd_set * ) io_fs);
+		ps[write_fs] = fs
+	ELSE
+		fs = ps[write_fs]
+	END
+$	FD_SET(io_fd, (fd_set * ) io_fs);
+	IF fd > ps[write_max] THEN
+		ps[write_max] = fd
+	END
+
+	fs = ps[write_ready_fs]
+	IF fs = NIL THEN
+		RETURN FALSE
+	END
+	fd = f[fd]
+$	if( FD_ISSET(io_fd, (fd_set * ) io_fs) ){
+$		FD_CLR(io_fd, (fd_set * ) io_fs);
+$		return TRUE;
+$	} else {
+$		return FALSE;
+$	}
+END
+
+
+FUNCTION GetCWD(): STRING
+RAISE ERROR
+VAR
+	p: STRING
+$	char *s;
+$	int s_size;
+BEGIN
+$	s_size = 100;
+$	s = M2_MALLOC_ATOMIC(s_size);
+$	while( getcwd(s, s_size) == NULL ){
+$		if( errno == ERANGE ){
+$			s_size = 2*s_size;
+$			s = M2_MALLOC_ATOMIC(s_size);
+$		} else {
+			RAISE ERROR errno() strerror()
+			RETURN NIL
+$		}
+$	}
+$	io_p = new_STRING(s, strlen(s));
+	RETURN p
+END
+
+
+FUNCTION ChDir(p: STRING)
+RAISE ERROR
+VAR
+$	char *pz;
+BEGIN
+	IF InvalidZString(p) THEN
+		RAISE ERROR EINVAL StringToLiteral(p) + INVAL_ZSTRING
+		RETURN
+	END
+$	MK_ZSTRING(pz, io_p);
+$	if( chdir(pz) != 0 ){
+		RAISE ERROR errno() p + ": " + strerror()
+$	}
+END
+
+
+FUNCTION Unlink(f: STRING)
+RAISE ERROR
+VAR
+$	char *fz;
+BEGIN
+	IF InvalidZString(f) THEN
+		RAISE ERROR EINVAL StringToLiteral(f) + INVAL_ZSTRING
+		RETURN
+	END
+$	MK_ZSTRING(fz, io_f);
+$	if( remove(fz) == 0 )  return;
+	RAISE ERROR errno() f + ": " + strerror()
+END
+
+
+FUNCTION Rename(old: STRING, new: STRING)
+RAISE ERROR
+VAR
+$ char *oldz, *newz;
+BEGIN
+	IF InvalidZString(old) OR InvalidZString(new) THEN
+		RAISE ERROR EINVAL StringToLiteral(old) + ", " + StringToLiteral(new)
+		+ INVAL_ZSTRING
+		RETURN
+	END
+$	MK_ZSTRING(oldz, io_old);
+$	MK_ZSTRING(newz, io_new);
+$	if( rename(oldz, newz) == 0 )  return;
+	RAISE ERROR errno() old + ", " + new + ": " + strerror()
+END
+
+
+FUNCTION MkDir(d: STRING, mode: STRING)
+RAISE ERROR
+VAR
+	x: INTEGER
+$	char *dz;
+BEGIN
+	IF InvalidZString(d) THEN
+		RAISE ERROR EINVAL StringToLiteral(d) + INVAL_ZSTRING
+		RETURN
+	END
+	x = parse_mode(mode)
+	IF x = -1 THEN
+		RAISE ERROR EINVAL "invalid mode " + StringToLiteral(mode)
+		RETURN
+	END
+$	MK_ZSTRING(dz, io_d);
+$	if( mkdir(dz, io_x) == 0 )  return;
+	RAISE ERROR errno() d + ", mode=" + mode + ": " + strerror()
+END
+
+
+FUNCTION Touch(fn: STRING)
+RAISE ERROR
+VAR f: FILE
+BEGIN
+	IF InvalidZString(fn) THEN
+		RAISE ERROR EINVAL StringToLiteral(fn) + INVAL_ZSTRING
+		RETURN
+	END
+	TRY
+		Open(f, fn, "wc")
+	ELSE
+		RAISE ERROR ERROR_CODE ERROR_MESSAGE
+		RETURN
+	END
+	TRY
+		Close(f)
+	ELSE
+		RAISE ERROR ERROR_CODE ERROR_MESSAGE
+	END
+END
+
+
+END

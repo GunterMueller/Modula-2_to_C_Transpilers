@@ -1,0 +1,178 @@
+DEFINITION MODULE gtk
+
+(*
+
+	Documentation:
+	-------------
+	http://developer.gnome.org - Official GNOME WEB site
+	http://developer.gnome.org/doc/API/ - GTK+ 2.x API Reference
+	http://www.gtk.org/tutorial/ - GTK+ 2.0 Tutorial
+
+	Convention on function names
+	----------------------------
+	Since "gtk" is the natural name for this MODULE, that poses the
+	problem of collision between the M2 names and C names starting
+	with "gtk_". Here are the conventions on names we adopted.
+
+	From M2 name to C name:
+
+		- add "gtk" in front
+		- add an underscore in front of any upper-case letter
+		- convert any upper-case letter to lower-case
+
+	From C name to M2 name:
+
+		- remove the initial "gtk_"
+		- convert any letter following an underscore to uppercase
+		- remove all the unserscores
+
+	Example:  BoxPackStart()  M2<-->C  gtk_box_pack_start()
+*)
+
+TYPE
+
+	Widget = FORWARD
+	GSList = FORWARD
+
+	SIGNAL_FUNC = FUNCTION(w: Widget, event: ADDRESS, data: ADDRESS): BOOLEAN
+	SIGNAL_FUNC2 = FUNCTION(w: Widget, data: ADDRESS): BOOLEAN
+
+
+FUNCTION Init(VAR args: ARRAY OF STRING)
+
+FUNCTION WindowNew(): Widget
+(* MACRO *)
+
+FUNCTION WidgetSetUsize(w: Widget, width: INTEGER, height: INTEGER)
+(* MACRO *)
+
+FUNCTION WindowSetTitle(w: Widget, t: STRING)
+(* MACRO *)
+
+FUNCTION WidgetShow(w: Widget)
+(* MACRO *)
+
+FUNCTION SignalConnect(w: Widget, signal: STRING, func: SIGNAL_FUNC,
+	data: ADDRESS)
+(* MACRO *)
+
+FUNCTION SignalConnect2(w: Widget, signal: STRING, func: SIGNAL_FUNC2,
+	data: ADDRESS)
+(* MACRO *)
+
+FUNCTION HboxNew(homogeneus: BOOLEAN, spacing: INTEGER): Widget
+(* MACRO *)
+
+FUNCTION VboxNew(homogeneus: BOOLEAN, spacing: INTEGER): Widget
+(* MACRO *)
+
+FUNCTION ContainerAdd(w: Widget, c: Widget)
+(* MACRO *)
+
+FUNCTION ContainerSetBorderWidth(w: Widget, border: INTEGER)
+(* MACRO *)
+
+FUNCTION ButtonNew(): Widget
+(* MACRO *)
+
+FUNCTION LabelNew(label: STRING): Widget
+(* MACRO *)
+
+FUNCTION ObjectSetData(w: Widget, s: STRING, d: Widget)
+(* MACRO *)
+
+FUNCTION ButtonNewWithLabel(label: STRING): Widget
+(* MACRO *)
+
+FUNCTION ButtonPressed(b: Widget)
+(* MACRO *)
+
+FUNCTION ButtonReleased(b: Widget)
+(* MACRO *)
+
+FUNCTION ButtonClicked(b: Widget)
+(* MACRO *)
+
+FUNCTION CheckButtonNew(): Widget
+(* MACRO *)
+
+FUNCTION CheckButtonNewWithLabel(label: STRING): Widget
+(* MACRO *)
+
+FUNCTION RadioButtonNew(group: GSList): Widget
+(* MACRO *)
+
+FUNCTION RadioButtonNewWithLabel(group: GSList, label: STRING): Widget
+(* MACRO *)
+
+FUNCTION RadioButtonGetGroup(radio_button: Widget): GSList
+(* MACRO *)
+
+FUNCTION ToggleButtonSetActive(button: Widget, active: BOOLEAN)
+(* MACRO *)
+
+FUNCTION EntryNew(): Widget
+(* MACRO *)
+
+FUNCTION EntryNewWithMaxLength(max: INTEGER): Widget
+(* MACRO *)
+
+FUNCTION EntrySetText(entry: Widget, text: STRING)
+(* MACRO *)
+
+FUNCTION EntryGetText(entry: Widget): STRING
+(* MACRO *)
+
+FUNCTION DrawingAreaNew(): Widget
+(* MACRO *)
+
+FUNCTION DrawingAreaSize(w: Widget, width: INTEGER, height: INTEGER)
+(* MACRO *)
+
+FUNCTION BoxPackStart(box: Widget, child: Widget, expand: BOOLEAN,
+	fill: BOOLEAN, padding: INTEGER)
+(* MACRO *)
+
+FUNCTION BoxPackEnd(w: Widget, b: Widget, b1: BOOLEAN, b2: BOOLEAN, i: INTEGER)
+(* MACRO *)
+
+FUNCTION MenuBarNew(): Widget
+(* MACRO *)
+
+FUNCTION MenuBarAppend(menu: Widget, child: Widget)
+(* MACRO *)
+
+FUNCTION MenuNew(): Widget
+(* MACRO *)
+
+FUNCTION MenuSetTitle(menu: Widget, title: STRING)
+(* MACRO *)
+
+FUNCTION MenuItemNew(): Widget
+(* MACRO *)
+
+FUNCTION MenuItemNewWithLabel(label: STRING): Widget
+(* MACRO *)
+
+FUNCTION MenuItemSetSubmenu(menu: Widget, submenu: Widget)
+(* MACRO *)
+
+FUNCTION CheckMenuItemSetActive(item: Widget, active: BOOLEAN)
+(* MACRO *)
+
+FUNCTION MenuAppend(menu: Widget, child: Widget)
+(* MACRO *)
+
+FUNCTION Main()
+(* MACRO *)
+
+FUNCTION MainQuit()
+(* MACRO *)
+
+FUNCTION EventsPending(): BOOLEAN
+(* MACRO *)
+
+FUNCTION MainIteration(): BOOLEAN
+(* MACRO *)
+
+END

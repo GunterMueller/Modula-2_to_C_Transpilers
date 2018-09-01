@@ -1,0 +1,89 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      LongRLib                                  *
+ * Description:           Mathematical functions (LONGREAL values)  *
+ *                        (see 'RLib' for REAL values)              *
+ * Implementation level:  Mid-level (Useful module)                 *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  February 27, 1995                         *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE LongRLib;
+
+CONST
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+    noError;                 (* No error ocurred *)
+    arithmeticError;         (* Error in floating point opeartion *)
+
+   PROCEDURE Sin(r: LONGREAL): LONGREAL;
+      (* Returns sin(r) *)
+
+   PROCEDURE Cos(r: LONGREAL): LONGREAL;
+      (* Returns cos(r) *)
+
+   PROCEDURE SinH(r: LONGREAL): LONGREAL;
+      (* Returns sinh(r) *)
+
+   PROCEDURE CosH(r: LONGREAL): LONGREAL;
+      (* Returns cosh(r) *)
+
+   PROCEDURE Exp(r: LONGREAL): LONGREAL;
+      (* Returns e^r *)
+
+   PROCEDURE Log(r: LONGREAL): LONGREAL;
+      (* Returns ln(r) *)
+
+   PROCEDURE Log10(r: LONGREAL): LONGREAL;
+      (* Returns ln(r) for base 10 *)
+
+   PROCEDURE ATan(r: LONGREAL): LONGREAL;
+      (* Returns arctan(r) *)
+
+   PROCEDURE ATanH(r: LONGREAL): LONGREAL;
+      (* Returns arctanh(r) *)
+
+   PROCEDURE Sqrt(r: LONGREAL): LONGREAL;
+      (* Returns square root of 'r' *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+END LongRLib.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - error handler 'errorHandler' added
+*)
+

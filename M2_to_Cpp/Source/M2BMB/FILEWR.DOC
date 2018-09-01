@@ -1,0 +1,91 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Definition of:         FileWr                                    *
+ * Description:           Output operations on files                *
+ * Implementation level:  High-level (Utility module)               *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  February 27, 1995                         *
+ *                                                                  *
+ * Author:                Zoran Budimac                             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: zjb@unsim.ns.ac.yu            *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE FileWr;
+IMPORT File;
+
+   PROCEDURE Bool(f: File.T; b: BOOLEAN; field: CARDINAL);
+      (* Writes a boolean 'b' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Int(f: File.T; n: INTEGER; field: CARDINAL);
+      (* Writes an integer 'n' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongInt(f: File.T; n: LONGINT; field: CARDINAL);
+      (* Writes a long integer 'n' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Card(f: File.T; n: CARDINAL; field: CARDINAL);
+      (* Writes a long integer 'n' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongCard(f: File.T; n: LONGCARD; field: CARDINAL);
+      (* Writes a long cardinal 'n' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Real(f: File.T; n: REAL; field: CARDINAL);
+      (* Writes a real 'n' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongReal(f: File.T; n: LONGREAL; field: CARDINAL);
+      (* Writes a long real 'n' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE IntB(f: File.T; n: INTEGER; base, field: CARDINAL);
+      (* Writes an integer 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongIntB(f: File.T; n: LONGINT; base, field: CARDINAL);
+      (* Writes a long integer 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE CardB(f: File.T; n: CARDINAL; base, field: CARDINAL);
+      (* Writes a long integer 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE LongCardB(f: File.T; n: LONGCARD; base, field: CARDINAL);
+      (* Writes a long cardinal 'n' in base 'base' to file 'f' in a field of
+         'field' positions (right adjusted) *)
+
+   PROCEDURE Bin(f: File.T; bin: ARRAY OF BYTE);
+      (* Writes an array of bytes 'bin' to a file 'f' *)
+
+CONST
+   (* The following are just synonims for corresponding
+      procedures from 'File' module *)
+
+   Char = File.RdChar;
+        (* PROCEDURE Char(f: File.T);       *)
+        (*    Writes a character to file 'f' *)
+
+   Str  = File.WrStr;
+        (* PROCEDURE WrStr(f: File.T; s: ARRAY OF CHAR); *)
+        (*    Writes a string 's' to file 'f'            *)
+
+   Ln   = File.RdLn;
+        (* PROCEDURE Ln(f: File.T);             *)
+        (*    Writes a 'new line' to file 'f'   *)
+
+END FileWr.
+
+(*
+   Changes from ver. 1.00:
+   - error codes are removed. Modules 'File' and 'Fmt' will report
+     errors
+*)
+
+

@@ -1,0 +1,123 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        LongRLib                                    *
+ * Description:             Mathematical functions (LONGREAL values)    *
+ *                          (see 'RLib' for REAL values)                *
+ * Implementation level:    Mid-level (Useful module)                   *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 17, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_LongRLib_m2h_
+#define _M2_LongRLib_m2h_
+
+#include <_m2sys.h>
+
+namespace LongRLib {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError;         /* No error ocurred */
+   const CARDINAL arithmeticError; /* Error in floating point opeartion */
+
+   LONGREAL Sin(LONGREAL r);
+      /* Returns sin(r).
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL Cos(LONGREAL r);
+      /* Returns cos(r).
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL SinH(LONGREAL r);
+      /* Returns sinh(r).
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL CosH(LONGREAL r);
+      /* Returns cosh(r).
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL Exp(LONGREAL r);
+      /* Returns e^r.
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL Log(LONGREAL r);
+      /* Returns ln(r).
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL Log10(LONGREAL r);
+      /* Returns ln(r) for base 10.
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL ATan(LONGREAL r);
+      /* Returns arctan(r).
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL ATanH(LONGREAL r);
+      /* Returns arctanh(r).
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   LONGREAL Sqrt(LONGREAL r);
+      /* Returns square root of 'r'.
+       + Sets error codes:
+           'arithmeticError'
+      */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // LongRLib
+
+#endif

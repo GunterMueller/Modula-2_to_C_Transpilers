@@ -1,0 +1,17 @@
+(* p.156 12b *)     (* file add14e.def *)
+
+(* Compilation units *)
+
+(* In the case of opaque export the full specification of *)
+(*   the type identifier must appear in the corresponding *)
+(*   implementation module.                               *)
+
+(* The full specification of the type PtrType             *)
+(*   is absent in the implementation module               *)
+
+DEFINITION MODULE add14e;
+ TYPE
+     PtrType;
+ VAR
+    x: REAL;
+END add14e.

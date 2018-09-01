@@ -1,0 +1,129 @@
+IMPLEMENTATION MODULE glut
+
+######$#include <GL/glut.h>
+
+$$linker options: -lglut
+
+
+FUNCTION InitWindowPosition(x: INTEGER, y: INTEGER)
+BEGIN
+	mark(x)
+	mark(y)
+$	glutInitWindowPosition(glut_x, glut_y);
+END
+
+
+FUNCTION InitWindowSize(width: INTEGER, height: INTEGER)
+BEGIN
+	mark(width)
+	mark(height)
+$	glutInitWindowSize(glut_width, glut_height);
+END
+
+
+
+FUNCTION InitDisplayMode(mask: INTEGER)
+BEGIN
+	mark(mask)
+$	glutInitDisplayMode(glut_mask);
+END
+
+
+FUNCTION CreateWindow(title: STRING): WINDOW
+$ char *title;
+BEGIN
+	IF title = NIL THEN
+$		return glutCreateWindow("");
+	ELSE
+$		MK_ZSTRING(title, glut_title);
+$		return glutCreateWindow(title);
+	END
+END
+
+
+FUNCTION SetWindow(wid: WINDOW)
+BEGIN
+	mark(wid)
+$	glutSetWindow(glut_wid);
+END
+
+
+FUNCTION DestroyWindow(wid: WINDOW)
+BEGIN
+	mark(wid)
+$	glutDestroyWindow(glut_wid);
+END
+
+
+FUNCTION DisplayFunc(f: FUNCTION() )
+BEGIN
+	mark(f)
+$	glutDisplayFunc(glut_f);
+END
+
+
+FUNCTION ReshapeFunc(f: FUNCTION(w: INTEGER, h: INTEGER) )
+BEGIN
+	mark(f)
+$	glutReshapeFunc(glut_f);
+END
+
+
+FUNCTION MouseFunc(f: FUNCTION(button: INTEGER, state: INTEGER, x: INTEGER, y: INTEGER) )
+BEGIN
+	mark(f)
+$	glutMouseFunc(glut_f);
+END
+
+
+FUNCTION PostRedisplay()
+BEGIN
+$	glutPostRedisplay();
+END
+
+
+FUNCTION IdleFunc(f: FUNCTION() )
+BEGIN
+	mark(f)
+$	glutIdleFunc(glut_f);
+END
+
+
+FUNCTION SwapBuffers()
+BEGIN
+$	glutSwapBuffers();
+END
+
+
+FUNCTION MainLoop()
+BEGIN
+$	glutMainLoop();
+END
+
+
+$#define glut_WireSphere(radius, slices, stacks) \
+$	glutWireSphere(radius, slices, stacks)
+$#define glut_SolidSphere(radius, slices, stacks) \
+$	glutSolidSphere(radius, slices, stacks)
+$#define glut_WireCone(base, height, slices, stacks) \
+$	glutWireCone(base, height, slices, stacks)
+$#define glut_SolidCone(base, height, slices, stacks) \
+$	glutSolidCone(base, height, slices, stacks)
+$#define glut_WireCube(size)  glutWireCube(size)
+$#define glut_SolidCube(size)  glutSolidCube(size)
+$#define glut_WireTorus(innerRadius, outerRadius, sides, rings) \
+$	glutWireTorus(innerRadius, outerRadius, sides, rings)
+$#define glut_SolidTorus(innerRadius, outerRadius, sides, rings) \
+$	glutSolidTorus(innerRadius, outerRadius, sides, rings)
+$#define glut_WireDodecahedron()  glutWireDodecahedron()
+$#define glut_SolidDodecahedron()  glutSolidDodecahedron()
+$#define glut_WireTeapot(size)  glutWireTeapot(size)
+$#define glut_SolidTeapot(size)  glutSolidTeapot(size)
+$#define glut_WireOctahedron()  glutWireOctahedron()
+$#define glut_SolidOctahedron()  glutSolidOctahedron()
+$#define glut_WireTetrahedron()  glutWireTetrahedron()
+$#define glut_SolidTetrahedron()  glutSolidTetrahedron()
+$#define glut_WireIcosahedron()  glutWireIcosahedron()
+$#define glut_SolidIcosahedron()  glutSolidIcosahedron()
+
+END

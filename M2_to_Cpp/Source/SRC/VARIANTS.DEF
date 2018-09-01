@@ -1,0 +1,51 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Variants;
+(* Implements storing and using information about variant record fields *)
+
+  FROM Defs IMPORT IdStr, BigStr;
+  IMPORT Ids, ConstStr;
+
+  TYPE
+    VariantsPtr = POINTER TO VariantsDesc;
+    VariantsDesc = RECORD
+      nameList: Ids.List; (* Names of fields *)
+      type: ConstStr.T;   (* Their type *)
+      next: VariantsPtr;
+    END;
+    List = RECORD         (* List of variant record fields *)
+      casePath: BigStr;   (* C++ struct in which all fields are placed *)
+      first, last, curr: VariantsPtr;
+    END;
+
+  PROCEDURE Init(VAR l: List; casePath: BigStr);
+  (* Initialize list 'l', copying 'casePath' *)
+
+  PROCEDURE InsertType(VAR l: List; type: ARRAY OF CHAR);
+  (* Insert 'type' to list 'l', at the rear *)
+  
+  PROCEDURE InsertName(VAR l: List; name: IdStr);
+  (* Inserts 'name' at the rear of the list of names corresponding to
+     the 'type' previously inserted by InsertType *)
+
+  PROCEDURE GetCasePath(l: List; VAR casePath: BigStr);
+  (* Returns 'casePath' of list 'l' *)
+  
+  PROCEDURE GetNextType(VAR l: List; VAR type: ARRAY OF CHAR);
+  (* Return the next element of 'l' in 'type'. If end of list is reached,
+     empty string is returned, and the next call to GetNextType will return
+     the frist element of 'l' *)
+
+  PROCEDURE GetNextName(VAR l: List; VAR name: IdStr);
+  (* Return the next element of the list of names corresponding to the 'type'
+     returned by previous call to GetNextType in 'name'. If end of list is
+     reached, empty string is returned, and the next call to GetNextName
+     will return the frist element of the list of names *)
+
+  PROCEDURE IsEmpty(l: List): BOOLEAN;
+  (* Is list 'l' empty? *)
+
+  PROCEDURE Kill(VAR l: List);
+  (* Dispose of list 'l' *)
+
+END Variants.

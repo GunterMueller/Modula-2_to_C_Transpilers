@@ -1,0 +1,10 @@
+(* file add14f.def *)
+(* seefile test14f.mod *)
+DEFINITION MODULE add14f;
+ TYPE PtrType;
+ TYPE
+     Type=RECORD
+	   int: INTEGER;
+	     r: REAL
+	  END;
+END add14f.

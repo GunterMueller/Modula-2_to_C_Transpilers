@@ -1,0 +1,30 @@
+(* ------------------------------------------------------------------ *
+ *                BMB Modula-2 Cross-Platform Library                 *
+ *                                                                    *
+ * Implementation of:       Mem (1.1)                                 *
+ *                          (see Mem.doc for full specification!)     *
+ * Version:                 1.0                                       *
+ * Date:                    March 20, 1996                            *
+ * Conformance Test Passed: -                                         *
+ * Platform:                80x86/MS-DOS                              *
+ * Requires:                TopSpeed Modula-2 ver. 1.x                *
+ *                                                                    *
+ * Author:                    Zoran Budimac                           *
+ *                            University of Novi Sad, Yugoslavia      *
+ *                            e-mail: zjb@unsim.ns.ac.yu              *
+ * ------------------------------------------------------------------ *)
+
+DEFINITION MODULE Mem;
+
+   PROCEDURE Copy(dest, source: ADDRESS; n: LONGCARD);
+
+   PROCEDURE Fill(source: ADDRESS; n: LONGCARD; val: BYTE);
+
+   PROCEDURE Equal(m1, m2: ADDRESS; n: LONGCARD): BOOLEAN;
+
+   PROCEDURE LEq(m1, m2: ADDRESS; n: LONGCARD): BOOLEAN;
+
+   PROCEDURE GEq(m1, m2: ADDRESS; n: LONGCARD): BOOLEAN;
+
+END Mem.
+

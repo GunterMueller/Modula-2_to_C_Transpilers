@@ -1,0 +1,135 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        String                                      *
+ * Description:             String operations                           *
+ * Implementation level:    Mid-level (Useful module)                   *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 17, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_String_m2h_
+#define _M2_String_m2h_
+
+#include <_m2sys.h>
+
+namespace String {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError'.
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError;            /* No Error */
+   const CARDINAL noRoomError;        /* No room in destination string */
+   const CARDINAL wrongPositionError; /* Invalid slice of string was requested */
+
+   /* Operations */
+   /* All indices in strings start from 0 */
+
+   BOOLEAN SubString(_ARRAYOF<CHAR> s, _ARRAYOF<CHAR> p, CARDINAL& pos);
+      /* Returns TRUE if 'p' is the substring of 's', otherwise
+         returns FALSE. If returns TRUE, then 'pos' is the
+         position of substring in 's', otherwise, 'pos' is undefined.
+      */
+
+   void Caps(_ARRAYOF<CHAR>& s);
+      /* Converts letters of string 's' into upper case letters. */
+
+   void Append(_ARRAYOF<CHAR>& s, _ARRAYOF<CHAR> p);
+      /* Appends string 'p' to the string 's'.
+       + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold 's' and 'p'
+      */
+
+   void Concat(_ARRAYOF<CHAR>& s, _ARRAYOF<CHAR> s1, _ARRAYOF<CHAR> s2);
+      /* Appends string 's2' to 's1' giving 's'.
+       + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold 's1' and 's2'
+      */
+
+   void Copy(_ARRAYOF<CHAR>& s, _ARRAYOF<CHAR> p);
+      /* Copies string 'p' into the string 's'.
+       + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold 'p'
+      */
+
+   BOOLEAN Equal(_ARRAYOF<CHAR> s, _ARRAYOF<CHAR> p);
+      /* Returns TRUE if strings 's' and 'p' are equal. */
+
+   BOOLEAN LEq(_ARRAYOF<CHAR> s, _ARRAYOF<CHAR> p);
+      /* Returns TRUE if string 's' is less or equal to string 'p'. */
+
+   BOOLEAN GEq(_ARRAYOF<CHAR> s, _ARRAYOF<CHAR> p);
+      /* Returns TRUE if string 's' is less or equal to string 'p'. */
+
+   CARDINAL Length(_ARRAYOF<CHAR> s);
+      /* Returns the length of a string 's'. */
+
+   void Insert(_ARRAYOF<CHAR>& s, _ARRAYOF<CHAR> p, CARDINAL pos);
+     /* Inserts the string 'p' into the string 's' starting from position
+        'pos'.
+       + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold the new string
+           'wrongPositionError' - if 'pos' is not inside the string 's'
+     */
+
+   void Delete(_ARRAYOF<CHAR>& s, CARDINAL from, CARDINAL to);
+      /* Deletes slice from 'from' up to 'to' from string 's' (inclusive).
+       + Sets error codes:
+           'wrongPositionError' - if requested slice is not a
+                                  substring of 's'
+      */
+
+   void Slice(_ARRAYOF<CHAR>& s, _ARRAYOF<CHAR> p,
+              CARDINAL from, CARDINAL to);
+      /* 's' is a slice from position 'from' up to 'to' (inclusive)
+         of string 'p'.
+       + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold the slice
+           'wrongPositionError' - if requested slice is not a
+                                  substring of 'p'
+      */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // String
+
+#endif

@@ -1,0 +1,37 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Addr                                        *
+ * Description:             Address arithmetic                          *
+ * Implementation level:    Low-level (Necessary module)                *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 16, 2000                           *
+ *                                                                      *
+ * Author:                  Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Addr_m2h_
+#define _M2_Addr_m2h_
+
+#include <_m2sys.h>
+
+namespace Addr {
+
+   void Inc(ADDRESS& a, LONGCARD n);
+      /* Increments address 'a' for 'n'. */
+
+   void Dec(ADDRESS& a, LONGCARD n);
+      /* Decrements address 'a' for 'n'. */
+
+} // Addr
+
+#endif

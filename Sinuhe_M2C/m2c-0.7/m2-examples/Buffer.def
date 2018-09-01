@@ -1,0 +1,5 @@
+DEFINITION MODULE Buffer;
+ VAR nonfull,nonempty: BOOLEAN;
+ PROCEDURE Put(x: INTEGER);
+ PROCEDURE Get(VAR x: INTEGER);
+END Buffer.

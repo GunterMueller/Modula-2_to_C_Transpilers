@@ -1,0 +1,31 @@
+(* ------------------------------------------------------------------ *
+ *                BMB Modula-2 Cross-Platform Library                 *
+ *                                                                    *
+ * Implementation of:       ShortMem (1.1)                            *
+ *                          (see ShortMem.doc for full specification!)*
+ * Version:                 1.0                                       *
+ * Date:                    January 23, 1997                          *
+ * Conformance Test Passed: -                                         *
+ * Platform:                80x86/MS-DOS                              *
+ * Requires:                TopSpeed Modula-2 ver. 1.x                *
+ *                                                                    *
+ * Author:                    Zoran Budimac                           *
+ *                            University of Novi Sad, Yugoslavia      *
+ *                            e-mail: zjb@unsim.ns.ac.yu              *
+ * ------------------------------------------------------------------ *)
+
+DEFINITION MODULE ShortMem;
+IMPORT Lib;     (* Topspeed low level routines *)
+
+   PROCEDURE Copy(dest, source: ADDRESS; n: CARDINAL);
+
+   PROCEDURE Fill(source: ADDRESS; n: CARDINAL; val: BYTE);
+
+   PROCEDURE Equal(m1, m2: ADDRESS; n: CARDINAL): BOOLEAN;
+
+   PROCEDURE LEq(m1, m2: ADDRESS; n: CARDINAL): BOOLEAN;
+
+   PROCEDURE GEq(m1, m2: ADDRESS; n: CARDINAL): BOOLEAN;
+
+END ShortMem.
+

@@ -1,0 +1,21 @@
+DEFINITION MODULE encode
+
+FUNCTION HexEncode(s: STRING): STRING
+(*
+	Return the string encoded in hexadecimal characters 0..9a..f.
+	HexEncode(NIL) => NIL
+	HexEncode("") => ""
+	Example: HexEncode("module\n") => "6d6f64756c650a"
+*)
+
+FUNCTION HexDecode(s: STRING): STRING
+(*
+	Decode the string from the exadecimal characters 0..9a..f.
+	Capital letters A..F are allowed in place of a..f.  If any other
+	character is found, or the length is odd, return NIL.
+	HexDecode(NIL) => NIL
+	HexDecode("") => ""
+	Example: HexDecode("6d6f64756c650a") => "module\n"
+*)
+
+END

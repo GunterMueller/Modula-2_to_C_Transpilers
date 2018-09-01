@@ -1,0 +1,88 @@
+IMPLEMENTATION MODULE encode
+
+IMPORT m2, buffer
+
+CONST
+	ASCII_0 = 48
+	ASCII_9 = 57
+	ASCII_A = 65
+	ASCII_F = 70
+	ASCII_a = 97
+	ASCII_f = 102
+
+
+FUNCTION HexEncode(s: STRING): STRING
+VAR i, c, n1, n2: INTEGER   b: BUFFER
+BEGIN
+	IF s = NIL THEN
+		RETURN NIL
+	END
+	IF length(s) = 0 THEN
+		RETURN s
+	END
+	FOR i=0 TO length(s)-1 DO
+		c = CharAt(s, i)
+		n1 = c DIV 16
+		n2 = c MOD 16
+		IF n1 < 10 THEN
+			c = ASCII_0 + n1
+		ELSE
+			c = ASCII_a + n1 - 10
+		END
+		b->AddChar(c)
+		IF n2 < 10 THEN
+			c = ASCII_0 + n2
+		ELSE
+			c = ASCII_a + n2 - 10
+		END
+		b->AddChar(c)
+	END
+	RETURN b->ToString()
+END
+
+
+FUNCTION HexDecode(s: STRING): STRING
+VAR
+	len, i, c1, c2: INTEGER
+	b: BUFFER
+BEGIN
+	IF s = NIL THEN
+		RETURN NIL
+	END
+	len = length(s)
+	IF len = 0 THEN
+		RETURN s
+	END
+	i = 0
+	WHILE i+1 < len DO
+		c1 = CharAt(s, i)
+		IF (c1 >= ASCII_0) AND (c1 <= ASCII_9) THEN
+			c1 = c1 - ASCII_0
+		ELSIF (c1 >= ASCII_a) AND (c1 <= ASCII_f) THEN
+			c1 = c1 - ASCII_a + 10
+		ELSIF (c1 >= ASCII_A) AND (c1 <= ASCII_F) THEN
+			c1 = c1 - ASCII_A + 10
+		ELSE
+			RETURN NIL
+		END
+		c2 = CharAt(s, i+1)
+		IF (c2 >= ASCII_0) AND (c2 <= ASCII_9) THEN
+			c2 = c2 - ASCII_0
+		ELSIF (c2 >= ASCII_a) AND (c2 <= ASCII_f) THEN
+			c2 = c2 - ASCII_a + 10
+		ELSIF (c2 >= ASCII_A) AND (c2 <= ASCII_F) THEN
+			c2 = c2 - ASCII_A + 10
+		ELSE
+			RETURN NIL
+		END
+		b->AddChar(16*c1 + c2)
+		inc(i, 2)
+	END
+	IF i > len THEN
+		RETURN NIL
+	END
+	RETURN b->ToString()
+END
+
+
+END

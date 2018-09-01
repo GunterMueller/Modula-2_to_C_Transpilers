@@ -1,0 +1,1411 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+COMPILER C2
+
+  FROM Defs IMPORT IdStr, BigStr, HugeStr;
+
+  FROM Printer IMPORT
+    Append, AppendLabel, NewLine, BlankLine, IndentNextLine, ExdentNextLine,
+    Indent, Exdent, BackTrack, MarkPrependPos, Prepend, GetPos, Insert, Flush,
+    GetBuffer, DelBuffer, OpenResults;
+
+  IMPORT String, Fmt; (* BMB *)
+  IMPORT Switches, Import, Ids, Procs, IdQueue, Variants, VFields, Type;
+
+  FROM Write IMPORT AppendCardToStr, WriteIfDefs, WriteIncludes,
+    WriteImportUsings, WriteExportUsings, WriteTemplateParams, AppendParams,
+    WriteParamReferences, WriteModuleBodyStruct, WriteModuleBodyVar,
+    WriteMain;
+
+  VAR
+    ModName: IdStr;
+    tmpId, tmpId2: IdStr;
+    procName: IdStr;
+    tmpBig, retStr: BigStr;
+    sel: HugeStr;
+    isImplMod: BOOLEAN;
+
+  PROCEDURE AppendToken;
+    VAR
+      token: ARRAY [0 .. 255] OF CHAR;
+  BEGIN
+    LexString(token); Append(token);
+  END AppendToken;
+
+  PROCEDURE ConvertAndAppendString;
+    VAR
+      token: ARRAY [0 .. 255] OF CHAR;
+      high, i: CARDINAL;
+      ch: CHAR;
+  BEGIN
+    LexString(token);
+    high := String.Length(token) - 1;
+    IF high # 2 THEN
+      IF Switches.s THEN Append("_ARRAYOF<CHAR>(") END;
+      Append('"');
+    ELSE
+      Append("'");
+    END;
+    FOR i := 1 TO high-1 DO
+      ch := token[i];
+      IF (ch = '\') OR (ch = '?') OR (ch = "'") OR (ch = '"') THEN
+        Append('\');
+      END;
+      Append(ch);
+    END;
+    IF high # 2 THEN
+      Append('"');
+      IF Switches.s THEN Append(")") END;
+    ELSE
+      Append("'");
+    END;
+  END ConvertAndAppendString;
+
+  PROCEDURE ConvertAndAppendWhole;
+    VAR
+      token: ARRAY [0 .. 255] OF CHAR;
+      high: CARDINAL;
+  BEGIN
+    LexString(token);
+    high := String.Length(token) - 1;
+    IF token[high] = 'C' THEN
+      token[high] := "'";
+      Append("'\");
+    ELSIF token[high] = 'B' THEN
+      token[high] := 0C;
+      Append("0");
+    ELSIF token[high] = 'H' THEN
+      token[high] := 0C;
+      Append("0X");
+    END;
+    Append(token);
+  END ConvertAndAppendWhole;
+
+CHARACTERS
+  eol        = CHR(13) .
+  letter     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" .
+  underscore = "_" .
+  octDigit   = "01234567" .
+  digit      = octDigit + "89" .
+  hexDigit   = digit + "ABCDEF" .
+  noQuote1   = ANY - "'" - eol .
+  noQuote2   = ANY - '"' - eol .
+
+IGNORE  CHR(9) .. CHR(13)
+
+COMMENTS
+  FROM "(*" TO "*)" NESTED
+
+TOKENS
+  identifier =   letter { letter | digit | underscore } .
+  integer    =   digit { digit }
+               | digit { digit }  CONTEXT ("..")
+               | octDigit { octDigit } ("B" | "C")
+               | digit { hexDigit } "H" .
+  real       =   digit { digit } "." { digit }
+               [ "E" [ "+" | "-" ] digit { digit } ] .
+  string     =   "'" { noQuote1 } "'"
+               | '"' { noQuote2 } '"' .
+
+PRODUCTIONS
+
+  C2 =                          (. isImplMod := FALSE .)
+  ( ProgMod
+  | DefMod
+  |                             (. isImplMod := TRUE .)
+    ImplMod
+  )                             (. Type.Kill .)
+  .
+
+  ProgMod                       (. VAR emptyEList: Ids.List; .)
+  =                             (. Ids.Init(emptyEList) .)
+    "MODULE"
+    Id                          (. LexString(ModName);
+                                   OpenResults(ModName, "cpp");
+                                   Append("#include <_m2sys.h>");
+                                   NewLine; BlankLine;
+                                   Append("#include <Env.m2h>"); NewLine;
+                                   Append("#include <Env.cpp>"); NewLine;
+                                   BlankLine .)
+    [Prot] ";"                  (. Import.Init;
+                                   Type.InitMod .)
+    {ImportList}                (. WriteIncludes;
+                                   Append("namespace ");
+                                   Append(ModName);
+                                   Append(" {");
+                                   IndentNextLine;
+                                   BlankLine;
+                                   WriteImportUsings .)
+    ModBlock<ModName, emptyEList>
+                                (. ExdentNextLine .)
+    Id
+    "."                         (. Append("}");
+                                   NewLine;
+                                   WriteMain(ModName);
+                                   Import.Kill;
+                                   Type.KillMod .)
+  .
+
+  Prot =
+    "["                         (. Append("// Module priority: "); .)
+    ProtExpr
+    "]"                         (. NewLine; BlankLine .)
+  .
+
+  ProtExpr =
+    ConstExpr
+  .
+
+  DefMod =
+    "DEFINITION" "MODULE"
+    Id                          (. LexString(ModName);
+                                   OpenResults(ModName, "m2h");
+                                   WriteIfDefs(ModName, "m2h");
+                                   Append("#include <_m2sys.h>");
+                                   NewLine; BlankLine .)
+    ";"                         (. Import.Init;
+                                   Type.InitMod .)
+    {ImportList}                (. WriteIncludes;
+                                   Append("namespace ");
+                                   Append(ModName);
+                                   Append(" {");
+                                   BlankLine;
+                                   IndentNextLine;
+                                   WriteImportUsings .)
+    {Def}
+    "END" Id "."                (. ExdentNextLine;
+                                   Append("}"); NewLine; BlankLine;
+                                   Append("#endif"); NewLine;
+                                   Import.Kill;
+                                   Type.KillMod .)
+  .
+
+  ImplMod                       (. VAR emptyEList: Ids.List; .)
+  =                             (. Ids.Init(emptyEList) .)
+    "IMPLEMENTATION" "MODULE"
+    Id                          (. LexString(ModName);
+                                   OpenResults(ModName, "cpp");
+                                   WriteIfDefs(ModName, "cpp");
+                                   Append("#include <_m2sys.h>");
+                                   NewLine; BlankLine;
+                                   Append("#include <");
+                                   Append(ModName);
+                                   Append(".m2h>");
+                                   NewLine; BlankLine .)
+    [Prot] ";"                  (. Import.Init;
+                                   Type.InitMod .)
+    {ImportList}                (. WriteIncludes;
+                                   Append("namespace ");
+                                   Append(ModName);
+                                   Append(" {");
+                                   BlankLine;
+                                   IndentNextLine;
+                                   WriteImportUsings .)
+    ModBlock<ModName, emptyEList>
+                                (. ExdentNextLine .)
+    Id
+    "."                         (. Append("}"); NewLine; BlankLine;
+                                   Append("#endif"); NewLine;
+                                   Import.Kill;
+                                   Type.KillMod .)
+  .
+
+  ImportList =
+    SimpleImport
+  | UnqualImport
+  .
+
+  SimpleImport
+  =
+    "IMPORT"
+    Id                          (. LexString(tmpId);
+                                   IF NOT String.Equal(tmpId, "SYSTEM") THEN
+                                     Import.AddModule(tmpId);
+                                   END .)
+  { "," Id                      (. LexString(tmpId);
+                                   IF NOT String.Equal(tmpId, "SYSTEM") THEN
+                                     Import.AddModule(tmpId);
+                                   END .)
+  } ";" .
+
+  UnqualImport                  (. VAR notSYSTEM: BOOLEAN; .)
+  =
+    "FROM"
+    Id                          (. LexString(tmpId);
+                                   notSYSTEM := NOT String.Equal(tmpId, "SYSTEM");
+                                   IF notSYSTEM THEN
+                                     Import.AddModule(tmpId);
+                                   END .)
+    "IMPORT"
+    Id                          (. IF notSYSTEM THEN
+                                     LexString(tmpId);
+                                     Import.AddImported(tmpId);
+                                     Type.Define(tmpId);
+                                   END .)
+  { "," Id                      (. IF notSYSTEM THEN
+                                     LexString(tmpId);
+                                     Import.AddImported(tmpId);
+                                     Type.Define(tmpId);
+                                   END .)
+  } ";" .
+
+  ExportList<VAR eList: Ids.List>
+  =
+    "EXPORT"
+  ( UnqualExport<eList>
+  | QualExport
+  )
+  .
+
+  UnqualExport<VAR eList: Ids.List>
+  =
+    Id                          (. LexString(tmpId);
+                                   Ids.Insert(eList, tmpId) .)
+  { "," Id                      (. LexString(tmpId);
+                                   Ids.Insert(eList, tmpId) .)
+  } ";"
+  .
+
+  QualExport =
+    "QUALIFIED" Id {"," Id} ";" .
+
+  QualId<VAR str: BigStr>       (. VAR tmpId: IdStr; .)
+  =                             (. String.Copy(str, "") .)
+    Id                          (. LexString(tmpId) .)
+  { "."                         (. IF NOT String.Equal(tmpId, "SYSTEM") THEN
+                                     String.Append(str, tmpId);
+                                     String.Append(str, "::");
+                                   END .)
+    Id                          (. LexString(tmpId) .)
+  }                             (. String.Append(str, tmpId) .)
+  .
+
+  Def =
+    "CONST"
+  { ConstDecl ";" SYNC          (. Append(";"); NewLine .)
+  }                             (. BlankLine .)
+  |
+    "TYPE"
+  { TypeDef ";" SYNC            (. Append(";"); NewLine .)
+  }                             (. BlankLine .)
+  |
+    "VAR"
+  { VarDecl ";" SYNC            (. Append(";"); NewLine .)
+  }                             (. BlankLine .)
+  |
+    ProcHeading ";" SYNC        (. Append(";"); BlankLine; NewLine .)
+  .
+
+  ProcHeading                   (. VAR procDesc: Procs.ProcDesc; .)
+  =                             (. Procs.Init(procDesc);
+                                   INC(Procs.level) .)
+    "PROCEDURE"                 (. String.Copy(retStr, "void") .)
+    Id                          (. LexString(procName); .)
+  [ FormalParams<procDesc> ]    (. WriteTemplateParams(procDesc);
+                                   Append(retStr); Append(" ");
+                                   Append(procName);
+                                   Append("(");
+                                   AppendParams(procDesc);
+                                   Append(")");
+                                   DEC(Procs.level);
+                                   Procs.Kill(procDesc) .)
+  .
+
+  FormalParams<VAR procDesc: Procs.ProcDesc>
+  = "("
+  [ FormalParamList<procDesc> ]
+    ")"
+  [ ":" QualId<retStr> ]
+  .
+
+  FormalParamList<VAR procDesc: Procs.ProcDesc> =
+    FormalParam<procDesc> {";" FormalParam<procDesc>} .
+
+  FormalParam<VAR procDesc: Procs.ProcDesc> =
+    ValueParamSpec<procDesc>
+  | VarParamSpec<procDesc>
+  .
+
+  ValueParamSpec<VAR procDesc: Procs.ProcDesc>
+                                (. VAR arrayLvl: CARDINAL; .)
+  =                             (. arrayLvl := 0; tmpBig := "" .)
+    Id                          (. LexString(tmpId) .)
+  { ","                         (. Procs.AddParam(procDesc, tmpId, tmpBig, 0, FALSE) .)
+    Id                          (. LexString(tmpId) .)
+  } ":"
+  { "ARRAY" "OF"                (. INC(arrayLvl) .)
+  } QualId<tmpBig>
+                                (. Procs.AddParam(procDesc, tmpId, tmpBig, arrayLvl, FALSE) .)
+  .
+
+  VarParamSpec<VAR procDesc: Procs.ProcDesc>
+                                (. VAR arrayLvl: CARDINAL; .)
+  =                             (. arrayLvl := 0; tmpBig := "" .)
+    "VAR"
+    Id                          (. LexString(tmpId) .)
+  { ","                         (. Procs.AddParam(procDesc, tmpId, tmpBig, 0, TRUE) .)
+    Id                          (. LexString(tmpId) .)
+  } ":"
+  { "ARRAY" "OF"                (. INC(arrayLvl) .)
+  } QualId<tmpBig>
+                                (. Procs.AddParam(procDesc, tmpId, tmpBig, arrayLvl, TRUE) .)
+  .
+
+  TypeDef                       (. VAR notProcType,
+                                       isRecType,
+                                       isOpaque: BOOLEAN;
+                                       typeId, singleId: IdStr; .)
+  =                             (. isOpaque := TRUE .)
+    Id                          (. LexString(typeId) .)
+  [ "="                         (. isOpaque := FALSE .)
+    TypeDenoter<notProcType, isRecType, singleId, typeId, TRUE>
+  ]                             (. IF notProcType THEN
+                                     Append(" ");
+                                     Append(typeId);
+                                   END;
+                                   IF isOpaque THEN
+                                     Append("// typedef ");
+                                     Append(typeId);
+                                   END;
+                                   Type.Define(typeId) .)
+  .
+
+  Decl<VAR eList: Ids.List>
+  =
+    "CONST"
+  { ConstDecl ";" SYNC          (. Append(";"); NewLine .)
+  }                             (. BlankLine .)
+  |
+    "TYPE"
+  { TypeDecl ";" SYNC           (. Append(";"); NewLine .)
+  }                             (. BlankLine .)
+  |
+    "VAR"
+  { VarDecl ";" SYNC            (. Append(";"); NewLine .)
+  }                             (. BlankLine .)
+  |
+    ProcDecl ";" SYNC           (. BlankLine; NewLine .)
+  |
+    LocalModDecl<eList> ";" SYNC (. BlankLine; NewLine .)
+  .
+
+  ConstDecl =
+    Id                          (. LexString(tmpId);
+                                   Append("const INTEGER ");
+                                   Append(tmpId); .)
+    "="                         (. Append(" = ") .)
+    ConstExpr
+  .
+
+  TypeDecl                      (. VAR notProcType, isRecType: BOOLEAN;
+                                       typeId, singleId: IdStr; .)
+  =
+    Id                          (. LexString(typeId) .)
+    "="
+    TypeDenoter<notProcType, isRecType, singleId, typeId, TRUE>
+                                (. IF notProcType THEN
+                                     Append(" ");
+                                     Append(typeId);
+                                   END;
+                                   Type.Define(typeId) .)
+  .
+
+  VarDecl                       (. VAR notProcType, isRecType: BOOLEAN;
+                                       varId, varIdOld, singleId: IdStr;
+                                       vq: IdQueue.T;
+                                       procStr: HugeStr; .)
+  =                             (. IdQueue.Init(vq) .)
+    Id                          (. LexString(varId);
+                                   IdQueue.AddRear(vq, varId) .)
+    [MachineAddress]
+  { "," Id                      (. LexString(varId);
+                                   IdQueue.AddRear(vq, varId) .)
+    [MachineAddress]
+  }
+    ":"                         (. IdQueue.First(vq, varId);
+                                   IdQueue.PopFirst(vq) .)
+    TypeDenoter<notProcType, isRecType, singleId, varId, FALSE>
+                                (. IF notProcType THEN
+                                     Append(" ");
+                                     Append(varId);
+                                     WHILE NOT IdQueue.IsEmpty(vq) DO
+                                       IdQueue.First(vq, varId);
+                                       Append(", ");
+                                       Append(varId);
+                                       IdQueue.PopFirst(vq);
+                                     END;
+                                   ELSE
+                                     GetBuffer(procStr);
+                                     WHILE NOT IdQueue.IsEmpty(vq) DO
+                                       Append(";");
+                                       NewLine;
+                                       Append(procStr);
+                                       String.Copy(varIdOld, varId);
+                                       IdQueue.First(vq, varId);
+                                       BackTrack(varIdOld, varId);
+                                       IdQueue.PopFirst(vq);
+                                     END;
+                                   END;
+                                   IdQueue.Kill(vq) .)
+  .
+
+  MachineAddress =
+    "[" ValueOfAddressType "]" .
+
+  ValueOfAddressType =
+    ConstExpr [":" ConstExpr] .
+
+  ProcDecl                      (. VAR procDesc: Procs.ProcDesc; .)
+  =                             (. Procs.Init(procDesc);
+                                   Type.InitProc;
+                                   INC(Procs.level) .)
+    "PROCEDURE"                 (. String.Copy(retStr, "void") .)
+    Id                          (. LexString(procName) .)
+    FormalParams2<procDesc>     (. DEC(Procs.level);
+                                   Procs.Kill(procDesc);
+                                   Type.KillProc .)
+  .
+
+  FormalParams2<VAR procDesc: Procs.ProcDesc> =
+    "(" [FormalParamList<procDesc>] ")"
+    (ProperProc2<procDesc> | FuncProc2<procDesc>)
+  | ProperProc2<procDesc>
+  .
+
+  ProperProc2<VAR procDesc: Procs.ProcDesc> =
+    ";"                         (. IF Procs.level = 1 THEN
+                                     WriteTemplateParams(procDesc);
+                                     Append(retStr); Append(" ");
+                                     Append(procName);
+                                     Append("(");
+                                     AppendParams(procDesc);
+                                     Append(")")
+                                   ELSE
+                                     Append("static struct _");
+                                     Append(procName);
+                                     Append(" {");
+                                     IndentNextLine;
+                                     Append(retStr);
+                                     Append(" operator()(");
+                                     AppendParams(procDesc);
+                                     Append(")")
+                                   END .)
+  ( ProperProcBlock<procDesc>   (. IF Procs.level # 1 THEN
+                                      ExdentNextLine;
+                                      Append("} ");
+                                      Append(procName);
+                                      Append(";");
+                                   END .)
+    Id
+  | "FORWARD"                   (. Append(";") .)
+  )
+  .
+
+  FuncProc2<VAR procDesc: Procs.ProcDesc> =
+    ":" QualId<retStr>
+    ";"                         (. IF Procs.level = 1 THEN
+                                     WriteTemplateParams(procDesc);
+                                     Append(retStr); Append(" ");
+                                     Append(procName);
+                                     Append("(");
+                                     AppendParams(procDesc);
+                                     Append(")")
+                                   ELSE
+                                     Append("static struct _");
+                                     Append(procName);
+                                     Append(" {");
+                                     IndentNextLine;
+                                     Append(retStr);
+                                     Append(" operator()(");
+                                     AppendParams(procDesc);
+                                     Append(")")
+                                   END .)
+  ( FuncProcBlock<procDesc>     (. IF Procs.level # 1 THEN
+                                     ExdentNextLine;
+                                     Append("} ");
+                                     Append(procName);
+                                     Append(";");
+                                   END .)
+    Id
+  | "FORWARD"                   (. Append(";") .)
+  )
+  .
+
+  LocalModDecl<VAR prevEList: Ids.List>
+                                (. VAR LocModName: IdStr;
+                                       eList: Ids.List; .)
+  =                             (. Ids.Init(eList) .)
+    "MODULE"                    (. Append("namespace ") .)
+    Id                          (. LexString(LocModName);
+                                   Append(LocModName);
+                                   Append(" {");
+                                   BlankLine;
+                                   IndentNextLine .)
+    [Prot] ";"                  (. Import.Init .)
+    {ImportList}                (. WriteImportUsings .)
+    [ExportList<eList>]
+    ModBlock<LocModName, eList>
+                                (. Ids.Replace(prevEList, LocModName, eList);
+                                   ExdentNextLine .)
+    Id                          (. Append("}"); NewLine;
+                                   WriteExportUsings(LocModName, eList);
+                                   Ids.Kill(eList);
+                                   Import.Kill .)
+
+  .
+
+  TypeDenoter<VAR notProcType, isRecType: BOOLEAN; VAR singleId: IdStr;
+                  id: IdStr; wrTypedef: BOOLEAN>
+  =                             (. String.Copy(singleId, "") .)
+  (                             (. IF wrTypedef THEN Append("typedef ") END .)
+    OrdTypeDenoter<singleId>    (. notProcType := TRUE; isRecType := FALSE .)
+  |                             (. IF wrTypedef THEN Append("typedef ") END .)
+    SetType                     (. notProcType := TRUE; isRecType := FALSE .)
+  |                             (. IF wrTypedef THEN Append("typedef ") END .)
+    PackedsetType               (. notProcType := TRUE; isRecType := FALSE .)
+  |
+    PointerType<wrTypedef>      (. notProcType := TRUE; isRecType := FALSE .)
+  |                             (. IF wrTypedef THEN Append("typedef ") END .)
+    ProcType<id>                (. notProcType := FALSE; isRecType := FALSE .)
+  |                             (. IF wrTypedef THEN Append("typedef ") END .)
+    ArrayType                   (. notProcType := TRUE; isRecType := FALSE .)
+  |                             (. IF wrTypedef THEN Append("typedef ") END .)
+    RecordType<id>              (. notProcType := TRUE; isRecType := TRUE .)
+  )
+  .
+
+  Subrange =
+    "["                         (. Append("_SubrangeType< ");
+                                   Append(tmpBig);
+                                   Append(", ") .)
+    ConstExpr
+    ".."                        (. Append(", ") .)
+    ConstExpr
+    "]"                         (. Append(" >") .)
+  .
+
+  OrdTypeDenoter<VAR singleId: IdStr>
+                                (. VAR notSubrange: BOOLEAN;
+                                       pos: CARDINAL; .)
+  =                             (. notSubrange := TRUE .)
+    QualId<tmpBig>
+  [ Subrange                    (. notSubrange := FALSE .)
+  ]                             (. IF notSubrange THEN
+                                     IF NOT String.SubString(tmpBig, ".", pos) THEN
+                                       String.Copy(singleId, tmpBig);
+                                     END;
+                                     Append(tmpBig);
+                                   END .)
+  |                             (. String.Copy(tmpBig, "INTEGER") .)
+    Subrange
+  | EnumerationType
+  .
+
+  EnumerationType =
+    "("                         (. Append("enum { ") .)
+    Id                          (. LexString(tmpId); Append(tmpId) .)
+  { ","                         (. Append(", ") .)
+    Id                          (. LexString(tmpId); Append(tmpId) .)
+  } ")"                         (. Append(" }") .)
+  .
+
+  SetType =
+    "SET" "OF"                  (. Append("SET< ") .)
+    OrdTypeDenoter<tmpId>       (. Append(" >") .)
+  .
+
+  PackedsetType =
+    "PACKEDSET" "OF"            (. Append("PACKEDSET< ") .)
+    OrdTypeDenoter<tmpId>       (. Append(" >") .)
+  .
+
+  PointerType<wrTypedef: BOOLEAN>
+                                (. VAR notProcType, isRecType: BOOLEAN;
+                                       singleId: IdStr; .)
+  =
+    "POINTER" "TO"              (. IF wrTypedef THEN Append("typedef ") END;
+                                   Append("POINTER< ") .)
+    TypeDenoter<notProcType, isRecType, singleId, "", FALSE>
+                                (. Append(" >");
+                                   IF wrTypedef AND
+                                      (String.Length(singleId) # 0) AND
+                                      NOT Type.IsDefined(singleId)
+                                   THEN
+                                     DelBuffer;
+                                     Append("struct _");
+                                     Append(singleId);
+                                     Append(";"); NewLine;
+                                     Append("typedef POINTER< _");
+                                     Append(singleId);
+                                     Append(" >");
+                                   END .)
+  .
+
+  ProcType<id: IdStr> =
+    "PROCEDURE"                 (. Append("void (*");
+                                   Append(id);
+                                   Append(")") .)
+  [ FormalParamTypeList ]
+  .
+
+  FormalParamTypeList =
+    "("                         (. Append("(") .)
+  [ FormalParamType
+    { ","                       (. Append(", ") .)
+      FormalParamType }
+  ]
+    ")"                         (. Append(")") .)
+  [ ":" QualId<retStr>          (. BackTrack("void", retStr) .)
+  ]
+  .
+
+  FormalParamType               (. VAR isVar: BOOLEAN; .)
+  =                             (. isVar := FALSE .)
+  [ "VAR"                       (. isVar := TRUE .)
+  ] FormalType                  (. IF isVar THEN Append("&") END .)
+  .
+
+  FormalType                    (. VAR arrayLvl, i: CARDINAL; .)
+  =                             (. arrayLvl := 0 .)
+  { "ARRAY" "OF"                (. INC(arrayLvl) .)
+  }                             (. FOR i := 1 TO arrayLvl DO
+                                     Append("_ARRAYOF< ");
+                                   END .)
+  QualId<tmpBig>                (. Append(tmpBig) .)
+                                (. FOR i := 1 TO arrayLvl DO
+                                     Append(" >");
+                                   END .)
+  .
+
+  ArrayType                     (. VAR indexCount, i: CARDINAL;
+                                       notProcType, isRecType: BOOLEAN; .)
+  =                             (. indexCount := 1 .)
+    "ARRAY"                     (. Append("ARRAY< ") .)
+    OrdTypeDenoter<tmpId>
+  { ","                         (. Append(", ARRAY< ") .)
+    OrdTypeDenoter<tmpId>       (. INC(indexCount) .)
+  } "OF"                        (. Append(", ") .)
+    TypeDenoter<notProcType, isRecType, tmpId, "", FALSE>
+                                (. FOR i := 1 TO indexCount DO
+                                     Append(" >");
+                                   END .)
+  .
+
+  RecordType<id: IdStr>         (. VAR noNameCount, pos: CARDINAL;
+                                       typeStr: HugeStr;
+                                       fieldId: IdStr;
+                                       vList: Variants.List;
+                                       casePath: BigStr;
+                                       notFirst: BOOLEAN; .)
+  =                             (. noNameCount := 0;
+                                   VFields.Init;
+                                   Variants.Init(vList, "") .)
+    "RECORD"                    (. Append("struct ");
+                                   IF String.Length(id) # 0 THEN
+                                     Append("_"); Append(id); Append(" ");
+                                   END;
+                                   Append("{"); IndentNextLine .)
+  [ FixedFields<FALSE, vList>   (. Append(";"); NewLine .)
+  | VariantFields<"", noNameCount, FALSE, vList>
+  ]
+  { ";"
+    [ FixedFields<FALSE, vList> (. Append(";"); NewLine .)
+    | VariantFields<"", noNameCount, FALSE, vList>
+    ]
+  }
+    "END"                       (. IF NOT VFields.IsEmpty() THEN
+                                     VFields.GetNext(vList);
+                                     WHILE NOT Variants.IsEmpty(vList) DO
+                                       Variants.GetNextType(vList, typeStr);
+                                       WHILE String.Length(typeStr) # 0 DO
+                                         NewLine;
+                                         Append(typeStr);
+                                         Variants.GetNextName(vList, fieldId);
+                                         IF String.SubString(typeStr, "(*", pos) THEN
+                                           BackTrack("*", "*&");
+                                           Variants.GetNextName(vList, fieldId);
+                                         ELSE
+                                           Append(" &");
+                                           Append(fieldId);
+                                           Variants.GetNextName(vList, fieldId);
+                                           WHILE String.Length(fieldId) # 0 DO
+                                             Append(", &");
+                                             Append(fieldId);
+                                             Variants.GetNextName(vList, fieldId);
+                                           END;
+                                         END;
+                                         Append(";");
+                                         Variants.GetNextType(vList, typeStr);
+                                       END;
+                                       VFields.GetNext(vList);
+                                     END;
+                                     NewLine;
+                                     Append("_");
+                                     Append(id);
+                                     Append("():"); IndentNextLine;
+                                     notFirst := FALSE;
+                                     VFields.GetNext(vList);
+                                     WHILE NOT Variants.IsEmpty(vList) DO
+                                       Variants.GetCasePath(vList, casePath);
+                                       Variants.GetNextType(vList, typeStr);
+                                       WHILE String.Length(typeStr) # 0 DO
+                                         Variants.GetNextName(vList, fieldId);
+                                         IF notFirst THEN
+                                           Append(", "); NewLine;
+                                         ELSE
+                                           notFirst := TRUE;
+                                         END;
+                                         Append(fieldId);
+                                         Append("(");
+                                         Append(casePath); Append("."); Append(fieldId);
+                                         Append(")");
+                                         Variants.GetNextName(vList, fieldId);
+                                         WHILE String.Length(fieldId) # 0 DO
+                                           Append(", "); NewLine;
+                                           Append(fieldId);
+                                           Append("(");
+                                           Append(casePath); Append("."); Append(fieldId);
+                                           Append(")");
+                                           Variants.GetNextName(vList, fieldId);
+                                         END;
+                                         Variants.GetNextType(vList, typeStr);
+                                       END;
+                                       VFields.GetNext(vList);
+                                     END;
+                                     NewLine;
+                                     Append("{}");
+                                     ExdentNextLine;
+                                   END;
+                                   ExdentNextLine;
+                                   Append("}");
+                                   VFields.Kill .)
+  .
+
+  FixedFields<inCase: BOOLEAN; VAR vList: Variants.List>
+                                (. VAR notProcType, isRecType: BOOLEAN;
+                                       fieldId, fieldIdOld, singleId: IdStr;
+                                       fq: IdQueue.T;
+                                       typeStr: HugeStr; .)
+  =                             (. IdQueue.Init(fq) .)
+    Id                          (. LexString(fieldId);
+                                   IdQueue.AddRear(fq, fieldId) .)
+  { "," Id                      (. LexString(fieldId);
+                                   IdQueue.AddRear(fq, fieldId) .)
+  } ":"                         (. IdQueue.First(fq, fieldId);
+                                   IdQueue.PopFirst(fq) .)
+    TypeDenoter<notProcType, isRecType, singleId, fieldId, FALSE>
+                                (. IF notProcType THEN
+                                     IF inCase THEN
+                                       IF isRecType THEN
+                                         String.Copy(typeStr, "_");
+                                         String.Append(typeStr, fieldId);
+                                       ELSE
+                                         GetBuffer(typeStr);
+                                       END;
+                                       Variants.InsertType(vList, typeStr);
+                                       Variants.InsertName(vList, fieldId);
+                                     END;
+                                     Append(" ");
+                                     Append(fieldId);
+                                     WHILE NOT IdQueue.IsEmpty(fq) DO
+                                       IdQueue.First(fq, fieldId);
+                                       Append(", ");
+                                       Append(fieldId);
+                                       IF inCase THEN
+                                         Variants.InsertName(vList, fieldId);
+                                       END;
+                                       IdQueue.PopFirst(fq);
+                                     END;
+                                   ELSE
+                                     GetBuffer(typeStr);
+                                     IF inCase THEN
+                                       Variants.InsertType(vList, typeStr);
+                                       Variants.InsertName(vList, fieldId);
+                                     END;
+                                     WHILE NOT IdQueue.IsEmpty(fq) DO
+                                       Append(";");
+                                       NewLine;
+                                       String.Copy(fieldIdOld, fieldId);
+                                       IdQueue.First(fq, fieldId);
+                                       Append(typeStr);
+                                       BackTrack(fieldIdOld, fieldId);
+                                       GetBuffer(typeStr);
+                                       IF inCase THEN
+                                         Variants.InsertType(vList, typeStr);
+                                         Variants.InsertName(vList, fieldId);
+                                       END;
+                                       IdQueue.PopFirst(fq);
+                                     END;
+                                   END;
+                                   IdQueue.Kill(fq) .)
+  .
+
+  VariantFields<casePath: BigStr; VAR noNameCount: CARDINAL;
+                inCase: BOOLEAN; VAR vList: Variants.List>
+                                (. VAR caseId: IdStr;
+                                       caseCount: CARDINAL; .)
+  =                             (. caseCount := 0;
+                                   String.Copy(caseId, "") .)
+    "CASE"
+  [ Id                          (. LexString(caseId) .)
+  ] ":"
+    QualId<tmpBig>              (. IF String.Length(caseId) = 0 THEN
+                                     INC(noNameCount);
+                                     String.Append(caseId, "noName");
+                                     AppendCardToStr(caseId, noNameCount);
+                                     Append("// CASE : ");
+                                     Append(tmpBig);
+                                     Append(" OF");
+                                   ELSE
+                                     Append(tmpBig);
+                                     Append(" ");
+                                     Append(caseId);
+                                     Append("; // CASE OF");
+                                     IF inCase THEN
+                                       Variants.InsertType(vList, tmpBig);
+                                       Variants.InsertName(vList, caseId);
+                                     END;
+                                   END;
+                                   String.Insert(caseId, "_", 0);
+                                   NewLine .)
+    "OF"                        (. Append("union {");
+                                   IndentNextLine .)
+    [Variant<casePath, caseId, caseCount>]
+    {"|" [Variant<casePath, caseId, caseCount>]}
+    [VariantElsePart<casePath, caseId>]
+                                (. ExdentNextLine;
+                                   Append("};"); NewLine .)
+    "END"
+  .
+
+  VariantElsePart<casePath: BigStr; caseId: IdStr>
+                                (. VAR noNameCount: CARDINAL;
+                                       vList: Variants.List; .)
+  =                             (. noNameCount := 0 .)
+    "ELSE"                      (. String.Append(caseId, "_ELSE");
+                                   IF String.Length(casePath) # 0 THEN
+                                     String.Append(casePath, ".");
+                                   END;
+                                   String.Append(casePath, caseId);
+                                   Variants.Init(vList, casePath);
+                                   Append("// ELSE"); NewLine;
+                                   Append("struct {");
+                                   IndentNextLine .)
+  [ FixedFields<TRUE, vList>    (. Append(";"); NewLine .)
+  | VariantFields<casePath, noNameCount, TRUE, vList>
+  ]
+  { ";"
+    [ FixedFields<TRUE, vList>  (. Append(";"); NewLine .)
+    | VariantFields<casePath, noNameCount, TRUE, vList>
+    ]
+  }                             (. ExdentNextLine;
+                                   Append("} ");
+                                   Append(caseId);
+                                   Append(";");
+                                   Append(" // "); Append(casePath);
+                                   NewLine;
+                                   IF NOT Variants.IsEmpty(vList) THEN
+                                     VFields.Insert(vList);
+                                   END .)
+  .
+
+  Variant<casePath: BigStr; caseId: IdStr; VAR caseCount: CARDINAL>
+                                (. VAR noNameCount: CARDINAL;
+                                       vList: Variants.List; .)
+  =                             (. noNameCount := 0;
+                                   INC(caseCount);
+                                   AppendCardToStr(caseId, caseCount);
+                                   IF String.Length(casePath) # 0 THEN
+                                     String.Append(casePath, ".");
+                                   END;
+                                   String.Append(casePath, caseId);
+                                   Variants.Init(vList, casePath);
+                                   Append("// ") .)
+    VariantLabelList ":"        (. Append(":"); NewLine;
+                                   Append("struct {");
+                                   IndentNextLine .)
+  [ FixedFields<TRUE, vList>    (. Append(";"); NewLine .)
+  | VariantFields<casePath, noNameCount, TRUE, vList>
+  ]
+  { ";"
+    [ FixedFields<TRUE, vList>  (. Append(";"); NewLine .)
+    | VariantFields<casePath, noNameCount, TRUE, vList>
+    ]
+  }                             (. ExdentNextLine;
+                                   Append("} ");
+                                   Append(caseId);
+                                   Append(";");
+                                   Append(" // "); Append(casePath);
+                                   NewLine;
+                                   IF NOT Variants.IsEmpty(vList) THEN
+                                     VFields.Insert(vList);
+                                   END .)
+  .
+
+  VariantLabelList =
+    VariantLabel
+  { ","                         (. Append(", ") .)
+    VariantLabel
+  }
+  .
+
+  VariantLabel =
+    ConstExpr
+  [ ".."                        (. Append("..") .)
+    ConstExpr
+  ]
+  .
+
+  ProperProcBlock<VAR procDesc: Procs.ProcDesc>
+                                (. VAR emptyEList: Ids.List; .)
+  =                             (. Ids.Init(emptyEList) .)
+                                (. Append(" {");
+                                   IndentNextLine;
+                                   WriteParamReferences(procDesc);
+                                   BlankLine .)
+  { Decl<emptyEList> }
+  [ ProcBody ]
+    "END"                       (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  ProcBody =
+    "BEGIN" BlockBody
+  .
+
+  FuncProcBlock<VAR procDesc: Procs.ProcDesc>
+                                (. VAR emptyEList: Ids.List; .)
+  =                             (. Ids.Init(emptyEList) .)
+                                (. Append(" {");
+                                   IndentNextLine;
+                                   WriteParamReferences(procDesc);
+                                   BlankLine .)
+  { Decl<emptyEList> }
+    ProcBody
+    "END"                       (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  ModBlock<modName: IdStr; eList: Ids.List>
+  =
+    {Decl<eList>}
+  [                             (. WriteModuleBodyStruct .)
+    ModBody                     (. IF isImplMod THEN WriteModuleBodyVar END .)
+  ] "END"
+  .
+
+  ModBody                       (. VAR hasFINALLY: BOOLEAN; .)
+  =                             (. hasFINALLY := FALSE .)
+    InitializationBody
+  [ FinalizationBody            (. hasFINALLY := TRUE .)
+  ]                             (. IF NOT hasFINALLY THEN
+                                     Append("void _ModuleBody::FINALLY() {}");
+                                     NewLine; BlankLine
+                                   END .)
+  .
+
+  InitializationBody =
+    "BEGIN"                     (. Append("void _ModuleBody::BEGIN() {");
+                                   IndentNextLine .)
+    BlockBody                   (. ExdentNextLine;
+                                   Append("}");
+                                   NewLine; BlankLine .)
+  .
+
+  FinalizationBody =
+    "FINALLY"                   (. Append("void _ModuleBody::FINALLY() {");
+                                   IndentNextLine .)
+    BlockBody                   (. ExdentNextLine;
+                                   Append("}");
+                                   NewLine; BlankLine .)
+  .
+
+  BlockBody =
+    StatSeq
+  [ "EXCEPT"                    (. Append("/* EXCEPT"); NewLine .)
+    StatSeq                     (. Append("*/"); NewLine .)
+  ]
+  .
+
+  Stat                          (. VAR wrSemicolon: BOOLEAN; .)
+  = SYNC                        (. wrSemicolon := TRUE .)
+  ( EmptyStat                   (. wrSemicolon := FALSE .)
+  | Designator
+    ( ":="                      (. Append(" = ") .)
+      Expr
+    |                           (. Append("(") .)
+      [ActualParams]            (. Append(")") .)
+    )
+  | ReturnStat
+  | RetryStat
+  | WithStat                    (. wrSemicolon := FALSE .)
+  | IfStat                      (. wrSemicolon := FALSE .)
+  | CaseStat                    (. wrSemicolon := FALSE .)
+  | WhileStat                   (. wrSemicolon := FALSE .)
+  | RepeatStat
+  | LoopStat                    (. wrSemicolon := FALSE .)
+  | ExitStat
+  | ForStat                     (. wrSemicolon := FALSE .)
+  )                             (. IF wrSemicolon THEN Append(";") END;
+                                   NewLine .)
+  .
+
+  StatSeq =
+    Stat { WEAK ";" Stat} .
+
+  EmptyStat =
+     .
+
+  ReturnStat =
+    "RETURN"                    (. Append("return") .)
+  [                             (. Append(" ") .)
+    Expr
+  ]
+  .
+
+  RetryStat =
+    "RETRY"                     (. Append("// RETRY") .)
+  .
+
+  WithStat =
+    "WITH"                      (. Append("// WITH(") .)
+    Designator                  (. Append(") {");
+                                   NewLine .)
+    "DO"
+    StatSeq
+    "END"                       (. Append("// }; /* WITH */");
+                                   NewLine .)
+  .
+
+  IfStat =
+    GuardedStats
+  [ IfElsePart ]
+    "END"
+  .
+
+  GuardedStats =
+    "IF"                        (. Append("if (") .)
+     BooleanExpr                (. Append(") {");
+                                   IndentNextLine .)
+     "THEN"
+     StatSeq                    (. ExdentNextLine;
+                                   Append("}") .)
+  { "ELSIF"                     (. Append(" else if (") .)
+    BooleanExpr                 (. Append(") {");
+                                   IndentNextLine .)
+    "THEN"
+    StatSeq                     (. ExdentNextLine;
+                                   Append("}") .)
+  }
+  .
+
+  IfElsePart =
+    "ELSE"                      (. Append(" else {");
+                                   IndentNextLine .)
+    StatSeq                     (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  BooleanExpr =
+     Expr .
+
+  CaseStat =
+    "CASE"
+    CaseSelector                (. GetBuffer(sel);
+                                   DelBuffer .)
+    "OF"
+    [CaseAlternative]
+  { "|" [                       (. Append(" else ") .)
+          CaseAlternative
+        ]
+  }
+    [CaseElsePart]
+    "END"
+  .
+
+  CaseSelector =
+     OrdExpr .
+
+  CaseElsePart =
+    "ELSE"                      (. Append(" else {");
+                                   IndentNextLine .)
+    StatSeq                     (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  CaseAlternative
+  =                             (. Append("if (") .)
+    CaseLabelList               (. Append(") {");
+                                   IndentNextLine .)
+    ":"
+    StatSeq                     (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  CaseLabelList =
+    CaseLabel
+  { ","                         (. Append(" || ") .)
+    CaseLabel
+  }
+  .
+
+  CaseLabel                     (. VAR notInterval: BOOLEAN; .)
+  =                             (. notInterval := TRUE;
+                                   Append("(") .)
+    ConstExpr
+  [ ".."                        (. notInterval := FALSE;
+                                   Prepend("(");
+                                   Append(" >= ");
+                                   Append(sel);
+                                   Append(") && (");
+                                   Append(sel);
+                                   Append(" <= ") .)
+    ConstExpr                   (. Append(")") .)
+  ]                             (. IF notInterval THEN
+                                     Append(" == ");
+                                     Append(sel);
+                                   END;
+                                   Append(")") .)
+  .
+
+  WhileStat =
+    "WHILE"                     (. Append("while (") .)
+    BooleanExpr                 (. Append(") {");
+                                   IndentNextLine .)
+    "DO"
+    StatSeq
+    "END"                       (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  RepeatStat =
+    "REPEAT"                    (. Append("do {");
+                                   IndentNextLine .)
+    StatSeq
+    "UNTIL"                     (. ExdentNextLine;
+                                   Append("} while (!(") .)
+    BooleanExpr                 (. Append("))") .)
+  .
+
+  LoopStat =
+    "LOOP"                      (. Append("for (;;) {");
+                                   IndentNextLine .)
+    StatSeq
+    "END"                       (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  ExitStat =
+    "EXIT"                      (. Append("break") .)
+  .
+
+  ForStat                       (. VAR hasStep: BOOLEAN; .)
+  =                             (. hasStep := FALSE .)
+    "FOR"                       (. Append("FOR(") .)
+    Id                          (. LexString(tmpId); Append(tmpId);
+                                   Append(", ") .)
+    ":="
+    InitialValue                (. Append(", ") .)
+    "TO"
+    FinalValue                  (. Append(", ") .)
+  [ "BY"                        (. hasStep := TRUE .)
+    StepSize
+  ]                             (. IF NOT hasStep THEN Append("1") END .)
+    "DO"                        (. Append(") {");
+                                   IndentNextLine .)
+    StatSeq
+    "END"                       (. ExdentNextLine;
+                                   Append("}") .)
+  .
+
+  InitialValue =
+    OrdExpr .
+
+  FinalValue =
+    OrdExpr .
+
+  StepSize =
+    ConstExpr .
+
+  Designator                    (. VAR doAppend: BOOLEAN;
+                                       insertPos: CARDINAL; .)
+  =
+                                (. doAppend := TRUE;
+                                   GetPos(insertPos) .)
+    Id                          (. LexString(tmpId) .)
+  { "["                         (. IF doAppend THEN Append(tmpId) END;
+                                   Append("[") .)
+    IndexExpr
+    { ","                       (. Append("][") .)
+      IndexExpr
+    }
+    "]"                         (. Append("]");
+                                   doAppend := FALSE .)
+  | "."                         (. IF NOT String.Equal(tmpId, "SYSTEM") THEN
+                                     IF doAppend THEN Append(tmpId) END;
+                                     IF doAppend AND Import.HasModule(tmpId) THEN
+                                         Append("::");
+                                     ELSE
+                                       Append(".");
+                                     END;
+                                   END .)
+    Id                          (. doAppend := TRUE;
+                                   LexString(tmpId) .)
+  | ("^" | "@")                 (. Insert("(*", insertPos);
+                                   IF doAppend THEN Append(tmpId) END;
+                                   Append(")");
+                                   doAppend := FALSE .)
+  }                             (. IF doAppend THEN Append(tmpId) END .)
+  .
+
+  IndexExpr =
+    OrdExpr .
+
+  Expr                          (. VAR isIN: BOOLEAN; .)
+  =                             (. MarkPrependPos .)
+    SimpleExpr
+  [ RelationalOp<isIN>
+    SimpleExpr                  (. IF isIN THEN Append(")") END .)
+    SYNC
+  ] .
+
+  SimpleExpr
+  = SYNC
+  [ "+"                         (. Append(" + ") .)
+  | "-"                         (. Append(" - ") .)
+  ] Term
+  { TermOp
+    Term
+  } .
+
+  Term =
+    Factor {FactorOp Factor} .
+
+  Factor
+  = SYNC (
+    "("                         (. Append("(") .)
+    Expr
+    ")"                         (. Append(")") .)
+  | ("~" | "NOT")               (. Append("!") .)
+    Factor
+  | Designator
+    [                           (. Append("(") .)
+      ActualParams              (. Append(")") .)
+    |                           (. Append("()") .)
+      ConstructedValue
+    ]
+  |                             (. Append("BITSET()") .)
+    (* extension *)
+    ConstructedValue
+  | ConstLiteral
+  )
+  .
+
+  OrdExpr =
+     Expr .
+
+  RelationalOp <VAR isIN: BOOLEAN> =
+    "="                         (. isIN := FALSE; Append(" == ") .)
+  | "#"                         (. isIN := FALSE; Append(" != ") .)
+  | "<>"                        (. isIN := FALSE; Append(" != ") .)
+  | "<"                         (. isIN := FALSE; Append(" < ") .)
+  | ">"                         (. isIN := FALSE; Append(" > ") .)
+  | "<="                        (. isIN := FALSE; Append(" <= ") .)
+  | ">="                        (. isIN := FALSE; Append(" >= ") .)
+  | "IN"                        (. isIN := TRUE;
+                                   Prepend("IN("); Append(", ") .)
+  .
+
+  TermOp =
+    "+"                         (. Append(" + ") .)
+  | "-"                         (. Append(" - ") .)
+  | "OR"                        (. Append(" || ") .)
+  .
+
+  FactorOp =
+    "*"                         (. Append(" * ") .)
+  | "/"                         (. Append(" / ") .)
+  | "REM"                       (. Append(" % ") .)
+  | "DIV"                       (. Append(" / ") .)
+  | "MOD"                       (. Append(" % ") .)
+  | "&"                         (. Append(" && ") .)
+  | "AND"                       (. Append(" && ") .)
+  .
+
+  ConstructedValue =
+    "{"
+  [
+          RepStructComponent
+    { "," RepStructComponent }
+  ]
+    "}"
+  .
+
+  RepStructComponent
+  =                             (. Append(".incl(") .)
+    StructComponent
+  [ "BY"                        (. Append(", ") .)
+    ConstExpr
+  | ".."                        (. Append(", ") .)
+    OrdExpr
+  ]                             (. Append(")") .)
+  .
+
+  StructComponent =
+    Expr
+  (*| ConstructedValue*)
+  .
+
+  ConstLiteral =
+    WholeNumberLiteral
+  | RealLiteral
+  | StringLiteral
+  | PointerLiteral
+  .
+
+  ConstExpr =
+    Expr .
+
+  ActualParams =
+    "(" [ActualParamList] ")" .
+
+  ActualParamList =
+    ActualParam
+  { ","                         (. Append(", ") .)
+    ActualParam
+  }
+  .
+
+  ActualParam =
+    (* VarDesignator | *)
+    Expr
+    (* | TypeId *)
+  .
+
+  StringLiteral =
+    string                      (. ConvertAndAppendString .)
+  .
+
+  RealLiteral =
+    real                        (. AppendToken .)
+  .
+
+  WholeNumberLiteral =
+    integer                     (. ConvertAndAppendWhole .)
+  .
+
+  PointerLiteral =
+    "NIL"                       (. Append("ADDRESS(0)") .)
+  | "["                         (. Append("ADDRESS(") .)
+    WholeNumberLiteral
+  [ ":"                         (. Append(" << 4 + ") .)
+    WholeNumberLiteral
+  ]
+    "]"                         (. Append(")") .)
+  .
+
+  Id =
+    identifier
+  .
+
+END C2.

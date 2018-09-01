@@ -1,0 +1,59 @@
+DEFINITION MODULE tcltk
+(*
+	Minimalistic interface to Tcl/Tk.
+	More info on Tcl/Tk: www.tcl.tk
+*)
+
+FUNCTION Init()
+FUNCTION Finalize()
+FUNCTION Eval(s: STRING)
+FUNCTION GetVar(name: STRING): STRING
+FUNCTION DoOneEvent()
+
+(*
+	This example module create a dialog box like this:
+
+		+-------------------------------+
+		|[x] Data entry box             |
+		+-------------------------------+
+		|                               |
+		|  Your name: ________________  |
+		|                               |
+		|  +---------+    +----------+  |
+		|  | Cancel  |    |    OK    |  |
+		|  +---------+    +----------+  |
+		+-------------------------------+
+
+
+	MODULE tcltk_test
+	IMPORT m2 tcltk
+	VAR
+		name, butt: STRING
+	BEGIN
+		Init()
+		Eval("wm title . \"Data entry box\"")
+		Eval("frame .top\n frame .but\n  pack .top .but")
+		Eval("label .top.l -text \"Your name:\"\n pack .top.l -side left")
+		Eval("entry .top.e -textvariable name -width 20 -background white\n"
+		+    "pack .top.e -side left")
+		Eval("button .but.ok     -text OK     -command {set button ok}")
+		Eval("button .but.cancel -text Cancel -command {set button cancel}")
+		Eval("pack .but.cancel .but.ok -side left")
+		Eval("wm protocol . WM_DELETE_WINDOW {set button cancel}")
+		LOOP
+			DoOneEvent()
+			butt = GetVar("button")
+			IF length(butt) > 0 THEN
+				EXIT
+			END
+		END
+		IF butt = "ok" THEN
+			print("Name entered: " + GetVar("name") + "\n")
+		END
+		IF butt = "cancel" THEN
+			print("Cancelled.\n")
+		END
+		Finalize()
+	END
+*)
+END

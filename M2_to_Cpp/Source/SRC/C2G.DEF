@@ -1,0 +1,24 @@
+DEFINITION MODULE C2G;
+
+CONST
+  EOFSYM = 0;  identifierSym = 1;  integerSym = 2;  realSym = 3;  stringSym = 4;
+  MODULESym = 5;  semicolonSym = 6;  pointSym = 7;  lbrackSym = 8;
+  rbrackSym = 9;  DEFINITIONSym = 10;  ENDSym = 11;  IMPLEMENTATIONSym = 12;
+  IMPORTSym = 13;  commaSym = 14;  FROMSym = 15;  EXPORTSym = 16;
+  QUALIFIEDSym = 17;  CONSTSym = 18;  TYPESym = 19;  VARSym = 20;
+  PROCEDURESym = 21;  lparenSym = 22;  rparenSym = 23;  colonSym = 24;
+  ARRAYSym = 25;  OFSym = 26;  equalSym = 27;  FORWARDSym = 28;
+  pointpointSym = 29;  SETSym = 30;  PACKEDSETSym = 31;  POINTERSym = 32;
+  TOSym = 33;  RECORDSym = 34;  CASESym = 35;  barSym = 36;  ELSESym = 37;
+  BEGINSym = 38;  FINALLYSym = 39;  EXCEPTSym = 40;  colonequalSym = 41;
+  RETURNSym = 42;  RETRYSym = 43;  WITHSym = 44;  DOSym = 45;  IFSym = 46;
+  THENSym = 47;  ELSIFSym = 48;  WHILESym = 49;  REPEATSym = 50;  UNTILSym = 51;
+  LOOPSym = 52;  EXITSym = 53;  FORSym = 54;  BYSym = 55;  uparrowSym = 56;
+  atSym = 57;  plusSym = 58;  minusSym = 59;  tildeSym = 60;  NOTSym = 61;
+  hashSym = 62;  lessgreaterSym = 63;  lessSym = 64;  greaterSym = 65;
+  lessequalSym = 66;  greaterequalSym = 67;  INSym = 68;  ORSym = 69;
+  starSym = 70;  slashSym = 71;  REMSym = 72;  DIVSym = 73;  MODSym = 74;
+  andSym = 75;  ANDSym = 76;  lbraceSym = 77;  rbraceSym = 78;  NILSym = 79;
+  NOSYM = 80;
+
+END C2G.

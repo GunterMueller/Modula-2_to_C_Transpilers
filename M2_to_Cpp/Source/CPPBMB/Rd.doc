@@ -1,0 +1,91 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Rd                                          *
+ * Description:             Input operations from keyboard              *
+ * Implementation level:    High-level (Utility module)                 *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 18, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Rd_m2h_
+#define _M2_Rd_m2h_
+
+#include <_m2sys.h>
+
+namespace Rd {
+
+   BOOLEAN Bool();
+      /* Reads a boolean from keyboard, previously skipping all blanks. */
+
+   INTEGER Int();
+      /* Reads an integer from keyboard, previously skipping all blanks. */
+
+   LONGINT LongInt();
+      /* Reads a long integer from keyboard,
+         previously skipping all blanks.
+      */
+
+   CARDINAL Card();
+      /* Reads a cardinal from keyboard, previously skipping all blanks. */
+
+   LONGCARD LongCard();
+      /* Reads a long cardinal from keyboard,
+         previously skipping all blanks.
+      */
+
+   REAL Real();
+      /* Reads a real from keyboard, previously skipping all blanks. */
+
+   LONGREAL LongReal();
+      /* Reads a long real from keyboard, previously skipping all blanks. */
+
+   INTEGER IntB(CARDINAL base);
+      /* Reads an integer from keyboard written in base 'base',
+         previously skipping all blanks.
+      */
+
+   LONGINT LongIntB(CARDINAL base);
+      /* Reads a long integer from keyboard written in base 'base',
+         previously skipping all blanks.
+      */
+
+   CARDINAL CardB(CARDINAL base);
+      /* Reads a cardinal from keyboard written in base 'base',
+         previously skipping all blanks.
+      */
+
+   LONGCARD LongCardB(CARDINAL base);
+      /* Reads a long cardinal from keyboard written in base 'base',
+         previously skipping all blanks.
+      */
+
+   CHAR Char();
+      /* Reads a character from keyboard. */
+
+   void Line(_ARRAYOF<CHAR>& line);
+      /* Reads a line 'line' from the keyboard, up to the end-of-line
+         mark.
+      */
+
+   void Ln();
+      /* Skips to the next line in the keyboard input. */
+
+   template <class _BYTEARRAY1>
+   void Bin(_BYTEARRAY1& bin);
+      /* Fills in an array of bytes 'bin' from the keyboard. */
+
+} // Rd
+
+#endif

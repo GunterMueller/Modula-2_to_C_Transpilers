@@ -1,0 +1,47 @@
+IMPLEMENTATION MODULE gcry_common
+
+$$ linker options: -I/usr/local/include -L/usr/local/lib -lgcrypt
+
+$#include <gcrypt.h>
+
+
+$ int dummy_check(const void *p)
+$ {
+$	/* FIXME: still to be implemented */
+$	return 0; /* = memory not secure */
+$ }
+
+
+$ void dummy_free(void *p)
+$ { }
+
+
+VAR initDone: BOOLEAN
+
+FUNCTION Init()
+BEGIN
+	IF initDone THEN
+		RETURN
+	END
+	initDone = TRUE
+$	gcry_check_version(NULL);
+$	gcry_set_allocation_handler(
+$		M2_MALLOC,
+$		M2_MALLOC, /* FIXME: malloc_secure() still to be implemented */
+$		dummy_check,
+$		M2_REALLOC,
+$		dummy_free);
+END
+
+
+FUNCTION ErrorDesc(code: INTEGER): STRING
+VAR
+$	char *s;
+BEGIN
+	mark(code)
+$	s = (char *) gcry_strerror(gcry_common_code);
+$	return new_STRING(s, strlen(s));
+END
+
+
+END

@@ -1,0 +1,259 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Console                                   *
+ * Description:           Console operaions                         *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.10                                      *
+ * Date:                  November, 1996                            *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Console;
+
+IMPORT Key;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError'.
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+    noError             ;    (* No Error *)
+    unknownError        ;    (* Any other error then described below *)
+    noRoomError         ;    (* Buffer space exceeded *)
+    wrongScrollRegion   ;    (* Invalid scroll region defined *)
+    cannotScroll        ;    (* Scroll option is off *)
+    cannotSetStyle      ;    (* Undefined or unavailable style *)
+    cannotSetColor      ;    (* Unavailable color *)
+    cursorOutOfRegion   ;    (* Cursor is out of defined region *)
+    notTextMode         ;    (* !!! ? *)
+
+(* Color definitions for background and text color*)
+
+    ColorBlack		;
+    ColorBlue		;
+    ColorGreen		;
+    ColorCyan		;
+    ColorRed		;
+    ColorMagenta	;
+    ColorBrown		;
+    ColorLightGray	;
+
+(* colors definitions only for text color *)
+
+    ColorGray		;
+    ColorLightBlue	;
+    ColorLightGreen	;
+    ColorLightCyan	;
+    ColorLightRed	;
+    ColorLightMagenta	;
+    ColorYellow		;
+    ColorWhite		;
+    ColorDefault	;
+
+(* Style definitions *)
+
+    StylePlain		;
+    StyleInverse	;
+    StyleBlink		;
+    StyleInverseBlink	;
+
+TYPE
+   ColorType		;
+   StyleType		;
+   OnOffStatus		;
+
+CONST
+    On  = TRUE;
+    Off = FALSE;
+
+
+PROCEDURE RdChar(): CHAR;
+   (* Returns character read from keyboard *)
+
+PROCEDURE RdLine(VAR str:ARRAY OF CHAR);
+   (* Reads line from keyboard
+      + Sets error code
+        'noRoomError' - input string length exceeded len of 'str' *)
+
+PROCEDURE RdLn();
+   (* Skips the line up to its end *)
+
+PROCEDURE EchoOn;
+   (* Turns echo on (influence only on RdChar & RdLine) *)
+
+PROCEDURE EchoOff;
+   (* Turns echo off (influence only on RdChar & RdLine) *)
+
+PROCEDURE Echo():OnOffStatus;
+   (* Returns echo status *)
+
+PROCEDURE Beep;
+   (* Produces sound for a moment *)
+
+PROCEDURE ClearScreen;
+   (* Clears entire screen *)
+
+PROCEDURE Clear;
+   (* Clears scroll region *)
+
+PROCEDURE SetScrollRegion(x1,y1,x2,y2:SHORTCARD);
+   (* Sets scroll region(window).Wrapping & scrolling affects only that
+      region.If output is done outside that region wrap & scroll
+      are set to off.
+      + Sets error code:
+        'wrongScrollRegion' - if coordinates are invalid
+   *)
+
+PROCEDURE GetScrollRegion(VAR x1,y1,x2,y2:SHORTCARD);
+   (* Returns scroll region(window) coordinates.Default region
+      is set to 1,1,maxX,maxY. *)
+
+PROCEDURE ScrollUp;
+   (* Scrolls inside of the region up.Last line will be cleared
+      + Sets error code
+        'cannotScroll'  - if scroll mode is off *)
+
+PROCEDURE ScrollDown;
+          (* Scrolls inside of the region down.First line will be cleared
+             + Sets error code
+               'cannotScroll'  - if scroll mode is off *)
+
+PROCEDURE ScrollOn;
+          (* Turns scroll on *)
+
+PROCEDURE ScrollOff;
+          (* Turns scroll off *)
+
+PROCEDURE Scroll():OnOffStatus;
+          (* Returns scroll status *)
+
+PROCEDURE WrapOn;
+          (* Turns wrap on *)
+
+PROCEDURE WrapOff;
+          (* Turns wrap off *)
+
+PROCEDURE Wrap():OnOffStatus;
+          (* Returns scroll status *)
+
+PROCEDURE SetStyle(style:StyleType);
+          (* Set style used for output procedures
+             + Sets error code:
+               'cannotSetStyle' - wrong or unavailable style
+          *)
+
+PROCEDURE GetStyle():StyleType;
+          (* Returns style currently in use*)
+
+PROCEDURE SetColor(color:ColorType);
+          (* Set color used for output procedures
+             + Sets error code:
+               'cannotSetColor' - unavailable color
+          *)
+
+PROCEDURE GetColor():ColorType;
+          (* Returns color currently in use *)
+
+PROCEDURE SetBackGround(color:ColorType);
+          (* Set color of background
+             + Sets error code:
+               'cannotSetColor' - unavailable color
+          *)
+
+PROCEDURE GetBackGround():ColorType;
+          (* Returns background color *)
+
+PROCEDURE WrChar(c:CHAR);
+          (* Writes character to screen*)
+
+PROCEDURE WrStr(str:ARRAY OF CHAR);
+          (* Writes string to screen *)
+
+PROCEDURE WrLn;
+          (* Goes to new line *)
+
+PROCEDURE Redraw;
+          (* Restoration of previous screen contents *)
+
+PROCEDURE SetRedrawOn;
+   (* Turns redraw on, and after that every output procedure
+      will save screen before output is done *)
+
+PROCEDURE SetRedrawOff;
+   (* Turns redraw off *)
+
+PROCEDURE RedrawOn(): BOOLEAN;
+   (* Returns status of redraw *)
+
+(* Next procedures does whatever in scroll region from place of cursor *)
+
+PROCEDURE ClearToEOD;
+          (* Erase to the end of display(region)
+             + Sets error code:
+               'cursorOutOfRegion' - Cursor is out of valid scroll region
+          *)
+
+PROCEDURE ClearToEOL;
+          (* Erase to the end of line
+             + Sets error code:
+               'cursorOutOfRegion' - Cursor is out of valid scroll region
+          *)
+
+PROCEDURE InsertLine;
+          (* Insert line at cursor position
+             + Sets error code:
+               'cursorOutOfRegion' - Cursor is out of valid scroll region
+          *)
+
+PROCEDURE DeleteLine;
+          (* Delete line at cursor position
+             + Sets error code:
+               'cursorOutOfRegion' - Cursor is out of valid scroll region
+          *)
+
+PROCEDURE InsertChars(n:CARDINAL);
+          (* Insert n chars, pushing line to right
+             + Sets error code:
+               'cursorOutOfRegion' - Cursor is out of valid scroll region
+          *)
+
+PROCEDURE DeleteChars(n:CARDINAL);
+          (* Delete n chars, moving rest of line to the left
+             + Sets error code:
+               'cursorOutOfRegion' - Cursor is out of valid scroll region
+          *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+END Console.
+
+

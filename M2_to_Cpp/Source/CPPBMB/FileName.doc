@@ -1,0 +1,118 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        FileName                                    *
+ * Description:             File name operations                        *
+ * Implementation level:    Low-level (Necessary module)                *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 17, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_FileName_m2h_
+#define _M2_FileName_m2h_
+
+#include <_m2sys.h>
+
+namespace FileName {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError;           /* No error */
+   const CARDINAL unknownError;      /* Any error not described below */
+   const CARDINAL noRoomError;       /* Internal or external storage buffer exceeded */
+   const CARDINAL notFileError;      /* Specified file is actually a directory or other filesystem structure */
+   const CARDINAL fileNotFoundError; /* Specified file cannot be found */
+   const CARDINAL pathNotFoundError; /* Specified directory path cannot be found */
+   const CARDINAL priviledgeError;   /* Violation of system privilegdes */
+
+   const CHAR root;
+   const CHAR delim;
+
+   BOOLEAN Exists(_ARRAYOF<CHAR> name);
+      /* Returns TRUE if a file with name 'name' exists.
+       + Sets error codes:
+           'notFileError'      - if platform doesn't support finding
+                                 directories this way
+           'fileNotFoundError'
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   void Delete(_ARRAYOF<CHAR> name);
+      /* Deletes the file with name 'name'.
+       + Sets error codes:
+           'notFileError'      - if platform doesn't support deleting
+                                 directories this way
+           'fileNotFoundError'
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   void Rename(_ARRAYOF<CHAR> from, _ARRAYOF<CHAR> to);
+      /* Renames the file name 'from' to file name 'to'.
+       + Sets error codes:
+           'notFileError'      - if platform doesn't support renaming
+                                 directories this way
+           'fileNotFoundError'
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   void Split(_ARRAYOF<CHAR> fullName,
+              _ARRAYOF<CHAR>& dir, _ARRAYOF<CHAR>& name);
+      /* Splits the full file name 'fullName' into directory
+         name (path) 'dir' and proper filename 'name'. Device
+         name is the part of directory name 'dir'.
+       + Sets error codes:
+           'noRoomError' if strings 'dir' or 'name' are not large enough.
+      */
+
+   void Concat(_ARRAYOF<CHAR>& fullName,
+               _ARRAYOF<CHAR> dir, _ARRAYOF<CHAR> name);
+      /* Concats the names of directory name (path) 'dir' and
+         proper filename 'name' into a full file name 'fullName'.
+         Device name is the part of directory name 'dir'.
+       + Sets error codes:
+           'noRoomError' if string 'fullname' is not large enough.
+      */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // FileName
+
+#endif

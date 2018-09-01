@@ -1,0 +1,78 @@
+DEFINITION MODULE base64
+(*
+	Base64 encoding/decoding, see RFC 1341 par. 5.2 for details.
+*)
+
+TYPE BASE64 = FORWARD
+
+FUNCTION Open(VAR h: BASE64, encode: BOOLEAN)
+FUNCTION Write(h: BASE64, s: STRING): STRING
+FUNCTION Close(h: BASE64): STRING
+(*
+	Incremental encoding/deconding. Open() create a new instance of
+	the encoding/decoding object. Close() return the last part of the
+	encoded/decoded data. The object h may be reused several times.
+*)
+
+
+FUNCTION Encode(s: STRING): STRING
+(*
+	Return the string encoded in Base64.
+	Example: Encode("module\n") => "bW9kdWxlCg=="
+*)
+
+FUNCTION Decode(s: STRING): STRING
+(*
+	Decode the string from the Base64 encoding. Characters different
+	from 0..9A..Za..z+/= are ignored. If s=NIL or do not contain any
+	valid Base64 character, return NIL.
+*)
+
+(*
+	Example:
+
+	MODULE EncodeFile
+	(* Encode the file x.txt as an email attachment x.elm *)
+	IMPORT
+		m2, base64, io
+	CONST
+		MAX_OUT_LINE_LEN = 72
+	VAR
+		in, out: FILE
+		buf, line: STRING
+		h: BASE64
+	BEGIN
+		in->Open("x.txt", "r")
+		out->Open("x.elm", "wct")
+		out->Write("MIME-Version: 1.0\n")
+		out->Write("Content-Type: text/plain\n")
+		out->Write("Content-Transfer-Encoding: base64\n")
+		out->Write("\n")
+		h->Open(TRUE)
+		LOOP
+			buf = in->Read((MAX_OUT_LINE_LEN + 3) DIV 4 * 3)
+			IF buf = NIL THEN
+				line = line + h->Close()
+			ELSE
+				line = line + h->Write(buf)
+			END
+			WHILE length(line) >= MAX_OUT_LINE_LEN DO
+				out->Write(line[0,MAX_OUT_LINE_LEN])
+				out->Write("\n")
+				line = line[MAX_OUT_LINE_LEN,length(line)]
+			END
+			IF buf = NIL THEN
+				EXIT
+			END
+		END
+		IF length(line) > 0 THEN
+			out->Write(line)
+			out->Write("\n")
+		END
+		in->Close()
+		out->Close()
+	END
+*)
+
+
+END

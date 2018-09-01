@@ -1,0 +1,67 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       RLib (1.1)                                *
+ *                          (See Rlib.doc for full specification!)    *
+ * Version:                 1.0                                       *
+ * Date:                    February 28, 1995                         *
+ * Conformance Test Passed: -                                         *
+ * Platform:                DOS/80x86                                 *
+ * Requires:                TopSpeed Modula-2 Compiler ver. 1.xx      *
+ *                                                                    *
+ * Author:                      Zoran Budimac                         *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: zjb@unsim.ns.ac.yu            *
+ **********************************************************************)
+
+DEFINITION MODULE RLib;
+CONST
+    noError         = 0;     (* No error ocurred *)
+    arithmeticError = 1;     (* Error in floating point opeartion *)
+
+   PROCEDURE Sin(r: REAL): REAL;
+      (* Returns sin(r) *)
+
+   PROCEDURE Cos(r: REAL): REAL;
+      (* Returns cos(r) *)
+
+   PROCEDURE SinH(r: REAL): REAL;
+      (* Returns sinh(r) *)
+
+   PROCEDURE CosH(r: REAL): REAL;
+      (* Returns cosh(r) *)
+
+   PROCEDURE Exp(r: REAL): REAL;
+      (* Returns e^r *)
+
+   PROCEDURE Log(r: REAL): REAL;
+      (* Returns ln(r) *)
+
+   PROCEDURE Log10(r: REAL): REAL;
+      (* Returns ln(r) for base 10 *)
+
+   PROCEDURE ATan(r: REAL): REAL;
+      (* Returns arctan(r) *)
+
+   PROCEDURE ATanH(r: REAL): REAL;
+      (* Returns arctanh(r) *)
+
+   PROCEDURE Sqrt(r: REAL): REAL;
+      (* Returns square root of 'r' *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+END RLib.

@@ -1,0 +1,196 @@
+IMPLEMENTATION MODULE gcry_mpi
+
+IMPORT encode, gcry_common
+
+
+FUNCTION Copy(a: MPI): MPI
+BEGIN
+	mark(a)
+$	return (void *) gcry_mpi_copy((gcry_mpi_t) gcry_mpi_a);
+END
+
+
+FUNCTION Binary2MPI(b: STRING): MPI
+VAR
+	err: INTEGER
+$	gcry_mpi_t a;
+$	int len;
+BEGIN
+	gcry_common.Init()
+$	len = gcry_mpi_b->len;
+$	gcry_mpi_err = gcry_mpi_scan((gcry_mpi_t *) &a, GCRYMPI_FMT_STD,
+$		(unsigned char *) gcry_mpi_b->s, len, (unsigned int *)&len);
+	IF err <> 0 THEN
+		HALT("gcry_mpi.Binary2MPI(" + StringToLiteral(b) + "): "
+			+ ErrorDesc(err))
+	END
+$	if( len != gcry_mpi_b->len ){
+		HALT("gcry_mpi.Binary2MPI(): failed")
+$	}
+$	return (void *) a;
+END
+
+
+FUNCTION MPI2Binary(a: MPI): STRING
+VAR
+	err: INTEGER
+$	char *s;
+$	int len;
+BEGIN
+	mark(a)
+$	gcry_mpi_err = gcry_mpi_aprint(GCRYMPI_FMT_STD, &s, (unsigned int *)&len,
+$		(gcry_mpi_t) gcry_mpi_a);
+	IF err <> 0 THEN
+		HALT("gcry_mpi.MPI2Binary(): " + ErrorDesc(err))
+	END
+$	return new_STRING(s, len);
+END
+
+
+FUNCTION Integer2MPI(i: INTEGER): MPI
+(* `i' must be >= 0. *)
+BEGIN
+	mark(i)
+	gcry_common.Init()
+$	return (void *) gcry_mpi_set_ui(NULL, (unsigned long) gcry_mpi_i);
+END
+
+
+FUNCTION MPI2Integer(a: MPI): INTEGER
+RAISE ERROR
+
+	FUNCTION CharAt(s: STRING, i: INTEGER): INTEGER
+	BEGIN
+		mark(s)
+		mark(i)
+$		return (unsigned char) gcry_mpi_s->s[gcry_mpi_i];
+	END
+
+CONST sizeofint = 4 (* sizeof(int) *)
+VAR
+	b: STRING
+	i, len: INTEGER
+BEGIN
+	b = MPI2Binary(a)
+	len = length(b)
+	(* Per qualche strana ragione, -1 viene ritornato come "00ffffffff"
+	invece che come "ffffffff". Per interpretare bene i numeri negativi
+	devo ignorare il primo byte quando e' zero. *)
+	IF (len = sizeofint + 1) AND (CharAt(b, 0) <> 0)
+	OR (len > sizeofint + 1) THEN
+		RAISE ERROR 1 "MPI too large: " + HexEncode(b) + ", " + itos(len) + " B"
+	END
+	i = CharAt(b, len-1)
+	IF len >= 2 THEN
+		i = i + (CharAt(b, len-2)<<8)
+		IF len >= 3 THEN
+			i = i + (CharAt(b, len-3)<<16)
+			IF len >= 4 THEN
+				i = i + (CharAt(b, len-4)<<24)
+			END
+		END
+	END
+	RETURN i
+(* Questo non funziona e restituisce numeri a casaccio:
+$	i = 0;  /* essenziale perche' gcry_mpi_print() scrive solo i primi byte */
+$	/* x = */ gcry_mpi_print(GCRYMPI_FMT_USG, (char * ) &i, sizeof(int), NULL,
+$		(gcry_mpi_t) gcry_mpi_a);
+$	return i;
+*)
+END
+
+
+FUNCTION Add(a: MPI, b: MPI): MPI
+VAR
+$	gcry_mpi_t r;
+BEGIN
+	mark(a)
+	mark(b)
+$	r = gcry_mpi_new(0);
+$	gcry_mpi_add(r, (gcry_mpi_t) gcry_mpi_a, (gcry_mpi_t) gcry_mpi_b);
+$	return (void *) r;
+END
+
+
+FUNCTION Sub(a: MPI, b: MPI): MPI
+VAR
+$	gcry_mpi_t r;
+BEGIN
+	mark(a)
+	mark(b)
+$	r = gcry_mpi_new(0);
+$	gcry_mpi_sub(r, (gcry_mpi_t) gcry_mpi_a, (gcry_mpi_t) gcry_mpi_b);
+$	return (void *) r;
+END
+
+
+FUNCTION Mul(a: MPI, b: MPI): MPI
+VAR
+$	gcry_mpi_t r;
+BEGIN
+	mark(a)
+	mark(b)
+$	r = gcry_mpi_new(0);
+$	gcry_mpi_mul(r, (gcry_mpi_t) gcry_mpi_a, (gcry_mpi_t) gcry_mpi_b);
+$	return (void *) r;
+END
+
+
+FUNCTION Div(a: MPI, b: MPI): MPI
+VAR
+$	gcry_mpi_t r;
+BEGIN
+	mark(a)
+	mark(b)
+$	r = gcry_mpi_new(0);
+$	gcry_mpi_div(r, NULL, (gcry_mpi_t) gcry_mpi_a, (gcry_mpi_t) gcry_mpi_b, 0);
+$	return (void *) r;
+END
+
+
+FUNCTION Mod(a: MPI, b: MPI): MPI
+VAR
+$	gcry_mpi_t r;
+BEGIN
+	mark(a)
+	mark(b)
+$	r = gcry_mpi_new(0);
+$	gcry_mpi_mod(r, (gcry_mpi_t) gcry_mpi_a, (gcry_mpi_t) gcry_mpi_b);
+$	return (void *) r;
+END
+
+
+FUNCTION Compare(a: MPI, b: MPI): INTEGER
+BEGIN
+	mark(a)
+	mark(b)
+$	return gcry_mpi_cmp((gcry_mpi_t) gcry_mpi_a, (gcry_mpi_t) gcry_mpi_b);
+END
+
+
+(**********
+
+VAR zero: MPI
+
+FUNCTION Zero(): MPI
+BEGIN
+	IF zero = NIL THEN
+		zero = Integer2MPI(0)
+	END
+	RETURN zero
+END
+
+
+VAR one: MPI
+
+FUNCTION One(): MPI
+BEGIN
+	IF one = NIL THEN
+		one = Integer2MPI(1)
+	END
+	RETURN one
+END
+
+***********)
+
+END

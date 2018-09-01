@@ -1,0 +1,261 @@
+IMPLEMENTATION MODULE fmt
+
+IMPORT m2, str
+
+VAR
+	base: INTEGER
+	precision: INTEGER
+	pad: STRING
+	real: INTEGER (* 0="1.234e+02", 1="123.4", 2=variable *)
+	right: BOOLEAN
+	sign: INTEGER (* 0=only if negative; 1=ever; 2=a space if positive *)
+	upper: BOOLEAN (* use "E" and upper-case digits *)
+	width: INTEGER (* minimum resulting string length *)
+	zero: BOOLEAN (* pad numbers with zero rather than space *)
+
+	err: STRING
+
+
+FUNCTION ParseFmt(f: STRING)
+VAR
+	i: INTEGER
+	c: STRING
+
+	FUNCTION ParseI(): INTEGER
+	VAR c: STRING  j: INTEGER
+	BEGIN
+		j = 0
+		WHILE i < length(f) DO
+			c = f[i]
+			IF (c < "0") OR (c > "9") THEN
+				RETURN j
+			END
+			j = 10*j + ASC(c) - ASC("0")
+			inc(i, 1)
+		END
+		RETURN j
+	END
+
+BEGIN
+	base = 10
+	pad = " "
+	precision = 6
+	real = 2
+	right = FALSE
+	sign = 0
+	upper = FALSE
+	width = 0
+	zero = FALSE
+
+	err = ""
+
+	i = 0
+	WHILE i < length(f) DO
+		c = f[i]
+		IF c = "w" THEN
+			inc(i, 1)
+			width = ParseI()
+		ELSIF c = "r" THEN
+			right = TRUE
+			inc(i, 1)
+		ELSIF c = "+" THEN
+			sign = 1
+			inc(i, 1)
+		ELSIF c = "b" THEN
+			inc(i, 1)
+			base = ParseI()
+			IF (base < 2) OR (base > 36) THEN
+				err = err + "b" + itos(base)
+				base = 10
+			END
+		ELSIF c = "S" THEN
+			sign = 2
+			inc(i, 1)
+		ELSIF c = "z" THEN
+			zero = TRUE
+			inc(i, 1)
+		ELSIF c = "e" THEN
+			real = 0
+			inc(i, 1)
+		ELSIF c = "f" THEN
+			real = 1
+			inc(i, 1)
+		ELSIF c = "g" THEN
+			real = 2
+			inc(i, 1)
+		ELSIF c = "U" THEN
+			upper = TRUE
+			inc(i, 1)
+		ELSIF c = "p" THEN
+			inc(i, 1)
+			precision = ParseI()
+		ELSIF c = "P" THEN
+			inc(i, 1)
+			IF i < length(f) THEN
+				pad = f[i]
+				inc(i, 1)
+			ELSE
+				err = err + "P?"
+			END
+		ELSIF c = " " THEN
+			inc(i, 1)
+		ELSE
+			err = err + c
+			inc(i, 1)
+		END
+	END
+	IF length(err) > 0 THEN
+		err = "[" + err + "?]"
+	END
+END
+
+
+FUNCTION Boolean(b: BOOLEAN, true: STRING, false: STRING): STRING
+BEGIN
+	IF b THEN
+		RETURN true
+	ELSE
+		RETURN false
+	END
+END
+
+
+FUNCTION Integer(f: STRING, i: INTEGER): STRING
+(*
+	TODO:
+	tX  usa X come separatore delle migliaia
+	u   unsigned int
+*)
+
+
+	FUNCTION ToBase(i: INTEGER, base: INTEGER): STRING
+	CONST
+		digits = "0123456789abcdefghijklmnopqrstuvwxyz"
+		udigits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	VAR
+		sg: BOOLEAN
+		s, ds: STRING
+		j, r: INTEGER
+	BEGIN
+		IF base = 10 THEN
+			RETURN itos(i)
+		END
+		IF upper THEN
+			ds = digits
+		ELSE
+			ds = udigits
+		END
+		IF i < 0 THEN
+			sg = TRUE
+			j = -i
+			IF j < 0 THEN
+$				fmt_r = (unsigned int) fmt_i % fmt_base;
+$				fmt_i = (unsigned int) fmt_i / fmt_base;
+				s = ds[r]
+			ELSE
+				i = j
+			END
+		END
+		REPEAT
+			r = i MOD base
+			i = i DIV base
+			s = ds[r] + s
+		UNTIL i = 0
+		IF sg THEN
+			RETURN "-" + s
+		ELSE
+			RETURN s
+		END
+	END
+
+
+VAR
+	s: STRING
+BEGIN
+	ParseFmt(f)
+	s = ToBase(i, base)
+	IF i > 0 THEN
+		IF sign = 1 THEN
+			s = "+" + s
+		ELSIF sign = 2 THEN
+			s = " " + s
+		END
+	END
+	IF width > length(s) THEN
+		IF zero THEN
+			IF (sign > 0) OR (i < 0) THEN
+				s = s[0] + repeat("0", width - length(s)) + s[1, length(s)]
+			ELSE
+				s = repeat("0", width - length(s)) + s
+			END
+		ELSIF right THEN
+			s = repeat(pad, width - length(s)) + s
+		ELSE
+			s = s + repeat(pad, width - length(s))
+		END
+	END
+	RETURN err + s
+END
+
+
+FUNCTION Real(f: STRING, r: REAL): STRING
+(*
+	TODO:
+	dX  usa X come punto decimale
+*)
+VAR
+	fm, s, l: STRING
+$	char *s;
+BEGIN
+	mark(r)
+	ParseFmt(f)
+	IF right THEN
+		fm = "%"
+	ELSE
+		fm = "%-"
+	END
+	IF sign = 1 THEN
+		fm = fm + "+"
+	ELSIF sign = 2 THEN
+		fm = fm + " "
+	END
+	IF zero THEN
+		fm = fm + "0"
+	END
+	fm = fm + "." +  itos(precision)
+	SWITCH real DO
+	CASE 0: l = "e"
+	CASE 1: l = "f"
+	CASE 2: l = "g"
+	END
+	IF upper THEN
+		l = toupper(l)
+	END
+	fm = fm + l + "\x00"
+$	asprintf(&s, fmt_fm->s, fmt_r);
+$	fmt_s = new_STRING(s, strlen(s));
+	IF width > length(s) THEN
+		IF right THEN
+			s = repeat(pad, width - length(s)) + s
+		ELSE
+			s = s + repeat(pad, width - length(s))
+		END
+	END
+	RETURN s
+END
+
+
+FUNCTION String(f: STRING, s: STRING): STRING
+BEGIN
+	ParseFmt(f)
+	IF width > length(s) THEN
+		IF right THEN
+			s = repeat(pad, width - length(s)) + s
+		ELSE
+			s = s + repeat(pad, width - length(s))
+		END
+	END
+	RETURN err + s
+END
+
+END

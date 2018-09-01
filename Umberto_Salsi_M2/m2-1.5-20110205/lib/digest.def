@@ -1,0 +1,48 @@
+DEFINITION MODULE digest
+
+(* Interface to the OpenSSL digest routines. *)
+
+TYPE
+
+	CTX = RECORD (* private data *) END
+
+
+FUNCTION Init(name: STRING): CTX
+RAISE ERROR
+(*
+	Instantiate a context for digest to be used by Update() and
+	Final(). Valid digest names are: MD2, MD4, MD5, SHA1, RIPEMD160.
+	For the complete list of valid digests, see the documentation
+	of OpenSSL.
+
+	Error codes:
+
+	1 = Unknown digest name.
+*)
+
+FUNCTION Update(c: CTX, s: STRING)
+(* Add the string to the digest. NIL strings are ignored. *)
+
+FUNCTION Final(c: CTX): STRING
+(* Return the digest. *)
+
+
+(*
+	Example:
+
+	MODULE digest_test
+	IMPORT m2, digest, encode
+	VAR
+		c: CTX
+		d: STRING
+	BEGIN
+		c = Init("SHA1")
+		Update(c, "Hello")
+		Update(c, ", world!")
+		d = Final(c)
+		print(HexEncode(d) + "\n")
+	END
+
+*)
+
+END

@@ -1,0 +1,130 @@
+DEFINITION MODULE gcry_cipher
+
+(* Symmetric cryptography from the libgcrypt library. See
+http://www.gnupg.org for details. *)
+
+TYPE
+
+	ALGO = (
+		DES3 = 2, (* 24 bytes key, high bits ignored *)
+		CAST5 = 3, (* 16 bytes key *)
+		BLOWFISH = 4, (* 16 bytes key *)
+		AES128 = 7, (* 16 bytes key *)
+		AES192 = 8, (* 24 bytes key *)
+		AES256 = 9, (* 32 bytes key *)
+		TWOFISH256 = 10, (* 32 bytes key *)
+
+		(* Other cipher numbers are above 300 for OpenPGP reasons. *)
+		ARCFOUR     = 301,  (* Fully compatible with RSA's RC4 (tm). *)
+		DES         = 302,  (* Yes, this is single key 56 bit DES. *)
+		TWOFISH128  = 303,
+		SERPENT128  = 304,
+		SERPENT192  = 305,
+		SERPENT256  = 306,
+		RFC2268_40  = 307,  (* Ron's Cipher 2 (40 bit). *)
+		RFC2268_128 = 308   (* Ron's Cipher 2 (128 bit). *)
+	)
+
+	MODE = (
+		ECB = 1, (* Electronic codebook. *)
+		CFB,     (* Cipher feedback. *)
+		CBC,     (* Cipher block chaining. *)
+		STREAM,  (* Used with stream ciphers. *)
+		OFB,     (* Outer feedback. *)
+		CTR      (* Counter. *)
+	)
+
+	FLAGS = (
+		SECURE      = 1,  (* Allocate in secure memory. *)
+		ENABLE_SYNC = 2,  (* Enable CFB sync mode. *)
+		CBC_CTS     = 4,  (* Enable CBC cipher text stealing (CTS). *)
+		CBC_MAC     = 8   (* Enable CBC message auth. code (MAC). *)
+	)
+
+	CIPHER = FORWARD
+
+
+FUNCTION Open(VAR cp: CIPHER, encrypt: BOOLEAN, algo: ALGO, mode: MODE,
+	flags: FLAGS, key: STRING, iv: STRING)
+RAISE ERROR
+(*
+	Initialize a cipher 'cp' to be used with Write(). The cipher
+	must be released calling Close(). `encrypt' must be TRUE for
+	encryption, FALSE for decription. The key length depends on the
+	chosen algorithm.  The initial vector `iv' may be NIL if not used.
+
+	Error codes:
+
+	1 = gcry_cipher_open() failed
+
+	2 = gcry_cipher_setkey() failed
+
+	3 = gcry_cipher_setiv() failed
+
+	4 = gcry_cipher_algo_info() failed
+*)
+
+
+FUNCTION Write(h: CIPHER, data: STRING): STRING
+RAISE ERROR
+(*
+	Encrypt/decrypt the data. May return a portion of the decrypted/
+	encrypted data, or it may return NIL if not enough data are
+	available to make a complete block.
+
+	Error codes:
+
+	1 = encryption/decryption failed
+*)
+
+
+FUNCTION Close(VAR h: CIPHER): STRING
+RAISE ERROR
+(*
+	Release the handle. Return NIL or the last encrypted/decrypted data
+	padded with zeros.
+
+	Error codes:
+
+	1 = encryption/decryption failed
+*)
+
+
+(**********************************************************************
+
+Example:
+
+	MODULE gcry_cipher_test
+
+	IMPORT m2, gcry_cipher, encode, str
+
+	VAR
+		h: CIPHER
+		key, plain_text, cipher_text: STRING
+		cipher: ALGO
+		mode: MODE
+
+	BEGIN
+		cipher = DES3
+		mode = CFB
+		key = repeat("x", 24)
+		plain_text = "Hello!"
+
+		print("Encryption:\n")
+		h->Open(TRUE, cipher, mode, 0, key, NIL)
+		print("\tBlock size = " + itos(h[block_size]) + "\n")
+		cipher_text = h->Write(plain_text)
+		(* ... more Write() here ... *)
+		cipher_text = cipher_text + Close(h)
+		print( "\tCipher text = " + HexEncode( cipher_text ) + "\n")
+
+		print("Decryption:\n")
+		h->Open(FALSE, cipher, mode, 0, key, NIL)
+		plain_text = h->Write(cipher_text)
+		(* ... more Write() here ... *)
+		plain_text = plain_text + Close(h)
+		print( "\tPlain text = " + StringToLiteral( plain_text ) + "\n")
+	END
+
+**********************************************************************)
+END

@@ -1,0 +1,16 @@
+DEFINITION MODULE ShellVars;
+
+  (* Remember: Number of Strings (of argument & environment) *)
+  (*              are 0,1,...                                *)
+
+ PROCEDURE GetNArg():CARDINAL;
+  (* Return number of arguments,                 *)
+  (*   i.e. last argument has number GetNarg()-1 *)
+
+ PROCEDURE GetNthArgStr(n:CARDINAL;VAR str: ARRAY OF CHAR);
+  (* Return n-th argument in str.                             *)
+  (*   If there was not n-th argument then str will be empty. *)
+
+ PROCEDURE GetNthEnvStr(n:CARDINAL;VAR str: ARRAY OF CHAR);
+  (* Analogous to GetNthArgStr but for environment strings *)
+END ShellVars.

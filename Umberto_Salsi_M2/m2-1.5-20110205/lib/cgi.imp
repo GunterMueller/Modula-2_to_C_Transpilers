@@ -1,0 +1,239 @@
+IMPLEMENTATION MODULE cgi
+
+IMPORT m2, unx, io, str, buffer, encode
+
+
+CONST
+	ASCII_0 = 48
+	ASCII_9 = 57
+	ASCII_A = 65
+	ASCII_F = 70
+	ASCII_Z = 90
+	ASCII_a = 97
+	ASCII_f = 102
+	ASCII_z = 122
+
+
+FUNCTION URLEncode(s: STRING): STRING
+(* urlencode - v. RFC 1738 per i dettagli *)
+VAR
+	i, c: INTEGER
+	h: STRING
+	b: BUFFER
+BEGIN
+	h = "0123456789abcdef"
+	FOR i=0 TO length(s)-1 DO
+		c = CharAt(s, i)
+		IF (ASCII_a <= c) AND (c <= ASCII_z)
+		OR (ASCII_A <= c) AND (c <= ASCII_Z)
+		OR (ASCII_0 <= c) AND (c <= ASCII_9)
+		THEN
+			b->AddChar(c)
+		ELSE
+			b->AddChar(ASC("%"))
+			b->AddChar(CharAt(h, c DIV 16))
+			b->AddChar(CharAt(h, c MOD 16))
+		END
+	END
+	RETURN b->ToString()
+END
+
+
+FUNCTION URLDecode(s: STRING): STRING
+
+	FUNCTION is_hex(c: INTEGER): BOOLEAN
+	BEGIN
+		RETURN (ASCII_0 <= c) AND (c <= ASCII_9)
+			OR (ASCII_A <= c) AND (c <= ASCII_F)
+			OR (ASCII_a <= c) AND (c <= ASCII_f)
+	END
+
+	FUNCTION hex2int(c: INTEGER): INTEGER
+	BEGIN
+		IF (ASCII_0 <= c) AND (c <= ASCII_9) THEN
+			RETURN c - ASCII_0
+		ELSIF (ASCII_A <= c) AND (c <= ASCII_F) THEN
+			RETURN c - ASCII_A + 10
+		ELSE (* ASCII_a <= c AND c <= ASCII_f *)
+			RETURN c - ASCII_a + 10
+		END
+	END
+
+VAR
+	i, c, c1, c2: INTEGER
+	b: BUFFER
+BEGIN
+	FOR i=0 TO length(s)-1 DO
+		c = CharAt(s, i)
+		IF c = ASC("+") THEN
+			b->AddString(" ")
+		ELSIF (c = ASC("%")) AND (i+2 < length(s)) THEN
+			c1 = CharAt(s, i+1)
+			c2 = CharAt(s, i+2)
+			IF is_hex(c1) AND is_hex(c2) THEN
+				b->AddChar(16*hex2int(c1) + hex2int(c2))
+				inc(i, 2)
+			ELSE
+				b->AddChar(c)
+			END
+		ELSE
+			b->AddChar(c)
+		END
+	END
+	RETURN b->ToString()
+END
+
+
+FUNCTION GetRequest(max: INTEGER)
+VAR
+	method: STRING
+	content_type: STRING
+	req: STRING
+	i, j, x: INTEGER
+	s: STRING
+	a: ARRAY OF STRING
+	f: FILE
+BEGIN
+	request = NIL
+
+	(* Method: *)
+	method = getenv("REQUEST_METHOD")
+	IF (method = NIL) OR (method <> "POST") THEN
+		method = "GET"
+	END
+
+	(* Encoding type: *)
+	content_type = getenv("CONTENT_TYPE")
+
+	IF method = "GET" THEN
+		req = getenv("QUERY_STRING")
+
+	ELSIF (method = "POST")
+	AND (content_type = "application/x-www-form-urlencoded") THEN
+		TRY
+			io.Open(f, "/dev/stdin", "r")
+		ELSE
+			RETURN
+		END
+		LOOP
+			TRY s = io.Read(f, 1024)
+			ELSE EXIT
+			END
+			req = req + s
+			IF length(req) >= max THEN
+				EXIT
+			END
+		END
+		TRY io.Close(f) END
+
+	ELSIF (method = "POST")
+	AND (content_type = "multipart/form-data") THEN
+		error("unsupported POST multipart/form-data\n")
+	
+	ELSE
+		error("unsupported method=" + method + ", content-type="
+		+ content_type + "\n")
+
+	END
+
+	IF length(req) > max THEN
+		req = req[0,max-1]
+	END
+	request = NIL
+	IF length(req) = 0 THEN
+		RETURN
+	END
+	a = split(req, "&")
+	j = 0
+	FOR i=0 TO count(a)-1 DO
+		s = a[i]
+		x = index(s, 0, "=")
+		IF x > 0 THEN
+			request[j][name] = s[0,x]
+			request[j][value] = URLDecode( s[x+1,length(s)] )
+			j = j + 1
+		END
+	END
+END
+
+
+FUNCTION GetParameter(name: STRING): STRING
+VAR
+	i: INTEGER
+BEGIN
+	FOR i = 0 TO count(request)-1 DO
+		IF request[i][name] = name THEN
+			RETURN request[i][value]
+		END
+	END
+	RETURN NIL
+END
+
+
+FUNCTION String2HTML(s: STRING): STRING
+BEGIN
+	s = substitute(s, "&", "&amp;")
+	s = substitute(s, "<", "&lt;")
+	s = substitute(s, ">", "&gt;")
+	RETURN s
+END
+
+
+FUNCTION String2Attribute(s: STRING): STRING
+BEGIN
+	s = substitute(s, "&", "&amp;")
+	s = substitute(s, "\"", "&quot;")
+	RETURN "\"" + s + "\""
+END
+
+
+FUNCTION GetCookie(name: STRING): STRING
+VAR
+	c, s: STRING
+	a: ARRAY OF STRING
+	i: INTEGER
+BEGIN
+	IF name = NIL THEN
+		RETURN NIL
+	END
+	c = getenv("HTTP_COOKIE")
+	IF c = NIL THEN
+		RETURN NIL
+	END
+	a = split(c, "&")
+	FOR i=0 TO count(a)-1 DO
+		s = a[i]
+		IF s[0,length(name)] + "=" = name + "=" THEN
+			RETURN URLDecode( s[length(name)+1,length(s)] )
+		END
+	END
+	RETURN NIL
+END
+
+
+FUNCTION SetCookie(name: STRING, value: STRING, max_age: INTEGER)
+BEGIN
+	IF value = NIL THEN
+		value = ""
+	END
+	print("Set-Cookie: " + name + "=" + URLEncode(value) + "; Max-Age="
+		+ itos(max_age) + "\n")
+END
+
+
+FUNCTION NewSessionID(len: INTEGER): STRING
+VAR
+	f: FILE
+	s: STRING
+BEGIN
+	TRY io.Open(f, "/dev/random", "r") END
+	TRY s = io.Read(f, len) END
+	IF length(s) <> len THEN
+		HALT("NewSession(" + itos(len) + " => " + StringToLiteral(s))
+	END
+	TRY io.Close(f) END
+	RETURN HexEncode(s)
+END
+
+
+END

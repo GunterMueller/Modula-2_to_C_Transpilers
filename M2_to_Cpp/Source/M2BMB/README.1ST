@@ -1,0 +1,9 @@
+This is a slightly modified version of the BMB Modula-2 Cross-Platform
+Library v1.1, getting rid of runtime check errors some modules (String) cause,
+and makeing it more compatible with TopSpeed Modula-2 v3.
+
+Changes are:
+  - module String taken from v1.0, with added procedures SubString and Insert
+    and modified Delete and Slice, to conform to v1.1
+  - in ENV.DEF all references to AsmLib changed to Lib for TS 3 compatibility
+  - in ENV.MOD 65535 changed to 65534 for TS 3 compatibility

@@ -1,0 +1,270 @@
+IMPLEMENTATION MODULE base64
+
+IMPORT m2, buffer
+
+CONST
+	ASCII_0 = 48
+	ASCII_9 = 57
+	ASCII_A = 65
+	ASCII_Z = 90
+	ASCII_a = 97
+	ASCII_z = 122
+
+
+VAR b: BUFFER
+
+
+FUNCTION enc_b64(c: INTEGER): INTEGER
+BEGIN
+	IF c < 26 THEN
+		RETURN ASCII_A + c
+	ELSIF c < 52 THEN
+		RETURN ASCII_a + c - 26
+	ELSIF c < 62 THEN
+		RETURN ASCII_0 + c - 52
+	ELSIF c = 62 THEN
+		RETURN ASC("+")
+	ELSIF c = 63 THEN
+		RETURN ASC("/")
+	ELSE
+		RETURN ASC("-")
+	END
+END
+
+
+FUNCTION dec_b64(c: INTEGER): INTEGER
+BEGIN
+	IF (c >= ASCII_A) AND (c <= ASCII_Z) THEN
+		RETURN c - ASCII_A
+	ELSIF (c >= ASCII_a) AND (c <= ASCII_z) THEN
+		RETURN c - ASCII_a + 26
+	ELSIF (c >= ASCII_0) AND (c <= ASCII_9) THEN
+		RETURN c - ASCII_0 + 52
+	ELSIF c = ASC("+") THEN
+		RETURN 62
+	ELSIF c = ASC("/") THEN
+		RETURN 63
+	ELSIF c = ASC("=") THEN
+		RETURN -1
+	ELSE
+		RETURN -2
+	END
+END
+
+
+TYPE
+	BASE64 = RECORD
+		encode: BOOLEAN
+		n, x1, x2, x3: INTEGER
+	END
+
+
+FUNCTION Open(VAR h: BASE64, encode: BOOLEAN)
+BEGIN
+	h[encode] = encode
+	h[n] = 0
+END
+
+
+FUNCTION Write(h: BASE64, s: STRING): STRING
+VAR n, b1, b2, b3, c1, c2, c3, c4, i, x: INTEGER
+BEGIN
+	IF h = NIL THEN
+		HALT("h = NIL")
+	END
+	IF length(s) = 0 THEN
+		RETURN NIL
+	END
+	IF h[encode] THEN
+
+		n = h[n]
+		b1 = h[x1]
+		b2 = h[x2]
+		b->Empty()
+		FOR i=0 TO length(s)-1 DO
+			IF n = 0 THEN
+				b1 = CharAt(s, i)
+				n = 1
+			ELSIF n = 1 THEN
+				b2 = CharAt(s, i)
+				n = 2
+			ELSE
+				b3 = CharAt(s, i)
+				n = 0
+				b->AddChar( enc_b64( b1 >> 2 ) )
+				b->AddChar( enc_b64( b1 & 3 << 4 + b2 >> 4 ) )
+				b->AddChar( enc_b64( b2 & 15 << 2 + b3 >> 6 ) )
+				b->AddChar( enc_b64( b3 & 63 ) )
+			END
+		END
+		h[n] = n
+		h[x1] = b1
+		h[x2] = b2
+		RETURN b->ToString()
+
+	ELSE
+
+		n = h[n]
+		c1 = h[x1]
+		c2 = h[x2]
+		c3 = h[x3]
+		b->Empty()
+		FOR i=0 TO length(s)-1 DO
+			x = dec_b64(CharAt(s, i))
+			IF x = -1 THEN (* `=' *)
+				IF n < 2 THEN (* case: = and c= *)
+					(* unexpected `=' *)
+				ELSIF n = 2 THEN (* case: cc= *)
+					b->AddChar(c1 << 2 + c2 >> 4)
+				ELSE (* case: ccc= *)
+					b->AddChar(c1 << 2 + c2 >> 4)
+					b->AddChar(c2 & 15 << 4 + c3 >> 2)
+				END
+				h[n] = 0
+				RETURN b->ToString()
+			ELSIF x >= 0 THEN
+				IF n = 0 THEN
+					c1 = x   inc(n, 1)
+				ELSIF n = 1 THEN
+					c2 = x   inc(n, 1)
+				ELSIF n = 2 THEN
+					c3 = x   inc(n, 1)
+				ELSE
+					c4 = x   n = 0
+					b->AddChar(c1 << 2 + c2 >> 4)
+					b->AddChar(c2 & 15 << 4 + c3 >> 2)
+					b->AddChar(c3 & 3 << 6 + c4)
+				END
+			END
+		END
+		h[n] = n
+		h[x1] = c1
+		h[x2] = c2
+		h[x3] = c3
+		RETURN b->ToString()
+
+	END
+END
+
+
+FUNCTION Close(h: BASE64): STRING
+VAR n, b1, b2, c1, c2, c3: INTEGER
+BEGIN
+	IF h = NIL THEN
+		HALT("h = NIL")
+	END
+	IF h[encode] THEN
+
+		n = h[n]
+		IF n = 0 THEN
+			RETURN NIL
+		ELSIF n = 1 THEN
+			b->Empty()
+			b1 = h[x1]
+			h[n] = 0
+			b->AddChar(enc_b64( b1 >> 2 ) )
+			b->AddChar(enc_b64( b1 & 3 << 4 ) )
+			b->AddString("==")
+			RETURN b->ToString()
+		ELSIF n = 2 THEN
+			b->Empty()
+			b1 = h[x1]
+			b2 = h[x2]
+			h[n] = 0
+			b->AddChar(enc_b64( b1 >> 2 ) )
+			b->AddChar(enc_b64( b1 & 3 << 4 + b2 >> 4 ) )
+			b->AddChar(enc_b64( b2 & 15 << 2 ) )
+			b->AddString("=")
+			RETURN b->ToString()
+		END
+
+	ELSE
+
+		n = h[n]
+		c1 = h[x1]
+		c2 = h[x2]
+		c3 = h[x3]
+		b->Empty()
+		IF n < 2 THEN (* case: = and c= *)
+			(* unexpected `=' *)
+		ELSIF n = 2 THEN (* case: cc= *)
+			b->AddChar(c1 << 2 + c2 >> 4)
+		ELSE (* case: ccc= *)
+			b->AddChar(c1 << 2 + c2 >> 4)
+			b->AddChar(c2 & 15 << 4 + c3 >> 2)
+		END
+		h[n] = 0
+		RETURN b->ToString()
+
+	END
+END
+
+
+FUNCTION Encode(s: STRING): STRING
+VAR i, b1, b2, b3, c1, c2, c3, c4: INTEGER
+BEGIN
+	b->Empty()
+	FOR i=0 TO length(s)-1 BY 3 DO
+		b1 = CharAt(s, i)
+		c1 = b1 >> 2
+		b->AddChar(enc_b64(c1))
+		IF i+1 < length(s) THEN
+			b2 = CharAt(s, i+1)
+			#c2 = 16*(b1 * 3) + b2 DIV 16
+			c2 = (b1 & 3 << 4) + (b2 >> 4)
+			b->AddChar(enc_b64(c2))
+			IF i+2 < length(s) THEN
+				b3 = CharAt(s, i+2)
+				c3 = (b2 & 15 << 2) + (b3 >> 6)
+				c4 = (b3 & 63)
+				b->AddChar(enc_b64(c3))
+				b->AddChar(enc_b64(c4))
+			ELSE
+				b->AddChar(enc_b64(b2 & 15 << 2))
+				b->AddString("=")
+			END
+		ELSE
+			b->AddChar(enc_b64(b1 & 3 << 4))
+			b->AddString("==")
+		END
+	END
+	RETURN b->ToString()
+END
+
+
+FUNCTION Decode(s: STRING): STRING
+VAR i, x, n, c1, c2, c3, c4: INTEGER
+BEGIN
+	b->Empty()
+	FOR i=0 TO length(s)-1 DO
+		x = dec_b64(CharAt(s, i))
+		IF x = -1 THEN (* `=' *)
+			IF n < 2 THEN (* case: = and c= *)
+				(* unexpected `=' *)
+			ELSIF n = 2 THEN (* case: cc= *)
+				b->AddChar(c1 << 2 + c2 >> 4)
+			ELSE (* case: ccc= *)
+				b->AddChar(c1 << 2 + c2 >> 4)
+				b->AddChar(c2 & 15 << 4 + c3 >> 2)
+			END
+			RETURN b->ToString()
+		ELSIF x >= 0 THEN
+			IF n = 0 THEN
+				c1 = x   inc(n, 1)
+			ELSIF n = 1 THEN
+				c2 = x   inc(n, 1)
+			ELSIF n = 2 THEN
+				c3 = x   inc(n, 1)
+			ELSE
+				c4 = x   n = 0
+				b->AddChar(c1 << 2 + c2 >> 4)
+				b->AddChar(c2 & 15 << 4 + c3 >> 2)
+				b->AddChar(c3 & 3 << 6 + c4)
+			END
+		END
+	END
+	RETURN b->ToString()
+END
+
+
+END

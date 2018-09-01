@@ -1,0 +1,91 @@
+(* **************************************************************** *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      FileRd                                    *
+ * Description:           Input operations on files                 *
+ * Implementation level:  High-level (Utility module)               *
+ * Depends on modules:    File                                      *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  February 17, 1996                         *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * **************************************************************** *)
+
+DEFINITION MODULE FileRd;
+IMPORT File, Scan;
+
+   (* All operations read values of simple data types written down
+      as sequence of characters, and convert them into their internal
+      representation. For actual format of written values, see Scan.Doc
+      file *)
+
+   PROCEDURE Bool(f: File.T): BOOLEAN;
+      (* Reads a boolean from file 'f', previously skipping all blanks *)
+
+   PROCEDURE Int(f: File.T): INTEGER;
+      (* Reads an integer from file 'f', previously skipping all blanks *)
+
+   PROCEDURE LongInt(f: File.T): LONGINT;
+      (* Reads a long integer from file 'f', previously skipping all blanks *)
+
+   PROCEDURE Card(f: File.T): CARDINAL;
+      (* Reads a cardinal from file 'f', previously skipping all blanks *)
+
+   PROCEDURE LongCard(f: File.T): LONGCARD;
+      (* Reads a long cardinal from file 'f', previously skipping all blanks *)
+
+   PROCEDURE Real(f: File.T): REAL;
+      (* Reads a real from file 'f', previously skipping all blanks *)
+
+   PROCEDURE LongReal(f: File.T): LONGREAL;
+      (* Reads a long real from file 'f', previously skipping all blanks *)
+
+   PROCEDURE IntB(f: File.T; base: Scan.Base): INTEGER;
+      (* Reads an integer from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE LongIntB(f: File.T; base: Scan.Base): LONGINT;
+      (* Reads a long integer from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE CardB(f: File.T; base: Scan.Base): CARDINAL;
+      (* Reads a cardinal from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE LongCardB(f: File.T; base: Scan.Base): LONGCARD;
+      (* Reads a long cardinal from file 'f' written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE Bin(f: File.T; VAR bin: ARRAY OF BYTE);
+      (* Fills in an array of bytes 'bin' from a file 'f' *)
+
+CONST
+   (* The following are just synonims for corresponding
+      procedures from 'File' module *)
+
+   Char = File.RdChar;
+        (* PROCEDURE Char(f: File.T): CHAR;   *)
+        (*    Reads a character from file 'f' *)
+
+   Line = File.RdLine;
+        (* PROCEDURE Line(f: File.T; VAR line: ARRAY OF CHAR); *)
+        (*    Reads a line 'line' from the file 'f', up to     *)
+        (*    the end-of-line mark                             *)
+
+   Ln   = File.RdLn;
+        (* PROCEDURE Ln(f: File.T);                          *)
+        (*    Skips to a beginning of a new line of file 'f' *)
+
+END FileRd.
+
+(*
+   Changes from ver. 1.00:
+   - error codes are removed. Modules 'File' and 'Scan' will report
+     errors
+*)
+
+

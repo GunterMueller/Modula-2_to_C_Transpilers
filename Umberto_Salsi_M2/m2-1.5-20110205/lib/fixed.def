@@ -1,0 +1,92 @@
+DEFINITION MODULE fixed
+(*
+	Arithmetical computations using decimal numbers of arbitrary
+	length.  All the functions that accept an argument of type FIXED
+	treat NIL as a Zero().
+*)
+
+TYPE FIXED = FORWARD
+
+FUNCTION Zero(): FIXED
+(*
+	Return the representation of the zero, i.e. IntegerToFixed(0).
+*)
+
+FUNCTION One(): FIXED
+(*
+	Return the representation of the unity, i.e. IntegerToFixed(1).
+*)
+
+FUNCTION ToString(f: FIXED): STRING
+(*
+	Return the given value formatted as string.  The format of the
+	resulting string may be described in BNF as follow:
+
+		["-"] digit {digit} ["." digit {digit}]
+*)
+
+FUNCTION StringToFixed(s: STRING): FIXED
+(*
+	Convert the given string to a FIXED value. The string must have
+	the form:
+
+		["+"|"-"] digit {digit} ["." digit {digit}]
+
+	Note that ".123" and "123." are NOT valid because a digit is
+	required just before and after the decimal point.
+*)
+
+FUNCTION IntegerToFixed(i: INTEGER): FIXED
+
+FUNCTION ChangeSigne(f: FIXED): FIXED
+
+FUNCTION Add(a: FIXED, b: FIXED): FIXED
+
+FUNCTION Sub(a: FIXED, b: FIXED): FIXED
+
+FUNCTION Mult(a: FIXED, b: FIXED): FIXED
+
+FUNCTION Div(a: FIXED, b: FIXED, decimals: INTEGER): FIXED
+(*
+	The result is trunked to 'decimals' decimal digits.  A negative
+	precision is treated as 0.  Example:
+
+		Div(IntegerToFixed(1), IntegerToFixed(3), 2) => 0.33
+
+	NOTE: division by zero give an HALT().
+*)
+
+FUNCTION Abs(f: FIXED): FIXED
+(*
+	Return the absolute value.
+*)
+
+FUNCTION Fact(n: INTEGER): FIXED
+(*
+	Factorial.
+*)
+
+FUNCTION Trunc(x: FIXED, decimals: INTEGER): FIXED
+(*
+	Return the number x truncated to `decimals' fractional digits.
+	A negative `decimals' is treated as 0.
+*)
+
+FUNCTION Signe(x: FIXED): INTEGER
+(*
+	Return 1 if positive, -1 if negative, 0 if zero.
+*)
+
+FUNCTION Compare(a: FIXED, b: FIXED): INTEGER
+(*
+	Return -1 if a<b, 0 if a=b, 1 if a>b.
+*)
+
+FUNCTION Sqrt(x: FIXED, decimals: INTEGER): FIXED
+(*
+	Return the square root of x trunked to `decimals' fractional
+	digits.  A negative `decimals' is treated as 0.  If x is negative,
+	HALT().
+*)
+
+END

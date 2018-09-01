@@ -1,0 +1,17 @@
+@echo off
+upx demoAddr.exe
+upx demoDate.exe
+upx demoDir.exe
+upx demoDirEntry.exe
+upx demoEnv.exe
+upx demoFile-FileName.exe
+upx demoFileRd-FileWr.exe
+upx demoFmt.exe
+upx demoLongRLib.exe
+upx demoMem.exe
+upx demoRd-Wr.exe
+upx demoRLib.exe
+upx demoScan.exe
+upx demoShortMem.exe
+upx demoString.exe
+upx demoTime.exe

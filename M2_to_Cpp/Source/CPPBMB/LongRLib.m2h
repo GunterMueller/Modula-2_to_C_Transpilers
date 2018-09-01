@@ -1,0 +1,102 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Implementation of:       LongRLib (1.1)                              *
+ *                          (see LongRLib.doc for full specification)   *
+ * Version:                 1.0                                         *
+ * Date:                    February 17, 2000                           *
+ * Conformance Test Passed: -                                           *
+ * Platform:                Every                                       *
+ * Requires:                Generic ISO C++ compiler                    *
+ *                                                                      *
+ * Author:                  Zoran Budimac                               *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: zjb@unsim.ns.ac.yu              *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_LongRLib_m2h_
+#define _M2_LongRLib_m2h_
+
+#include <_m2sys.h>
+
+namespace LongRLib {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError         = 0; /* No error ocurred */
+   const CARDINAL arithmeticError = 1; /* Error in floating point opeartion */
+
+   LONGREAL Sin(LONGREAL r);
+      /* Returns sin(r). */
+
+   LONGREAL Cos(LONGREAL r);
+      /* Returns cos(r). */
+
+   LONGREAL SinH(LONGREAL r);
+      /* Returns sinh(r). */
+
+   LONGREAL CosH(LONGREAL r);
+      /* Returns cosh(r). */
+
+   LONGREAL Exp(LONGREAL r);
+      /* Returns e^r. */
+
+   LONGREAL Log(LONGREAL r);
+      /* Returns ln(r). */
+
+   LONGREAL Log10(LONGREAL r);
+      /* Returns ln(r) for base 10. */
+
+   LONGREAL ATan(LONGREAL r);
+      /* Returns arctan(r). */
+
+   LONGREAL ATanH(LONGREAL r);
+      /* Returns arctanh(r). */
+
+   LONGREAL Sqrt(LONGREAL r);
+      /* Returns square root of 'r'. */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+   struct _ModuleBody {
+      _ModuleBody()  { BEGIN(); }
+      ~_ModuleBody() { FINALLY(); }
+
+      void BEGIN();
+      void FINALLY();
+   };
+
+   _ModuleBody _body;
+
+} // LongRLib
+
+#endif

@@ -1,0 +1,155 @@
+DEFINITION MODULE parser
+
+(*
+
+	Modulo di utilita' per la scansione di file di testo strutturati.
+	Esempio di utilizzo:
+
+	MODULE prova_parser
+
+	IMPORT m2 parser
+
+	VAR pd: Status
+
+	BEGIN
+		#pd = Open("myfile")
+		printf("Premere CTRL-D per terminare:\n")
+		pd = Open("/dev/stdin")
+		LOOP
+			NextSym(pd)
+			IF pd[type] = A_EOF THEN
+				EXIT
+			ELSIF pd[type] = A_NAME THEN
+				print("NAME=" + pd[s] + "\n")
+			ELSIF pd[type] = A_CHAR THEN
+				print("CHAR=" + STRING2ASCII(CHR(pd[c])) + "\n")
+			ELSIF pd[type] = A_STRING THEN
+				print("STRING=" + STRING2ASCII( pd[s] ) + "\n")
+			ELSIF pd[type] = A_INTEGER THEN
+				print("INTEGER=" + itos(pd[i]) + "\n")
+			ELSIF pd[type] = A_REAL THEN
+				print("REAL=" + rtos(pd[r]) + "\n")
+			END
+		END
+		Close(pd)
+	END
+
+	Sintassi degli elementi
+	-----------------------
+
+	I caratteri " " (spazio), "\t" (tabulazione), "\n" (line feed)
+	e "\r" (carriage return) vengono considerati spaziature. Le
+	spaziature possono delimitare i simboli tra di loro, e vengono
+	altrimenti ignorate dal parser.
+
+	Il carattere "#" (purche' appaia all'esterno di una stringa
+	letterale) viene considerato inizio di commento che si estende
+	fino alla fine della riga o del file, e viene pertanto ignorato
+	dal parser.
+
+	Dopo ogni invocazione della funzione NextSym(pd), il record
+	pd contiene nel campo pd[type] il codice del tipo del simbolo
+	trovato:
+
+	A_NAME
+	Una sequenza di una o piu' lettere, cifre e underscore ("_"). Il
+	primo carattere deve essere una lettera o underscore. Il simbolo
+	ritorna nel campo pd[s].  Esempi:
+
+		pi Alfa x1 x2 x3 coord_x __inc
+
+	A_STRING
+	Una stringa letterale che ha la stessa sintassi delle
+	stringhe letterali di M2. La stringa completa di virgolette di
+	delimitazione, ritorna nel campo pd[s]. Se la stringa non soddisfa
+	le convenzioni di M2, il parser ritorna come A_CHAR le virgolette
+	di apertura e il parsing prosegue da quel punto.  Esempio:
+
+		"ERRORE:\a\tfile non trovato\n"
+	
+	A_INTEGER
+	Una sequenza di una o piu' cifre decimali che viene convertito
+	con la funzione stoi(). Il valore viene ritornato nel campo pd[i].
+	Esempio:
+
+		123456
+	
+	A_REAL
+	Un numero in precisione reale senza segno costituito da una o
+	piu' cifre, l'eventuale punto decimale seguito da uno o piu'
+	decimali, l'eventuale esponente "e" oppure "E" seguito dal
+	valore dell'esponente con eventuale segno.  La sottostringa
+	trovata viene convertita in REAL con la funzione stor() e il
+	valore viene ritornato nel campo pd[r].  Esempi:
+
+		3.1415927  1.6E-27  1e6
+
+	A_CHAR
+	Ogni altro carattere non riconducibile agli elementi precedenti
+	viene ritornato come A_CHAR. Il codice del carattere viene
+	inserito nel campo pd[c] come valore INTEGER.
+
+	A_EOF
+	Questo simbolo viene ritornato quando il parser incontra la fine
+	del file o un errore di I/O.
+
+*)
+
+IMPORT io
+
+CONST
+	A_EOF = -1
+	A_CHAR = 1
+	A_STRING = 2
+	A_INTEGER = 3
+	A_REAL = 4
+	A_NAME = 5
+
+TYPE
+	Status = RECORD
+		file_name: STRING
+		file_descr: FILE
+		buffer: STRING
+		idx: INTEGER
+
+		(* current symbol: *)
+		type: INTEGER
+		c: INTEGER
+		s: STRING
+		i: INTEGER
+		r: REAL
+	END
+
+
+FUNCTION NextSym(VAR pd: Status)
+(*
+	Analizza il prossimo simbolo e ne ritorna la descrizione nel record di
+	stato pd, campi type,c,i,r,s.
+*)
+
+FUNCTION Open(f: STRING): Status
+RAISE ERROR
+(*
+	Inizializza il parser per eseguire la scansione del file indicato.
+	E' possibile eseguire il parsing anche dello stdin indicando il
+	file "/dev/stdin". In questo caso l'utente terminera' l'input
+	premendo CTRL-D, oppure il parser dovra' utilizzare un apposito
+	comando alternativo (ad esempio un puntom o altro simbolo di
+	punteggiatura).
+*)
+
+FUNCTION Close(VAR pd: Status)
+
+FUNCTION ASCII2STRING(a: STRING): STRING
+(*
+	Converte una stringa letterale nel senso di M2 nella
+	corrispondente STRING.
+	Prerequisito: la stringa deve essere sintatticamente corretta,
+	e deve includere anche le virgolette che la delimitano, le
+	sequenze di escape devono essere quelle previste, ecc. In caso
+	di difformita', ritorna semplicemente la stringa cosi' com'e',
+	incluse le virgolette per evitare di generare (e di dover gestire)
+	condizioni di errore.
+*)
+
+END

@@ -1,0 +1,41 @@
+DEFINITION MODULE win
+
+TYPE EventCode = (
+	ButtonPress,   (* user clicked a mouse button *)
+	ButtonRelease, (* user released a mouse button *)
+	ClientMessage, (* NOT USED *)
+	CloseRequest,  (* user clicked the close box *)
+	ConfigureNotify, (* NOT USED *)
+	DestroyNotify, (* the window has bee closed *)
+	Expose,        (* window need update *)
+	KeyPress,      (* user pressed a keyboard key *)
+	MappingNotify, (* NOT USED *)
+	Null           (* unhandled event - ignore *)
+)
+
+VAR
+	button: INTEGER
+	pointer_x, pointer_y: INTEGER
+	key: STRING
+
+FUNCTION Open(w: INTEGER, h: INTEGER): INTEGER
+
+FUNCTION Close()
+
+FUNCTION SetWin(win: INTEGER)
+
+FUNCTION Erase()
+
+FUNCTION Move(x: INTEGER, y: INTEGER)
+
+FUNCTION DrawLine(x: INTEGER, y: INTEGER)
+
+FUNCTION DrawString(s: STRING)
+
+FUNCTION GetEvent(): EventCode
+
+FUNCTION PendingEvent(): BOOLEAN
+
+FUNCTION GetSize(VAR width: INTEGER, VAR height: INTEGER)
+
+END

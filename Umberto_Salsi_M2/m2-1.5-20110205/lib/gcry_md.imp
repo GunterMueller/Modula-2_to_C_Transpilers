@@ -1,0 +1,47 @@
+IMPLEMENTATION MODULE gcry_md
+
+IMPORT gcry_common
+
+
+FUNCTION Open(algo: ALGOS, flags: FLAGS): HD
+VAR
+$	int err;
+$	gcry_md_hd_t hd;
+BEGIN
+	mark(algo)
+	mark(flags)
+	gcry_common.Init()
+$	err = gcry_md_open(&hd, gcry_md_algo, gcry_md_flags);
+$	if( err != 0 ){
+		HALT("Open(): failed")
+$	}
+$	return (RECORD *) hd;
+END
+
+
+FUNCTION Write(h: HD, s: STRING)
+BEGIN
+	mark(h)
+	IF length(s) = 0 THEN
+		RETURN
+	END
+$	gcry_md_write((gcry_md_hd_t) gcry_md_h, gcry_md_s->s, gcry_md_s->len);
+END
+
+
+FUNCTION Close(h: HD): STRING
+VAR
+	s: STRING
+$	int len;
+$	char *s;
+BEGIN
+	mark(h)
+$	len = gcry_md_get_algo_dlen( gcry_md_get_algo( (gcry_md_hd_t) gcry_md_h ) );
+$	s = (char *)gcry_md_read((gcry_md_hd_t) gcry_md_h, 0);
+$	gcry_md_s = new_STRING(s, len);
+$	gcry_md_close((gcry_md_hd_t) gcry_md_h);
+	RETURN s
+END
+
+
+END

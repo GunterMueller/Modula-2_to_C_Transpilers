@@ -1,0 +1,118 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Scr                                       *
+ * Description:           Operations on screen in textual mode      *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.10                                      *
+ * Date:                  December, 1996                            *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Scr;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError'.
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+    noError          ;    (* no error *)
+    wrongCoordError  ;    (* At least one coordinate do not exist *)
+
+PROCEDURE SetCursorOn;
+   (* Turns cursor on *)
+
+PROCEDURE SetCursorOff;
+   (* Turns cursor off *)
+
+PROCEDURE CursorOn(): BOOLEAN;
+   (* Returns cursor on/off status *)
+
+PROCEDURE GetMaxCoords(VAR x, y: CARDINAL);
+   (* Returns maximum coordinates of display screen *)
+
+PROCEDURE CursorX(): CARDINAL;
+   (* Returns cursor's x coordinate *)
+
+PROCEDURE CursorY(): CARDINAL;
+   (* Returns cursors y coordinate *)
+
+PROCEDURE SetCursorTo(x, y: CARDINAL);
+   (* Moves cursor to new position
+      + Sets error code:
+      'wrongCoordError' - if wrong coordinates are supplied
+   *)
+
+PROCEDURE Fill(ch: CHAR; foreground, background: CARDINAL);
+   (* Fills entire screen with 'ch' writing it with 'foreground' color
+      on 'background' color *)
+
+PROCEDURE Save(VAR buffer: ARRAY OF BYTE);
+   (* Saves the (part of the) screen into the 'buffer'. If the buffer is
+      not long enough to hold entire screen, only HIGH(buffer)+1 elements
+      are stored *)
+
+PROCEDURE Restore(VAR buffer: ARRAY OF BYTE);
+   (* Restores the (part of the) screen from the 'buffer'. If the buffer is
+      not long enough to hold entire screen, only HIGH(buffer)+1 elements
+      are restored *)
+
+PROCEDURE FillBlock(ch: CHAR; x, y, width, heigth, foreground, background: CARDINAL);
+   (* Fills block on the screen with 'ch' between coordinates (x,y) and
+      (x+width, y+heigth) in 'foreground' color on
+      'background' *)
+
+PROCEDURE CopyBlock(x, y, width, heigth, newX, newY: CARDINAL);
+   (* Copies block on the screen between coordinates (x,y) and
+      (x+width, y+heigth) to the new position from (newX, newY) to
+      (newX+width, newy+heigth) *)
+
+PROCEDURE SaveBlock(x, y, width, height: CARDINAL; VAR buffer: ARRAY OF BYTE);
+   (* Saves the part of the screen into the 'buffer'. If the buffer is
+      not long enough to hold entire screen, only HIGH(buffer)+1 elements
+      are stored *)
+
+PROCEDURE RestoreBlock(x, y, width, height: CARDINAL; VAR buffer: ARRAY OF BYTE);
+   (* Restores the part of the screen from the 'buffer'. If the buffer is
+      not long enough to hold entire screen, only HIGH(buffer)+1 elements
+      are restored *)
+
+PROCEDURE WrCharAt(ch: CHAR; x, y, foreground, background: CARDINAL);
+   (* Writes 'ch' at coordinates ('x','y') using 'foreground' color
+      on 'background' *)
+
+PROCEDURE WrStrAt(str: ARRAY OF CHAR; x, y, foreground, background: CARDINAL);
+   (* Writes 'str' at coordinates ('x','y') using 'foreground' color
+      on 'background'. If it falls out of screen it will be clipped. *)
+
+
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+
+END Scr.

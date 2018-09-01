@@ -1,0 +1,97 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       Fmt (1.1)                                 *
+ *                          (See Fmt.doc for full specification)      *
+ * Version:                 1.0                                       *
+ * Date:                    July 15, 1996                             *
+ * Conformance Test Passed: July 15, 1996                             *
+ * Platform:                DOS/80x86                                 *
+ * Requires:                TopSpeed Modula-2 Compiler ver. 1.xx      *
+ * To do:                   Replace the current implementation of     *
+ *                          'Real' and 'LongReal' from TS1RealConvs   *
+ *                          with the more general one - perhaps with  *
+ *                          the one that is related to the            *
+ *                          representation of reals and not to the    *
+ *                          Modula-2 compiler                         *
+ *                                                                    *
+ * Author:                      Tamas Cservenak & Zoran Budimac       *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: {icervenak,zjb}@unsim.ns.ac.yu*
+ * ------------------------------------------------------------------ *)
+
+DEFINITION MODULE Fmt;
+
+   (* Error codes. Function Error() returns one of these *)
+
+   CONST
+      noError          = 0;
+      noRoomError      = 1;
+      wrongBaseError   = 2;
+
+  TYPE
+     Base = [2..16];             (* Base for numbers *)
+
+
+   PROCEDURE Bool(VAR s: ARRAY OF CHAR; b: BOOLEAN);
+      (* 's' is string representation of boolean 'b', if possible. *)
+
+   PROCEDURE Int(VAR s: ARRAY OF CHAR; n: INTEGER);
+      (* 's' is string representation of integer 'n', if possible. *)
+
+   PROCEDURE LongInt(VAR s: ARRAY OF CHAR; n: LONGINT);
+      (* 's' is  string representation of long integer 'n', if possible. *)
+
+   PROCEDURE Card(VAR s: ARRAY OF CHAR; n: CARDINAL);
+      (* 's' is  string representation of cardinal 'n', if possible. *)
+
+   PROCEDURE LongCard(VAR s: ARRAY OF CHAR; n: LONGCARD);
+      (* 's' is  string representation of long cardinal 'n', if possible. *)
+
+   PROCEDURE Real(VAR s: ARRAY OF CHAR; n: REAL);
+      (* 's' is  string representation of real 'n', if possible. *)
+
+   PROCEDURE LongReal(VAR s: ARRAY OF CHAR; n: LONGREAL);
+      (* 's' is  string representation of long real 'n', if possible. *)
+
+   PROCEDURE IntB(VAR s: ARRAY OF CHAR; n: INTEGER; base: Base);
+      (* 's' is  string representation in base 'base' of integer 'n',
+         if possible. *)
+
+   PROCEDURE LongIntB(VAR s: ARRAY OF CHAR; n: LONGINT; base: Base);
+      (* 's' is  string representation in base 'base' of long integer 'n',
+         if possible. *)
+
+   PROCEDURE CardB(VAR s: ARRAY OF CHAR; n: CARDINAL; base: Base);
+      (* 's' is  string representation in base 'base' of cardinal 'n',
+         if possible. *)
+
+   PROCEDURE LongCardB(VAR s: ARRAY OF CHAR; n: LONGCARD; base: Base);
+      (* 's' is  string representation in base 'base' of long cardinal 'n',
+         if possible. *)
+
+   PROCEDURE PadL(VAR s1: ARRAY OF CHAR; s: ARRAY OF CHAR;
+                  n: CARDINAL; ch: CHAR);
+      (* 's1' is a string of length 'n', where 's' is left adjusted,
+         and the rest is padded with 'ch' *)
+
+   PROCEDURE PadR(VAR s1: ARRAY OF CHAR; s: ARRAY OF CHAR;
+                  n: CARDINAL; ch: CHAR);
+      (* 's1' is a string of length 'n', where 's' is right adjusted,
+         and the rest is padded with 'ch' *)
+
+   PROCEDURE PadC(VAR s1: ARRAY OF CHAR; s: ARRAY OF CHAR;
+                  n: CARDINAL; ch: CHAR);
+      (* 's1' is a string of length 'n', where 's' is centered,
+         and the rest is padded with 'ch' *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code for previous operation from this module.
+         See the possible error codes in constant declaration part *)
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+
+END Fmt.
+

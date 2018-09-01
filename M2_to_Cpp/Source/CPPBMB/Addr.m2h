@@ -1,0 +1,47 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Implementation of:       Addr (1.1)                                  *
+ *                          (see Addr.doc for full specification)       *
+ * Version:                 1.0                                         *
+ * Date:                    February 16, 2000                           *
+ * Conformance Test Passed: -                                           *
+ * Platform:                Every                                       *
+ * Requires:                Generic ISO C++ compiler                    *
+ *                                                                      *
+ * Author:                  Zoran Budimac                               *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: zjb@unsim.ns.ac.yu              *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Addr_m2h_
+#define _M2_Addr_m2h_
+
+#include <_m2sys.h>
+
+namespace Addr {
+
+   void Inc(ADDRESS& a, LONGCARD n);
+      /* Increments address 'a' for 'n'. */
+
+   void Dec(ADDRESS& a, LONGCARD n);
+      /* Decrements address 'a' for 'n'. */
+
+   struct _ModuleBody {
+      _ModuleBody()  { BEGIN(); }
+      ~_ModuleBody() { FINALLY(); }
+
+      void BEGIN();
+      void FINALLY();
+   };
+
+   _ModuleBody _body;
+
+} // Addr
+
+#endif

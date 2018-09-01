@@ -1,0 +1,102 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Dir                                       *
+ * Description:           Directory operations                      *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  August 20, 1996                           *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Dir;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+   noError          ;       (* No error. *)
+   unknownError     ;       (* Any other error not described below. *)
+   diskFullError    ;       (* Disk is full. *)
+   noRoomError      ;       (* Storage buffer exceeded. *)
+   pathNotFoundError;       (* Specified directory path cannot be found. *)
+   priviledgeError  ;       (* Violation of system privilegdes to set/get time. *)
+
+   PROCEDURE Make(dir: ARRAY OF CHAR);
+      (* Makes a new directory 'dir'.
+       + Sets error codes:
+           'diskFullError'
+           'pathNotFoundError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE Remove(dir: ARRAY OF CHAR);
+      (* Removes a directory 'dir' (if it is empty).
+       + Sets error codes:
+           'pathNotFoundError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE ChangeTo(dir: ARRAY OF CHAR);
+      (* Changes the current directory to 'dir'.
+       + Sets error codes:
+           'pathNotFoundError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE GetCurrent(VAR dir: ARRAY OF CHAR);
+      (* sets 'dir' to a name of current directory.
+       + Sets error codes:
+           'noRoomError' if string 'dir' is not large enough.
+      *)
+
+   PROCEDURE GetParent(VAR dir: ARRAY OF CHAR);
+      (* Sets 'dir' to the parent of the current directory.
+       + Sets error codes:
+           'unknownError' - if it is not possible to find parent directory -
+                            (file-)system error.
+           'pathNotFoundError'
+           'priviledgeError'
+      *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+END Dir.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+   - 'Get' renamed to 'GetCurrent'
+   - 'Parent' renamed to 'GetParent'
+*)
+
+

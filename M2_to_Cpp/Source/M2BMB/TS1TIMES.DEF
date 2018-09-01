@@ -1,0 +1,21 @@
+(* -------------------------------------------------------------------
+    This module is internally needed by the implementation of BMB
+    Cross Platform 'Time' module. It contains operations for getting
+    and setting the system time. Operations are characteristic for
+    80x86/MS-DOS platform and means for doing them in
+    Top Speed Modula-2 ver. 1.x.
+
+    by Zoran Budimac, July, 1996
+    ------------------------------------------------------------------ *)
+DEFINITION MODULE TS1Times;
+IMPORT Time;
+
+PROCEDURE SetST(t: Time.T; VAR ok: BOOLEAN);
+   (* Sets system time to 't'. 'ok' is TRUE if everything went ok *)
+
+PROCEDURE GetST(VAR t: Time.T; VAR ok: BOOLEAN);
+   (* Gets system time and puts it in 't'. 'ok' is TRUE if
+      everything went ok *)
+
+END TS1Times.
+ 

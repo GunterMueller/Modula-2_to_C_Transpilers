@@ -1,0 +1,183 @@
+IMPLEMENTATION MODULE iconv
+
+$#include <iconv.h>
+
+TYPE
+	ICONV = RECORD
+		hd: ADDRESS
+		incomplete: STRING
+		invalid: STRING
+	END
+
+
+FUNCTION Finalize(h: ICONV)
+BEGIN
+	mark(h)
+	HALT("missing Close() of an ICONV object")
+END
+
+
+FUNCTION Open(VAR h: ICONV, fromCode: STRING, toCode: STRING)
+RAISE ERROR
+VAR
+	hd: ADDRESS
+$	char *from, *to;
+BEGIN
+$	MK_ZSTRING(from, iconv_fromCode);
+$	MK_ZSTRING(to, iconv_toCode);
+$	iconv_hd = (void *) iconv_open(to, from);
+$	if( (int) iconv_hd == -1 ){
+		h = NIL
+		RAISE ERROR errno() "fromCode=" + StringToLiteral(fromCode)
+		+ ", toCode=" + StringToLiteral(toCode) + ": " + strerror()
+		RETURN
+$	}
+	h = {hd, NIL, NIL}
+	FINALIZER(Finalize, h)
+END
+
+
+FUNCTION Write(h: ICONV, s: STRING): STRING
+RAISE ERROR
+VAR
+	hd: ADDRESS
+	t: STRING
+$	char *in, *in2, *out, *out2;
+$	int e, in_len, in_len2, out_len, out_len2, out_len3, converted;
+BEGIN
+	IF h = NIL THEN
+		HALT("uninitialized ICONV object")
+	END
+	IF h[invalid] <> NIL THEN
+		HALT("invalid sequence - please handle the EILSEQ error")
+	END
+	IF h[incomplete] <> NIL THEN
+		s = h[incomplete] + s
+		h[incomplete] = NIL
+	END
+	hd = h[hd]
+
+$	in = iconv_s->s;
+$	in_len = iconv_s->len;
+$
+$	/* Allocate the output buffer:
+$	   at least 6 chars are required for multibyte encodings: */
+$	out_len = ( in_len >= 6 )? in_len : 6;
+$	out = M2_MALLOC_ATOMIC(out_len);
+$
+$	in2 = in;
+$	in_len2 = in_len;
+$	out2 = out;
+$	out_len2 = out_len;
+$
+$ iconv_continue_conversion:
+$
+$	/* Convert buffer in2 (in_len2 bytes) into out2 (out_len2 bytes): */
+$	e = iconv(iconv_hd, &in2, (unsigned int *)&in_len2, &out2, (unsigned int *)&out_len2);
+$
+$	if( e != -1 ){
+$		return new_STRING(out, out2 - out);
+$
+$	} else if( errno == EINVAL ){
+$		iconv_t = new_STRING(in2, in_len2);
+		h[incomplete] = t
+$		return new_STRING(out, out2 - out);
+$
+$	} else if( errno == E2BIG ){
+$		/* allocate a bigger out buffer for the remaining chars: */
+$		converted = out2 - out;
+$		out_len3 = out_len + in_len2 + 6;
+$		out = M2_REALLOC(out, out_len3);
+$		out2 = out + converted;
+$		out_len2 = out_len3 - converted;
+$		goto iconv_continue_conversion;
+$
+$	} else {
+$		if( errno == EILSEQ ){
+			RAISE ERROR EILSEQ "invalid multibyte sequence"
+$		} else {
+			RAISE ERROR errno() strerror()
+$		}
+$		iconv_t = new_STRING(in2, in_len2);
+		h[invalid] = t
+$		return new_STRING(out, out2 - out);
+$
+$	}
+END
+
+
+FUNCTION GetInvalidSequence(h: ICONV): STRING
+BEGIN
+	IF h = NIL THEN
+		HALT("uninitialized ICONV object")
+	END
+	RETURN h[invalid]
+END
+
+
+FUNCTION GetIncompleteSequence(h: ICONV): STRING
+BEGIN
+	IF h = NIL THEN
+		HALT("uninitialized ICONV object")
+	END
+	RETURN h[incomplete]
+END
+
+
+FUNCTION WriteLine(h: ICONV, s: STRING): STRING
+RAISE ERROR
+VAR r: STRING
+BEGIN
+	IF h = NIL THEN
+		HALT("uninitialized ICONV object")
+	END
+	IF h[invalid] <> NIL THEN
+		HALT("still invalid sequence to be converted")
+	END
+	IF h[incomplete] <> NIL THEN
+		s = h[incomplete] + s
+		h[incomplete] = NIL
+	END
+	IF length(s) = 0 THEN
+		RETURN s
+	END
+	TRY
+		r = Write(h, s)
+	ELSE
+		RAISE ERROR ERROR_CODE ERROR_MESSAGE
+		RETURN r
+	END
+	IF h[incomplete] <> NIL THEN
+		RAISE ERROR EINVAL "incomplete multibyte sequence"
+	END
+	RETURN r
+END
+
+
+FUNCTION Reset(h: ICONV)
+VAR hd: ADDRESS
+BEGIN
+	IF h = NIL THEN
+		HALT("uninitialized ICONV object")
+	END
+	hd = h[hd]
+$	iconv((iconv_t) iconv_hd, NULL, NULL, NULL, NULL);
+	h[incomplete] = NIL
+	h[invalid] = NIL
+END
+
+
+FUNCTION Close(VAR h: ICONV)
+RAISE ERROR
+VAR hd: ADDRESS
+BEGIN
+	IF h[incomplete] <> NIL THEN
+		RAISE ERROR EINVAL "incomplete multibyte sequence"
+	END
+	hd = h[hd]
+$	iconv_close((iconv_t) iconv_hd);
+	h = NIL
+END
+
+
+END

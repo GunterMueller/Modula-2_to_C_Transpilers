@@ -1,0 +1,306 @@
+DEFINITION MODULE m2runtime
+
+(*
+	M2 Runtime Library
+
+	This module is always included by the compiler.
+*)
+
+TYPE
+	ADDRESS = FORWARD
+
+VAR
+	ERROR_CODE: INTEGER
+	ERROR_MESSAGE: STRING
+
+FUNCTION eq(a: BOOLEAN, b: BOOLEAN): BOOLEAN
+(*
+	Return TRUE if the two boolean arguments are equal.
+*)
+
+FUNCTION CHR(code: INTEGER): STRING
+(*
+	Return a string with the character of code 'code', 0<=code<=255.
+	If the code is invalid, die with error.  Example: CHR(65) ==> "A"
+*)
+
+FUNCTION ASC(ch: STRING): INTEGER
+(*
+	Return the code of the first character in the string.  If the
+	string is NIL or empty, die with error.  Examples:
+
+		ASC(NIL) ==> die
+		ASC("")  ==> die
+		ASC("A") ==> 65
+		ASC("ABC") ==> 65
+*)
+
+FUNCTION length(s: STRING): INTEGER
+(*
+	Return the length of the string. If the string is NIL, return 0.
+*)
+
+FUNCTION strcmp(a: STRING, b: STRING): INTEGER
+(*
+	Return:
+
+		< 0  if a < b
+		= 0  if a = b
+		> 0  if a > b
+
+	Remember that:
+
+		NIL  <  ""  <  (any string of one or more characters)
+
+	These BOOLEAN expressions give the same result:
+
+		(s = NIL) OR (s = "")
+		length(s) = 0
+		s <= ""
+		"" >= s
+
+	NOTE: normally it is simpler to use the comparison operators
+	between strings; this function is given only for those cases where
+	you need to test a string against all the three possibilities
+	like in this example:
+
+		IF a < b THEN ...
+		ELSIF a > b THEN ...
+		ELSE ...
+		END
+
+	require 2 string comparisons. This code may be rewritten in a
+	more efficient form that require only one string comparison:
+
+		r = strcmp(a, b)
+		IF r < 0 THEN ...
+		ELSIF r > 0 THEN ...
+		ELSE ...
+		END
+
+	so that the string comparison is done only one time.
+*)
+
+FUNCTION StringToLiteral(s: STRING): STRING
+(*
+	Convert the given string to an M2-compliant literal string, including
+	double quotes. If the string is NIL, return "NIL". Examples:
+	m2.print( StringToLiteral(NIL) ) => NIL
+	m2.print( StringToLiteral("alfa\0x00\n") ) => "alfa\0x00\n"
+*)
+
+FUNCTION count(a: ARRAY OF VOID): INTEGER
+(*
+	Return the number of elements in the array.  If the array is NIL,
+	return 0.
+*)
+
+FUNCTION itos(i: INTEGER): STRING
+(*
+	Return the string representation of the given INTEGER.
+*)
+
+FUNCTION rtos(r: REAL): STRING
+(*
+	Return the string representation of the given REAL number.
+	The result is expressed in human readable form and with a limited
+	precision of 9 significant digits. Examples:
+
+		rtos(1.0/3.0) ==> "0.333333333"
+		rtos(1e10/3.0) ==> "3.33333333e+09"
+*)
+
+FUNCTION get_args(): ARRAY OF STRING
+(*
+	Return the parameters from the command line which started the
+	program. a[0] is the program name used.
+*)
+
+FUNCTION exit(code: INTEGER)
+(*
+	Terminate the program with exit code code&0xFF, so it should be
+	0 <= code <= 255.
+*)
+
+FUNCTION GC()
+(*
+	Force a full garbage collection of the unused memory space. Should
+	not be used, since the garbage collector is started automatically.
+*)
+
+
+TYPE SYSTEM_ERROR_CODES = (
+
+	SUCCESS =         0,
+
+	EPERM =           1,     # Operation not permitted
+	ENOENT =          2,     # No such file or directory
+	ESRCH =           3,     # No such process
+	EINTR =           4,     # Interrupted system call
+	EIO =             5,     # I/O error
+	ENXIO =           6,     # No such device or address
+	E2BIG =           7,     # Argument list too long
+	ENOEXEC =         8,     # Exec format error
+	EBADF =           9,     # Bad file number
+	ECHILD =         10,     # No child processes
+	EAGAIN =         11,     # Try again
+	ENOMEM =         12,     # Out of memory
+	EACCES =         13,     # Permission denied
+	EFAULT =         14,     # Bad address
+	ENOTBLK =        15,     # Block device required
+	EBUSY =          16,     # Device or resource busy
+	EEXIST =         17,     # File exists
+	EXDEV =          18,     # Cross-device link
+	ENODEV =         19,     # No such device
+	ENOTDIR =        20,     # Not a directory
+	EISDIR =         21,     # Is a directory
+	EINVAL =         22,     # Invalid argument
+	ENFILE =         23,     # File table overflow
+	EMFILE =         24,     # Too many open files
+	ENOTTY =         25,     # Not a typewriter
+	ETXTBSY =        26,     # Text file busy
+	EFBIG =          27,     # File too large
+	ENOSPC =         28,     # No space left on device
+	ESPIPE =         29,     # Illegal seek
+	EROFS =          30,     # Read-only file system
+	EMLINK =         31,     # Too many links
+	EPIPE =          32,     # Broken pipe
+	EDOM =           33,     # Math argument out of domain of func
+	ERANGE =         34,     # Math result not representable
+	EDEADLK =        35,     # Resource deadlock would occur
+	ENAMETOOLONG =   36,     # File name too long
+	ENOLCK =         37,     # No record locks available
+	ENOSYS =         38,     # Function not implemented
+	ENOTEMPTY =      39,     # Directory not empty
+	ELOOP =          40,     # Too many symbolic links encountered
+	ENOMSG =         42,     # No message of desired type
+	EIDRM =          43,     # Identifier removed
+	ECHRNG =         44,     # Channel number out of range
+	EL2NSYNC =       45,     # Level 2 not synchronized
+	EL3HLT =         46,     # Level 3 halted
+	EL3RST =         47,     # Level 3 reset
+	ELNRNG =         48,     # Link number out of range
+	EUNATCH =        49,     # Protocol driver not attached
+	ENOCSI =         50,     # No CSI structure available
+	EL2HLT =         51,     # Level 2 halted
+	EBADE =          52,     # Invalid exchange
+	EBADR =          53,     # Invalid request descriptor
+	EXFULL =         54,     # Exchange full
+	ENOANO =         55,     # No anode
+	EBADRQC =        56,     # Invalid request code
+	EBADSLT =        57,     # Invalid slot
+
+	EBFONT =         59,     # Bad font file format
+	ENOSTR =         60,     # Device not a stream
+	ENODATA =        61,     # No data available
+	ETIME =          62,     # Timer expired
+	ENOSR =          63,     # Out of streams resources
+	ENONET =         64,     # Machine is not on the network
+	ENOPKG =         65,     # Package not installed
+	EREMOTE =        66,     # Object is remote
+	ENOLINK =        67,     # Link has been severed
+	EADV =           68,     # Advertise error
+	ESRMNT =         69,     # Srmount error
+	ECOMM =          70,     # Communication error on send
+	EPROTO =         71,     # Protocol error
+	EMULTIHOP =      72,     # Multihop attempted
+	EDOTDOT =        73,     # RFS specific error
+	EBADMSG =        74,     # Not a data message
+	EOVERFLOW =      75,     # Value too large for defined data type
+	ENOTUNIQ =       76,     # Name not unique on network
+	EBADFD =         77,     # File descriptor in bad state
+	EREMCHG =        78,     # Remote address changed
+	ELIBACC =        79,     # Can not access a needed shared library
+	ELIBBAD =        80,     # Accessing a corrupted shared library
+	ELIBSCN =        81,     # .lib section in a.out corrupted
+	ELIBMAX =        82,     # Attempting to link in too many shared libraries
+	ELIBEXEC =       83,     # Cannot exec a shared library directly
+	EILSEQ =         84,     # Illegal byte sequence
+	ERESTART =       85,     # Interrupted system call should be restarted
+	ESTRPIPE =       86,     # Streams pipe error
+	EUSERS =         87,     # Too many users
+	ENOTSOCK =       88,     # Socket operation on non-socket
+	EDESTADDRREQ =   89,     # Destination address required
+	EMSGSIZE =       90,     # Message too long
+	EPROTOTYPE =     91,     # Protocol wrong type for socket
+	ENOPROTOOPT =    92,     # Protocol not available
+	EPROTONOSUPPORT =93,     # Protocol not supported
+	ESOCKTNOSUPPORT =94,     # Socket type not supported
+	EOPNOTSUPP =     95,     # Operation not supported on transport endpoint
+	EPFNOSUPPORT =   96,     # Protocol family not supported
+	EAFNOSUPPORT =   97,     # Address family not supported by protocol
+	EADDRINUSE =     98,     # Address already in use
+	EADDRNOTAVAIL =  99,     # Cannot assign requested address
+	ENETDOWN =       100,    # Network is down
+	ENETUNREACH =    101,    # Network is unreachable
+	ENETRESET =      102,    # Network dropped connection because of reset
+	ECONNABORTED =   103,    # Software caused connection abort
+	ECONNRESET =     104,    # Connection reset by peer
+	ENOBUFS =        105,    # No buffer space available
+	EISCONN =        106,    # Transport endpoint is already connected
+	ENOTCONN =       107,    # Transport endpoint is not connected
+	ESHUTDOWN =      108,    # Cannot send after transport endpoint shutdown
+	ETOOMANYREFS =   109,    # Too many references: cannot splice
+	ETIMEDOUT =      110,    # Connection timed out
+	ECONNREFUSED =   111,    # Connection refused
+	EHOSTDOWN =      112,    # Host is down
+	EHOSTUNREACH =   113,    # No route to host
+	EALREADY =       114,    # Operation already in progress
+	EINPROGRESS =    115,    # Operation now in progress
+	ESTALE =         116,    # Stale NFS file handle
+	EUCLEAN =        117,    # Structure needs cleaning
+	ENOTNAM =        118,    # Not a XENIX named type file
+	ENAVAIL =        119,    # No XENIX semaphores available
+	EISNAM =         120,    # Is a named type file
+	EREMOTEIO =      121,    # Remote I/O error
+	EDQUOT =         122,    # Quota exceeded
+
+	ENOMEDIUM =      123,    # No medium found
+	EMEDIUMTYPE =    124     # Wrong medium type
+)
+
+SYSTEM_ERROR_CODES_2 = (
+	EWOULDBLOCK =    EAGAIN,  # Operation would block
+	EDEADLOCK =      EDEADLK
+)
+
+
+(***************************************************************************
+
+	Low-level utilities for interfacing with the C language and the
+	underlying operating system.
+
+****************************************************************************)
+
+FUNCTION InvalidZString(s: STRING): BOOLEAN
+(*
+	The given STRING is NIL or it contain a NUL byte.
+*)
+
+FUNCTION mark(VAR x: VOID)
+(*
+	Do nothing and do not generate code. Simply mark the variable as
+	"used". Usefull when the variable is used only on in-line C code to
+	prevent the compiler complains about unused variables.
+*)
+
+FUNCTION errno(): INTEGER
+(*
+	Return the error code of the last system function that failed.
+	NOTE: this value is defined if and only if a system function
+	failed; otherwise it is undefined.
+*)
+
+FUNCTION strerror(): STRING
+(*
+	Return the associate message to the error given by errno().
+	See errno() for more details.
+*)
+
+FUNCTION lock(r: VOID)
+(*
+	Lock a RECORD/ARRAY for read-only operations. Raises a fatal
+	error if a field/element is modified. Mostly useful for debugging.
+*)
+
+END

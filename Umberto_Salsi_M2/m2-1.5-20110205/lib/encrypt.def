@@ -1,0 +1,133 @@
+DEFINITION MODULE encrypt
+
+TYPE
+
+	CIPHER = (
+		ENC_NULL,
+
+		(* DES, 56 bits key (8 bytes, high order bit ignored): *)
+		DES_CBC, DES_EBC, DES_CFB, DES_OFB,
+
+		(* DES, 2*56 bit skey (16 bytes, high order bit ignored): *)
+		DES_EDE_CBC, DES_EDE, DES_EDE_OFB, DES_EDE_CFB,
+	
+		(* 3DES, 3*56 bits key (24 bytes, high order bit ignored): *)
+		DES_EDE3_CBC, DES_EDE3, DES_EDE3_OFB, DES_EDE3_CFB,
+
+		(* DESX, 56 bits key (8 bytes, high order bit ignored): *)
+		DESX_CBC,
+
+		(* RC4, variable size key (typically 128 bits): *)
+		RC4,
+		(* RC4_40, *)
+
+		(* IDEA (optional support): *)
+		(* IDEA_CBC, IDEA_ECB, IDEA_CFB, IDEA_OFB, IDEA_CBC, *)
+
+		(* RC2, variable size key (typically 128 bits): *)
+		RC2_CBC, RC2_ECB, RC2_CFB, RC2_OFB,
+		(* RC2_40_CBC, RC2_64_CBC, *)
+
+		(* Blowfish, variable size key up to 448 bits (56 bytes): *)
+		BF_CBC, BF_ECB, BF_CFB, BF_OFB,
+
+		(* CAST, variable size key: *)
+		CAST5_CBC, CAST5_ECB, CAST5_CFB, CAST5_OFB
+
+		(* RC5, variable size key (typ. 128), variable no. of
+		round (typ. 12) (optional support): *)
+		(* RC5_32_12_16_CBC, RC5_32_12_16_ECB, RC5_32_12_16_CFB,
+		RC5_32_12_16_OFB *)
+	)
+
+	CTX = RECORD (* private *) END
+
+
+FUNCTION Init(encryption: BOOLEAN, cipher: CIPHER, key: STRING): CTX
+RAISE ERROR
+(*
+	Create a context for encryption (if encryption=TRUE) or for
+	decryption (if encryption=FALSE) using the given cipher and
+	the given key. The length of the key depends on the cipher.
+	Some ciphers require a fixed key length, others do not.
+
+	Error codes:
+
+	1 = Invalid cipher no.
+
+	2 = Invalid key length.
+
+	3 = Init() failure.
+
+	4 = Invalid key length.
+*)
+
+
+FUNCTION Update(ctx: CTX, s: STRING): STRING
+RAISE ERROR
+(*
+	Encript/decrypt the string using the given context. Return
+	a partial result. This function may be called several times.
+	The partial results should be concatenated and the Final()
+	function must be called to return the final data.
+
+	Error codes:
+
+	1 = Update() failure. A failure may occour on harware
+	implementation of the algorithms.
+*)
+
+
+FUNCTION Final(VAR ctx: CTX): STRING
+RAISE ERROR
+(*
+	Return the final data encrypted/decrypted for the given context.
+	Release the internal buffers. The context is set to NIL.
+
+	Error codes:
+
+	1 = Final() failure.
+*)
+
+
+(***************************************************************************
+
+	MODULE encrypt_test
+
+	IMPORT m2, encrypt, encode, io
+
+	CONST
+		#RANDOM_DEV = "/dev/urandom" # high quality random bytes source
+		RANDOM_DEV = "/dev/random" # low quality random bytes source
+
+	VAR
+		plain_text, cipher_text, key: STRING
+		cipher: CIPHER
+		c: CTX
+		fd: INTEGER
+	BEGIN
+		plain_text = "Test of the module encrypt."
+		cipher = DES_EDE3
+		fd = open(RANDOM_DEV, "r")
+		key = read(fd, 3*8)
+		close(fd)
+		print("key = " + HexEncode(key) + "\n")
+
+		(* Encryption: *)
+		c = Init(TRUE, cipher, key)
+		cipher_text = Update(c, plain_text)
+		(* ... more calls to Update() here ... *)
+		cipher_text = cipher_text + Final(c)
+		print( "Cipher text: " + HexEncode(cipher_text) + "\n" )
+
+		(* Decryption: *)
+		c = Init(FALSE, cipher, key)
+		plain_text = Update(c, cipher_text)
+		(* ... more calls to Update() here ... *)
+		plain_text = plain_text + Final(c)
+		print( "Plain text: " + StringToLiteral(plain_text) + "\n" )
+	END
+
+****************************************************************************)
+
+END

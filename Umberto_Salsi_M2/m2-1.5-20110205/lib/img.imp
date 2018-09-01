@@ -1,0 +1,265 @@
+IMPLEMENTATION MODULE img
+
+IMPORT buffer
+
+CONST
+	cmd = "/home/salsi/bin/fly"
+	src = "img-tmp"
+	dst = "img-tmp.gif"
+
+TYPE
+	IMG = RECORD
+		f: ADDRESS
+		width, height: INTEGER
+		r, g, b: INTEGER
+		x, y: INTEGER
+		font: INTEGER
+	END
+
+FUNCTION fopen(fn: STRING, mode: STRING): ADDRESS
+VAR
+$	FILE *f;
+$	char *fn, *mode;
+BEGIN
+	mark(fn)
+	mark(mode)
+$	MK_ZSTRING(fn, img_fn);
+$	MK_ZSTRING(mode, img_mode);
+$	f = fopen(fn, mode);
+$	if( f == NULL ){
+		HALT(fn + ": " + strerror())
+$	}
+$	return f;
+END
+
+FUNCTION fwrite(f: ADDRESS, s: STRING)
+VAR
+$	int n;
+BEGIN
+	mark(f)
+	mark(s)
+$	n = fwrite(img_s->s, img_s->len, 1, (FILE *) img_f);
+$	if( n < 1 ){
+		HALT(strerror())
+$	}
+END
+
+FUNCTION fclose(f: ADDRESS)
+BEGIN
+	mark(f)
+$	if( fclose((FILE *) img_f) == -1 ){
+		HALT(strerror())
+$	}
+END
+
+FUNCTION range(x: INTEGER, min: INTEGER, max: INTEGER): INTEGER
+BEGIN
+	IF x < min THEN
+		RETURN min
+	ELSIF x > max THEN
+		RETURN max
+	ELSE
+		RETURN x
+	END
+END
+
+FUNCTION Open(VAR img: IMG, width: INTEGER, height: INTEGER)
+BEGIN
+	img = NIL
+	img[f] = fopen(src, "w")
+	img[width] = range(width, 1, 1000)
+	img[height] = range(height, 1, 1000)
+	fwrite(img[f], "new\nsize " + img[width] + "," + img[height] + "\n")
+END
+
+FUNCTION SetColor(img: IMG, r: INTEGER, g: INTEGER, b: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	img[r] = range(r, 0, 255)
+	img[g] = range(g, 0, 255)
+	img[b] = range(b, 0, 255)
+END
+
+FUNCTION SetFont(img: IMG, font: INTEGER)
+(*
+	Set the font to by used by String():
+	0 = 5x8 points (default)
+	1 = 6x12
+	2 = 7x13 bold
+	3 = 8x16
+	4 = 9x15 bold
+*)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	img[font] = range(font, 0, 4)
+END
+
+FUNCTION MoveTo(img: IMG, x: INTEGER, y: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	img[x] = range(x, 0, img[width] - 1)
+	img[y] = range(y, 0, img[height] - 1)
+END
+
+FUNCTION Move(img: IMG, dx: INTEGER, dy: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	img[x] = range(img[x] + dx, 0, img[width] - 1)
+	img[y] = range(img[y] + dy, 0, img[height] - 1)
+END
+
+FUNCTION color(img: IMG): STRING
+BEGIN
+	RETURN "" + img[r] + "," + img[g] + "," + img[b]
+END
+
+FUNCTION LineTo(img: IMG, x: INTEGER, y: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	x = range(x, 0, img[width] - 1)
+	y = range(y, 0, img[height] - 1)
+	fwrite(img[f], "line " + img[x] + "," + img[y] + "," + x + "," + y
+		+ "," + color(img) + "\n")
+	img[x] = x
+	img[y] = y
+END
+
+FUNCTION Line(img: IMG, dx: INTEGER, dy: INTEGER)
+VAR x, y: INTEGER
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	x = range(img[x] + dx, 0, img[width] - 1)
+	y = range(img[y] + dy, 0, img[height] - 1)
+	fwrite(img[f], "line " + img[x] + "," + img[y] + "," + x + "," + y
+		+ "," + color(img) + "\n")
+	img[x] = x
+	img[y] = y
+END
+
+FUNCTION DashedLineTo(img: IMG, x: INTEGER, y: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	x = range(x, 0, img[width] - 1)
+	y = range(y, 0, img[height] - 1)
+	fwrite(img[f], "dline " + img[x] + "," + img[y] + "," + x + "," + y
+		+ "," + color(img) + "\n")
+	img[x] = x
+	img[y] = y
+END
+
+FUNCTION DashedLine(img: IMG, dx: INTEGER, dy: INTEGER)
+VAR x, y: INTEGER
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	x = range(img[x] + dx, 0, img[width] - 1)
+	y = range(img[y] + dy, 0, img[height] - 1)
+	fwrite(img[f], "dline " + img[x] + "," + img[y] + "," + x + "," + y
+		+ "," + color(img) + "\n")
+	img[x] = x
+	img[y] = y
+END
+
+FUNCTION Rect(img: IMG, w: INTEGER, h: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	IF (w < 1) OR (h < 1) THEN
+		RETURN
+	END
+	fwrite(img[f], "rect " + img[x] + "," + img[y] + "," + (img[x] + w - 1)
+		+ "," + (img[y] + h - 1) + "," + color(img) + "\n")
+END
+
+FUNCTION FillRect(img: IMG, w: INTEGER, h: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	IF (w < 1) OR (h < 1) THEN
+		RETURN
+	END
+	fwrite(img[f], "frect " + img[x] + "," + img[y] + "," + (img[x] + w - 1)
+		+ "," + (img[y] + h - 1) + "," + color(img) + "\n")
+END
+
+FUNCTION Circle(img: IMG, d: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	d = range(d, 0, 1000)
+	fwrite(img[f], "circle " + img[x] + "," + img[y] + "," + d + ","
+		+ color(img) + "\n")
+END
+
+FUNCTION FillCircle(img: IMG, d: INTEGER)
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	d = range(d, 0, 1000)
+	fwrite(img[f], "fcircle " + img[x] + "," + img[y] + "," + d + ","
+		+ color(img) + "\n")
+END
+
+FUNCTION String(img: IMG, s: STRING)
+VAR
+	font: STRING
+	b: BUFFER
+	h, i, c: INTEGER
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	IF length(s) = 0 THEN
+		RETURN
+	END
+	SWITCH img[font] DO
+	CASE 0: font = "tiny"   h = 8
+	CASE 1: font = "small"  h = 12
+	CASE 2: font = "medium" h = 13
+	CASE 3: font = "large"  h = 16
+	CASE 4: font = "giant"  h = 15
+	END
+	FOR i=0 TO length(s)-1 DO
+		c = CharAt(s, i)
+		IF (c < 32) OR (c = 127) THEN
+			b->AddString("[" + c + "]")
+		ELSE
+			b->AddChar(c)
+		END
+	END
+	fwrite(img[f], "string " + color(img) + "," + img[x] + "," + (img[y] - h)
+		+ "," + font + "," + b->ToString() + "\n")
+END
+
+FUNCTION Close(img: IMG)
+VAR s: STRING
+BEGIN
+	IF img = NIL THEN
+		HALT("img = NIL")
+	END
+	fclose(img[f])
+	img[f] = NIL
+	s = cmd + " -i " + src + " -o " + dst + " >/dev/null\x00"
+$	system(img_s->s);
+END
+
+END

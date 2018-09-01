@@ -1,0 +1,85 @@
+DEFINITION MODULE glut
+
+CONST
+	(* Mouse buttons: *)
+	LEFT_BUTTON = 0
+	MIDDLE_BUTTON = 1
+	RIGHT_BUTTON = 2
+
+	(* Mouse button state: *)
+	DOWN = 0
+	UP = 1
+
+
+TYPE WINDOW = INTEGER
+
+
+FUNCTION InitWindowPosition(x: INTEGER, y: INTEGER)
+
+FUNCTION InitWindowSize(width: INTEGER, height: INTEGER)
+
+CONST
+	(* Display mode bit masks: *)
+	RGB     = 0
+	RGBA    = RGB
+	INDEX   = 1
+	SINGLE  = 0
+	DOUBLE  = 2
+	ACCUM   = 4
+	ALPHA   = 8
+	DEPTH   = 16
+	STENCIL = 32
+	(****** FIXME
+	#if (GLUT_API_VERSION >= 2)
+	#define GLUT_MULTISAMPLE                128
+	#define GLUT_STEREO                     256
+	#endif
+	#if (GLUT_API_VERSION >= 3)
+	#define GLUT_LUMINANCE                  512
+	#endif
+	*******)
+
+
+FUNCTION InitDisplayMode(mask: INTEGER)
+
+FUNCTION CreateWindow(title: STRING): WINDOW
+
+FUNCTION SetWindow(wid: WINDOW)
+
+FUNCTION DestroyWindow(wid: WINDOW)
+
+FUNCTION DisplayFunc(f: FUNCTION() )
+
+FUNCTION ReshapeFunc(f: FUNCTION(w: INTEGER, h: INTEGER) )
+
+FUNCTION MouseFunc(f: FUNCTION(button: INTEGER, state: INTEGER, x: INTEGER, y: INTEGER) )
+
+FUNCTION PostRedisplay()
+
+FUNCTION IdleFunc(f: FUNCTION() )
+
+FUNCTION SwapBuffers()
+
+FUNCTION MainLoop()
+
+FUNCTION WireSphere(radius: REAL, slices: INTEGER, stacks: INTEGER)
+FUNCTION SolidSphere(radius: REAL, slices: INTEGER, stacks: INTEGER)
+FUNCTION WireCone(base: REAL, height: REAL, slices: INTEGER, stacks: INTEGER)
+FUNCTION SolidCone(base: REAL, height: REAL, slices: INTEGER, stacks: INTEGER)
+FUNCTION WireCube(size: REAL)
+FUNCTION SolidCube(size: REAL)
+FUNCTION WireTorus(innerRadius: REAL, outerRadius: REAL, sides: INTEGER, rings: INTEGER)
+FUNCTION SolidTorus(innerRadius: REAL, outerRadius: REAL, sides: INTEGER, rings: INTEGER)
+FUNCTION WireDodecahedron()
+FUNCTION SolidDodecahedron()
+FUNCTION WireTeapot(size: REAL)
+FUNCTION SolidTeapot(size: REAL)
+FUNCTION WireOctahedron()
+FUNCTION SolidOctahedron()
+FUNCTION WireTetrahedron()
+FUNCTION SolidTetrahedron()
+FUNCTION WireIcosahedron()
+FUNCTION SolidIcosahedron()
+
+
+END

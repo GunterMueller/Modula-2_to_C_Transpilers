@@ -1,0 +1,132 @@
+DEFINITION MODULE gcry_ac
+
+(* Asymmetric key Cryptography from the libgcrypt library. See
+http://www.gnupg.org for details. *)
+
+IMPORT gcry_mpi
+
+
+(* DATA sets are used by this module to store name/value pairs. The
+name is a string of characters. The values are MPI (multi-precision
+integer). The following function for asymmetric cryptography uses data
+sets to store secret keys, public keys and digital signatures. *)
+
+TYPE
+
+	DATA = FORWARD (* A set of pairs name/MPI-value *)
+
+
+FUNCTION DataNew(VAR d: DATA)
+(* Return a new, empty data set. *)
+
+FUNCTION DataDestroy(VAR d: DATA)
+(* Destroys the data set. *)
+
+FUNCTION DataLength(data: DATA): INTEGER
+
+TYPE
+	DATA_VALUE = RECORD
+		name: STRING
+		value: MPI
+	END
+
+
+FUNCTION GetDataValues(data: DATA): ARRAY OF DATA_VALUE
+(* Return the data set as an array of DATA_VALUEs. *)
+
+
+
+(* ASYMMETRIC KEY CRYPTOGRAFY functions follows: *)
+
+TYPE
+
+	HANDLE = FORWARD (* Handle for the AC algorithm. *)
+
+	ALGO = (
+		RSA   =  1,
+		ELG_E = 16, (* ElGamal - Encryption only - use only for OpenPGP *)
+		DSA   = 17,
+		ELG   = 20  (* ElGamal - Encryption and signature *)
+	)
+
+	KEY = FORWARD
+	KEY_PAIR = FORWARD
+	KEY_TYPE = (SECRET, PUBLIC)
+
+
+FUNCTION Open(algo: ALGO): HANDLE
+(* Return a new handle for the given algorithm. *)
+
+FUNCTION KeyPairGenerate(h: HANDLE, nbits: INTEGER): KEY_PAIR
+(* Return a new key-pair of nbits bits. *)
+
+FUNCTION GetKey(kp: KEY_PAIR, which: KEY_TYPE): KEY
+(* Extract the public or the secret key from a key-pair. *)
+
+FUNCTION GetKeyData(kp: KEY_PAIR, which: KEY_TYPE): ARRAY OF DATA_VALUE
+(* Return the content of the given key as an array of DATA_VALUEs. *)
+
+FUNCTION Encrypt(h: HANDLE, no_blinding: BOOLEAN, public_key: KEY,
+	data_plain: MPI): DATA
+(* Return the data_palin encrypted using the given public_key. *)
+
+FUNCTION Decrypt(h: HANDLE, no_blinding: BOOLEAN, secret_key: KEY,
+	data_encrypted: DATA): MPI
+(* Return the data_encrypted decrypted using the given secret_key. *)
+
+FUNCTION Sign(h: HANDLE, secret_key: KEY, data: MPI): DATA
+(* Return the digital signature of `data'. *)
+
+FUNCTION Verify(h: HANDLE, public_key: KEY, data: MPI, signature: DATA): BOOLEAN
+(* Return TRUE if the signature is indeed the result of signing the
+`data' with the secret key belonging to the public key `key'. *)
+
+FUNCTION Close(VAR h: HANDLE)
+(* Release the handle. *)
+
+
+(**********************************************************************
+
+Example:
+-------
+
+MODULE gcry_ac_test
+
+IMPORT m2, gcry_ac, encode
+
+FUNCTION print_data_set(dv: ARRAY OF DATA_VALUE)
+VAR i: INTEGER
+BEGIN
+	FOR i=0 TO count(dv)-1 DO
+		print(dv[i][name] + " = ")
+		print(HexEncode(MPI2Binary(dv[i][value])))
+		print("\n")
+	END
+END
+
+VAR
+	h: HANDLE
+	kp: KEY_PAIR
+	data_encrypted: DATA
+	data_decrypted: MPI
+
+BEGIN
+	h = Open(RSA)
+	print("Generating the key pair:\n")
+	kp = KeyPairGenerate(h, 128)
+	print("Secret key:\n")
+	print_data_set( GetKeyData(kp, SECRET) )
+	print("Public key:\n")
+	print_data_set( GetKeyData(kp, PUBLIC) )
+	data_encrypted = Encrypt(h, FALSE, GetKey(kp, PUBLIC), Integer2MPI(123))
+	print("Data encrypted:\n")
+	print_data_set( GetDataValues(data_encrypted) )
+	print("Data decrypted:\n")
+	data_decrypted = Decrypt(h, FALSE, GetKey(kp, SECRET), data_encrypted)
+	print( itos( MPI2Integer(data_decrypted) ) + "\n")
+	Close(h)
+END
+
+**********************************************************************)
+
+END

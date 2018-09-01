@@ -1,0 +1,50 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Write;
+(* This module provides procedures for writing certain C++ constructs
+   using routines from module Printer *)
+
+  FROM Defs IMPORT IdStr;
+  IMPORT Ids, Procs;
+
+  PROCEDURE AppendCardToStr(VAR s: ARRAY OF CHAR; n: CARDINAL);
+  (* Append string representation of 'n' to 's', with '_' in between *)
+
+  PROCEDURE WriteIfDefs(modName: IdStr; ext: ARRAY OF CHAR);
+  (* Write macro include guard for module named 'modName', with the filemane
+     extension being 'ext' *)
+     
+  PROCEDURE WriteIncludes;
+  (* Write necessary "#include <...>" using information from module Import *)
+
+  PROCEDURE WriteImportUsings;
+  (* Write C++ equivalent of unqualified imports using information from
+     module Import *)
+
+  PROCEDURE WriteExportUsings(modName: IdStr; eList: Ids.List);
+  (* Write C++ equivalent of local module unqualified exports using
+     information from module Export *)
+
+  PROCEDURE WriteTemplateParams(procDesc: Procs.ProcDesc);
+  (* Write C++ function template parameters *)
+
+  PROCEDURE AppendParams(procDesc: Procs.ProcDesc);
+  (* Append (to output buffer) the list of formal parameters of
+     C++ function *)
+
+  PROCEDURE WriteParamReferences(procDesc: Procs.ProcDesc);
+  (* Write C++ function local variables, which represent references to
+     formal template parameters *)
+
+  PROCEDURE WriteModuleBodyStruct;
+  (* Write definition of C++ struct which implements M2 BEGIN and FINALLY
+     blocks *)
+
+  PROCEDURE WriteModuleBodyVar;
+  (* Write the global variable (object) which of type written by
+     WriteModuleBodyStruct *)
+
+  PROCEDURE WriteMain(modName: IdStr);
+  (* Write function "main" *)
+
+END Write.

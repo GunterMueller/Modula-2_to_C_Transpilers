@@ -1,0 +1,201 @@
+IMPLEMENTATION MODULE encrypt
+
+$$ linker options: -lssl
+
+$#include <openssl/evp.h>
+
+IMPORT str
+
+
+CONST
+
+	MAX_IV_LENGTH = 8
+
+
+FUNCTION Init(encryption: BOOLEAN, cipher: CIPHER, key: STRING): CTX
+RAISE ERROR
+VAR
+	key_len: INTEGER
+	iv: STRING
+$	char *key;
+$	EVP_CIPHER *type;
+$	EVP_CIPHER_CTX *ctx;
+BEGIN
+	mark(encryption)
+	key_len = -1
+	IF cipher = ENC_NULL THEN
+$		type = (EVP_CIPHER *) EVP_enc_null();
+		key_len = 0
+	ELSIF cipher = DES_CBC THEN
+$		type = (EVP_CIPHER *) EVP_des_cbc();
+		key_len = 8
+	ELSIF cipher = DES_EBC THEN
+$		type = (EVP_CIPHER *) EVP_des_ecb();
+		key_len = 8
+	ELSIF cipher = DES_CFB THEN
+$		type = (EVP_CIPHER *) EVP_des_cfb();
+		key_len = 8
+	ELSIF cipher = DES_OFB THEN
+$		type = (EVP_CIPHER *) EVP_des_ofb();
+		key_len = 8
+	ELSIF cipher = DES_EDE_CBC THEN
+$		type = (EVP_CIPHER *) EVP_des_ede_cbc();
+		key_len = 16
+	ELSIF cipher = DES_EDE THEN
+$		type = (EVP_CIPHER *) EVP_des_ede();
+		key_len = 16
+	ELSIF cipher = DES_EDE_OFB THEN
+$		type = (EVP_CIPHER *) EVP_des_ede_ofb();
+		key_len = 16
+	ELSIF cipher = DES_EDE_CFB THEN
+$		type = (EVP_CIPHER *) EVP_des_ede_cfb();
+		key_len = 16
+	ELSIF cipher = DES_EDE3_CBC THEN
+$		type = (EVP_CIPHER *) EVP_des_ede3_cbc();
+		key_len = 24
+	ELSIF cipher = DES_EDE3 THEN
+$		type = (EVP_CIPHER *) EVP_des_ede3();
+		key_len = 24
+	ELSIF cipher = DES_EDE3_OFB THEN
+$		type = (EVP_CIPHER *) EVP_des_ede3_ofb();
+		key_len = 24
+	ELSIF cipher = DES_EDE3_CFB THEN
+$		type = (EVP_CIPHER *) EVP_des_ede3_cfb();
+		key_len = 24
+	ELSIF cipher = DESX_CBC THEN
+$		type = (EVP_CIPHER *) EVP_desx_cbc();
+		key_len = 8
+	ELSIF cipher = RC4 THEN
+$		type = (EVP_CIPHER *) EVP_rc4();
+	(*
+	ELSIF cipher = RC4_40 THEN
+$		type = (EVP_CIPHER * ) EVP_rc4_40();
+	*)
+	(*
+	ELSIF cipher = IDEA_CBC THEN
+$		type = (EVP_CIPHER * ) EVP_idea_cbc();
+	ELSIF cipher = IDEA_ECB THEN
+$		type = (EVP_CIPHER * ) EVP_idea_ecb();
+	ELSIF cipher = IDEA_CFB THEN
+$		type = (EVP_CIPHER * ) EVP_idea_cfb();
+	ELSIF cipher = IDEA_OFB THEN
+$		type = (EVP_CIPHER * ) EVP_idea_ofb();
+	ELSIF cipher = IDEA_CBC THEN
+$		type = (EVP_CIPHER * ) EVP_idea_cbc();
+	*)
+	ELSIF cipher = RC2_CBC THEN
+$		type = (EVP_CIPHER *) EVP_rc2_cbc();
+	ELSIF cipher = RC2_ECB THEN
+$		type = (EVP_CIPHER *) EVP_rc2_ecb();
+	ELSIF cipher = RC2_CFB THEN
+$		type = (EVP_CIPHER *) EVP_rc2_cfb();
+	ELSIF cipher = RC2_OFB THEN
+$		type = (EVP_CIPHER *) EVP_rc2_ofb();
+	(*
+	ELSIF cipher = RC2_40_CBC THEN
+$		type = (EVP_CIPHER * ) EVP_rc2_40_cbc();
+	ELSIF cipher = RC2_64_CBC THEN
+$		type = (EVP_CIPHER * ) EVP_rc2_64_cbc();
+	*)
+	ELSIF cipher = BF_CBC THEN
+$		type = (EVP_CIPHER *) EVP_bf_cbc();
+	ELSIF cipher = BF_ECB THEN
+$		type = (EVP_CIPHER *) EVP_bf_ecb();
+	ELSIF cipher = BF_CFB THEN
+$		type = (EVP_CIPHER *) EVP_bf_cfb();
+	ELSIF cipher = BF_OFB THEN
+$		type = (EVP_CIPHER *) EVP_bf_ofb();
+	ELSIF cipher = CAST5_CBC THEN
+$		type = (EVP_CIPHER *) EVP_cast5_cbc();
+	ELSIF cipher = CAST5_ECB THEN
+$		type = (EVP_CIPHER *) EVP_cast5_ecb();
+	ELSIF cipher = CAST5_CFB THEN
+$		type = (EVP_CIPHER *) EVP_cast5_cfb();
+	ELSIF cipher = CAST5_OFB THEN
+$		type = (EVP_CIPHER *) EVP_cast5_ofb();
+	(*
+	ELSIF cipher = RC5_32_12_16_CBC THEN
+$		type = (EVP_CIPHER * ) EVP_rc5_32_12_16_cbc();
+	ELSIF cipher = RC5_32_12_16_ECB THEN
+$		type = (EVP_CIPHER * ) EVP_rc5_32_12_16_ecb();
+	ELSIF cipher = RC5_32_12_16_CFB THEN
+$		type = (EVP_CIPHER * ) EVP_rc5_32_12_16_cfb();
+	ELSIF cipher = RC5_32_12_16_OFB THEN
+$		type = (EVP_CIPHER * ) EVP_rc5_32_12_16_ofb();
+	*)
+	ELSE
+		RAISE ERROR 1 "Invalid cipher no. " + itos(cipher)
+		RETURN NIL
+	END
+	IF (key_len >= 0) AND (length(key) <> key_len) THEN
+		RAISE ERROR 2 "encrypt.Init(): invalid key length: required "
+		+ itos(key_len) + " B, given " + itos(length(key)) + " B"
+		RETURN NIL
+	END
+	key_len = length(key)
+	# FIXME: con Blowfish ctrl che lenght(key) <= 56
+	IF key = NIL THEN
+$		key = NULL;
+	ELSE
+$		key = encrypt_key->s;
+	END
+$	ctx = M2_MALLOC(sizeof(EVP_CIPHER_CTX));
+	iv = repeat("q", MAX_IV_LENGTH)
+$	if( EVP_CipherInit(ctx, type, (unsigned char *)encrypt_key->s, (unsigned char *)encrypt_iv->s,
+$	encrypt_encryption) != 1 ){
+		RAISE ERROR 3 "encrypt.Init(): failed\n"
+		RETURN NIL
+$	}
+$	if( EVP_CIPHER_CTX_set_key_length(ctx, encrypt_key_len) != 1 ){
+		RAISE ERROR 4 "encrypt.Init(): invalid key length " + itos(key_len)
+		+ "."
+		# FIXME: dovrei rilasciare le strutture dati allocate dentro a ctx.
+		RETURN NIL
+$	}
+$	return (RECORD *) ctx;
+END
+
+
+FUNCTION Update(ctx: CTX, s: STRING): STRING
+RAISE ERROR
+VAR
+$	char *C;
+$	int Clen;
+BEGIN
+	IF (ctx = NIL) OR (s = NIL) THEN
+		RETURN NIL
+	END
+$	Clen = encrypt_s->len
+$		+ EVP_CIPHER_CTX_block_size((EVP_CIPHER_CTX *) encrypt_ctx);
+$	C = alloca(Clen);
+$	if( EVP_CipherUpdate((EVP_CIPHER_CTX *) encrypt_ctx, (unsigned char *)C, &Clen,
+$		(unsigned char *)encrypt_s->s, encrypt_s->len) != 1 ){
+		RAISE ERROR 1 "encrypt.Update(): failed."
+		RETURN NIL
+$	}
+$	return new_STRING(C, Clen);
+END
+
+
+FUNCTION Final(VAR ctx: CTX): STRING
+RAISE ERROR
+VAR
+$	char *C;
+$	int Clen;
+BEGIN
+	IF ctx = NIL THEN
+$		die("encrypt.Final(): context NIL.");
+	END
+$	Clen = EVP_CIPHER_CTX_block_size((EVP_CIPHER_CTX *) *encrypt_ctx);
+$	C = alloca(Clen);
+$	if( EVP_CipherFinal((EVP_CIPHER_CTX *) *encrypt_ctx, (unsigned char *)C, &Clen) != 1 ){
+		RAISE ERROR 1 "encrypt.Final(): failed."
+		RETURN NIL
+$	}
+$	EVP_CIPHER_CTX_cleanup((EVP_CIPHER_CTX *) *encrypt_ctx);
+	ctx = NIL
+$	return new_STRING(C, Clen);
+END
+
+
+END

@@ -1,0 +1,95 @@
+(* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                                                                      *
+ * Implementation of:       FileName (1.1)                              *
+ *                          (see FileName.doc for full specification!)  *
+ * Version:                 1.0                                         *
+ * Date:                    October 20, 1996                            *
+ * Conformance Test Passed: -                                           *
+ * Platform:                DOS/80x86                                   *
+ * Requires:                TopSpeed Modula-2 Compiler Version 1.xx     *
+ * Acknowledgement:         Implementation based on TS FIO module       *
+ *                                                                      *
+ * Author:                  Daniel Sendula                              *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: isendula@unsim.ns.ac.yu         *
+ * -------------------------------------------------------------------- *)
+
+DEFINITION MODULE FileName;
+IMPORT TS1FileNames;
+       (* Implementation of non-portable operations for TopSpeed 1.xx
+          ('Rename' and 'Delete') *)
+
+CONST
+   noError          = 0;       (* No error. *)
+   unknownError     = 1;       (* Any other error not described below. *)
+   noRoomError      = 2;       (* Internal or external storage buffer exceeded. *)
+   notFileError     = 3;       (* Specified file is acctualy a directory or other filesystem structure. *)
+   fileNotFoundError= 4;       (* Specified file cannot be found. *)
+   pathNotFoundError= 5;       (* Specified directory path cannot be found. *)
+   priviledgeError  = 6;       (* Violation of system privilegdes to set/get time. *)
+
+CONST
+   root  = '\';
+   delim = '\';
+
+
+   PROCEDURE Exists(name: ARRAY OF CHAR): BOOLEAN;
+      (* Returns TRUE if a file with name 'name' exists.
+       + Sets error codes:
+           'pathNotFoundError'
+           'fileNotFoundError'
+           'notFileError'
+           'priviledgeError'
+      *)
+
+   PROCEDURE Split(fullName: ARRAY OF CHAR;
+                   VAR dir, name: ARRAY OF CHAR);
+      (* Splits the full file name 'fullName' into directory
+         name (path) 'dir' and proper filename 'name'. Device
+         name is the part of directory name 'dir'.
+       + Sets error codes:
+           'noRoomError' if strings 'dir' or 'name' are not large enough.
+      *)
+
+   PROCEDURE Concat(VAR fullName: ARRAY OF CHAR;
+                    dir, name: ARRAY OF CHAR);
+      (* Concats the names of directory name (path) 'dir' and
+         proper filename 'name' into a full file name 'fullName'.
+         Device name is the part of directory name 'dir'.
+       + Sets error codes:
+           'noRoomError' if string 'fullname' is not large enough.
+      *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+(* -------------------------------------- *)
+
+PROCEDURE SetError(code: CARDINAL; msg: ARRAY OF CHAR);
+   (* This is exported because it is used by the non-portable module
+      TS1FileNames *)
+
+CONST
+   (* Two non-portable operations are implemented in TS1FileNames! *)
+   Rename = TS1FileNames.Rename;
+   Delete = TS1FileNames.Delete;
+
+(* -------------------------------------- *)
+
+END FileName.
+
+

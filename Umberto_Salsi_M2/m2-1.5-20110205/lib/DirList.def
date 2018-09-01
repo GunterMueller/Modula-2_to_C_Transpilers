@@ -1,0 +1,45 @@
+DEFINITION MODULE DirList
+
+(*
+	DIR ENTRY
+*)
+
+CONST
+	DT_UNKNOWN = 0  (* type unknown - some systems return only this *)
+	DT_FIFO    = 1  (* named pipe or fifo *)
+	DT_CHR     = 2  (* character device *)
+	DT_DIR     = 4  (* directory *)
+	DT_BLK     = 6  (* block device *)
+	DT_REG     = 8  (* regular file *)
+	DT_LNK     = 10 (* link *)
+	DT_SOCK    = 12 (* socket *)
+
+TYPE
+	DirEntry = RECORD
+		name: STRING
+		type: INTEGER
+		fileno: INTEGER
+	END
+
+FUNCTION Get(VAR d: ARRAY OF DirEntry, dir: STRING)
+RAISE ERROR
+(*
+	Ritorna l'elenco dei file della directory indicata.
+*)
+
+
+
+FUNCTION Sort(d: ARRAY OF DirEntry)
+(*
+	Ordina alfabeticamente l'elenco dei file prodotto da DirList().
+*)
+
+
+FUNCTION RemoveDirectory(dir: STRING)
+RAISE ERROR
+(*
+	Rimuove la directory indicata e tutti i file in essa contenuti.
+*)
+
+
+END

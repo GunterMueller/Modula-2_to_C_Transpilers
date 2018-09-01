@@ -1,0 +1,189 @@
+IMPLEMENTATION MODULE str
+
+
+FUNCTION repeat(s: STRING, n: INTEGER): STRING
+VAR r: STRING
+$	int i;
+BEGIN
+	IF (s = NIL) OR (n <= 0) THEN
+		RETURN NIL
+	END
+	IF n = 1 THEN
+		RETURN s
+	END
+$	str_r = M2_MALLOC_ATOMIC(sizeof(STRING) + str_s->len * str_n);
+$	str_r->type = STRING_type;
+$	str_r->len = str_s->len * str_n;
+$	for( i=0; i<str_n; i++ )
+$		memcpy(&str_r->s[i*str_s->len], str_s->s, str_s->len);
+	RETURN r
+END
+
+
+FUNCTION toupper(s: STRING): STRING
+VAR r: STRING
+$	char *a, *b;
+$	int i;
+BEGIN
+	IF s = NIL THEN
+		RETURN NIL
+	END
+$	str_r = M2_MALLOC(sizeof(STRING) + str_s->len);
+$	str_r->type = STRING_type;
+$   str_r->len = str_s->len;
+$	a = str_s->s; b = str_r->s;
+$	for( i=str_s->len; i>0; i-- )
+$		*b++ = toupper(*a++);
+	RETURN r
+END
+
+
+FUNCTION tolower(s: STRING): STRING
+VAR r: STRING
+$	char *a, *b;
+$	int i;
+BEGIN
+	IF s = NIL THEN
+		RETURN NIL
+	END
+$	str_r = M2_MALLOC(sizeof(STRING) + str_s->len);
+$	str_r->type = STRING_type;
+$   str_r->len = str_s->len;
+$	a = str_s->s; b = str_r->s;
+$	for( i=str_s->len; i>0; i-- )
+$		*b++ = tolower(*a++);
+	RETURN r
+END
+
+
+FUNCTION index(s: STRING, i: INTEGER, t: STRING): INTEGER
+(*
+	FIXME: if length(t) = 1 use the fastest memchr().
+*)
+VAR
+$ int a, b;
+BEGIN
+	IF (s = NIL) OR (t = NIL) OR (i < 0) OR (i > length(s)) THEN
+		RETURN -1
+	END
+$	for( a = str_i; a < str_s->len; a++ ){
+$		for( b = 0; b < str_t->len; b++ ){
+$			if( str_s->s[a] == str_t->s[b] ){
+$				return a;
+$			}
+$		}
+$	}
+	RETURN -1
+END
+
+
+FUNCTION split(s: STRING, t: STRING): ARRAY OF STRING
+VAR
+	i,j : INTEGER
+	a: ARRAY OF STRING
+BEGIN
+	i = 0
+	LOOP
+		j = index(s, i, t)
+		IF j < 0 THEN
+			IF i <= length(s) THEN
+				a[count(a)] = s[i,length(s)]
+			END
+			RETURN a
+		END
+		a[count(a)] = s[i,j]
+		i = j+1
+	END
+	RETURN a
+END
+
+
+FUNCTION join(a: ARRAY OF STRING, sep: STRING): STRING
+VAR
+	s: STRING
+	i: INTEGER
+BEGIN
+	s = ""
+	FOR i = 0 TO count(a)-1 DO
+		IF i = 0 THEN
+			s = a[0]
+		ELSE
+			s = s + sep + a[i]
+		END
+	END
+	RETURN s
+END
+
+
+FUNCTION find(s: STRING, t: STRING): INTEGER
+VAR x: INTEGER
+BEGIN
+	IF (length(s) = 0) OR (length(t) = 0) OR (length(t) > length(s)) THEN
+		RETURN -1
+	END
+	FOR x = 0 TO length(s)-length(t) DO
+$		if( memcmp(str_s->s + str_x, str_t->s, str_t->len) == 0 )
+$			return str_x;
+	END
+	RETURN -1
+END
+
+
+FUNCTION substitute(s: STRING, target: STRING, sub: STRING): STRING
+VAR
+	r: STRING
+	x: INTEGER
+BEGIN
+	IF s = NIL THEN
+		RETURN NIL
+	ELSIF s = "" THEN
+		RETURN ""
+	ELSIF length(target) = 0 THEN
+		RETURN s
+	END
+	LOOP
+		x = find(s, target)
+		IF x < 0 THEN
+			RETURN r + s
+		END
+		r = r + s[0,x] + sub
+		s = s[x+length(target),length(s)]
+	END
+END
+
+
+
+FUNCTION starts_with(s: STRING, head: STRING): BOOLEAN
+BEGIN
+	IF s = NIL THEN
+		RETURN head = NIL
+	ELSIF head = NIL THEN
+		RETURN TRUE
+	ELSIF length(head) > length(s) THEN
+		RETURN FALSE
+	ELSE
+#		RETURN s[0,length(head)] = head
+#		Faster and avoids to stress dynamic memory:
+$		return memcmp(str_s->s, str_head->s, str_head->len) == 0;
+	END
+END
+
+
+FUNCTION ends_with(s: STRING, tail: STRING): BOOLEAN
+BEGIN
+	IF s = NIL THEN
+		RETURN tail = NIL
+	ELSIF tail = NIL THEN
+		RETURN TRUE
+	ELSIF length(tail) > length(s) THEN
+		RETURN FALSE
+	ELSE
+#		RETURN s[length(s) - length(tail),length(s)] = tail
+#		Faster and avoids to stress dynamic memory:
+$		return memcmp(str_s->s + str_s->len - str_tail->len,
+$			str_tail->s, str_tail->len) == 0;
+	END
+END
+
+
+END

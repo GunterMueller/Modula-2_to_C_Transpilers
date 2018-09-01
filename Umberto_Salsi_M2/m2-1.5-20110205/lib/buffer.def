@@ -1,0 +1,87 @@
+DEFINITION MODULE buffer
+
+(*
+	A BUFFER collects a sequence of bytes.	A BUFFER try to mimic
+	the behavior of STRINGs, so a BUFFER can be NIL, empty (zero
+	bytes), or it may contain a sequence of bytes of arbitrary length;
+	unallocated BUFFERs behave as the NIL string.
+	Adding data to the buffer, its size increase accordingly.
+*)
+
+
+TYPE BUFFER = FORWARD
+
+FUNCTION Set(VAR b: BUFFER, s: STRING)
+(*
+	Set the buffer to the given string, so that a following call to the
+	function ToString() will return exactly that string. Examples:
+
+	Set(b, NIL)
+	ToString(b) will return NIL. If the buffer isn't allocated,
+	do nothing.  If the buffer is allocated, reset its content, but
+	the memory isn't released; to effectively release the memory,
+	simply assign b=NIL.
+
+	Set(b, "")
+	ToString(b) will return "". The buffer is allocated, if required.
+
+	Set(b, "abc")
+	The buffer is allocated or expanded as required.
+*)
+
+FUNCTION AddString(VAR b: BUFFER, s: STRING)
+(*
+	Append the string to the buffer. If s=NIL, do nothing. If b=NIL
+	and s="" the buffer is allocated empty.
+*)
+
+FUNCTION Length(b: BUFFER): INTEGER
+(*
+	Return the current length of the buffer. Unallocated buffer has zero
+	length.
+*)
+
+FUNCTION CharAt(s: STRING, i: INTEGER): INTEGER
+(*
+	Return m2.ASC(s[i]).
+*)
+
+FUNCTION AddChar(VAR b: BUFFER, c: INTEGER)
+(*
+	Add the character of code `c' to the buffer.
+*)
+
+FUNCTION ToString(b: BUFFER): STRING
+(*
+	Return the content of the buffer.  If b=NIL return NIL.  If the
+	buffer is empty, return "".
+*)
+
+FUNCTION Reset(b: BUFFER)
+(*
+	Same as Set(b, NIL).
+*)
+
+FUNCTION Empty(VAR b: BUFFER)
+(*
+	Same as Set(b, "").
+*)
+
+(* Example:
+
+	FUNCTION reverse(s: STRING): STRING
+	VAR i: INTEGER  b: BUFFER
+	BEGIN
+		FOR i=length(s)-1 TO 0 BY -1 DO
+			b->AddChar( CharAt(s, i) )
+		END
+		RETURN b->ToString()
+	END 
+
+	reverse("Programming with M2") => "2M htiw gnimmargorP"
+	reverse("") => NIL
+	reverse(NIL) => NIL
+*)
+
+
+END

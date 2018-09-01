@@ -1,0 +1,45 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      String                                    *
+ * Description:           String operations                         *
+ * Implementation level:  Mid-level (Useful module)                 *
+ *                                                                  *
+ * Version:               1.00                                      *
+ * Date:                  February, 1995                            *
+ *                                                                  *
+ * Author:                Zoran Budimac                             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: zjb@unsim.ns.ac.yu            *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE String;
+IMPORT Str, Lib;    (* TopSpeed Modula-2 string operations *)
+
+CONST
+   (* Error codes. Function Error() returns one of these *)
+   NoError        = 0;             (* No Error *)
+   UnknownError   = 1;
+
+CONST
+
+   Pos          = Str.Pos;
+   Caps         = Str.Caps;
+   Append       = Str.Append;
+   Copy         = Str.Copy;
+   Length       = Str.Length;
+   Concat       = Str.Concat;
+   Insert       = Str.Insert;
+
+PROCEDURE Delete(VAR s: ARRAY OF CHAR; from, to: CARDINAL);
+PROCEDURE Slice(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR; from, to: CARDINAL);
+PROCEDURE SubString(s, r: ARRAY OF CHAR; VAR pos: CARDINAL): BOOLEAN;
+PROCEDURE Equal(s, r: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE LEq(s, r: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE GEq(s, r: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE Error(): CARDINAL;
+
+END String.
+
+

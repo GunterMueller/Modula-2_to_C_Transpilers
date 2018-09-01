@@ -1,0 +1,123 @@
+DEFINITION MODULE iconv
+
+TYPE  ICONV = FORWARD
+
+
+FUNCTION Open(VAR h: ICONV, fromCode: STRING, toCode: STRING)
+RAISE ERROR
+(*
+	Initialize a conversion object h.  The supported encodings are
+	given by the command "iconv --list".  Encoding names are case
+	insensitive.  Very common encodings are: UTF-8, ISO-8859-1,
+	ISO-8859-15.
+
+	Error codes:
+		EINVAL  Conversion not supported.
+*)
+
+FUNCTION Write(h: ICONV, s: STRING): STRING
+RAISE ERROR
+(*
+	Return the string s converted as per the `h' handle.  If s=NIL
+	return NIL. If s="" return "". If the string terminate with an
+	incomplete multibyte sequence, the fuction return the successfully
+	converted part and store the incomplete sequence to be used in
+	the following calls to this function.
+
+	Error codes:
+		EILSEQ  Invalid multibyte sequence found. The value returned
+		        is the successfully converted portion. Use the
+		        function GetInvalidSequence() to return the remaining
+		        part of the string s. Note that if you call Write*()
+		        once more, the program will be halted with HALT().
+		        See GetInvalidSequence() and Reset().
+*)
+
+FUNCTION WriteLine(h: ICONV, s: STRING): STRING
+RAISE ERROR
+(*
+	Like Write(), but it raise an error EINVAL if an incomplete
+	multibyte sequence is found at the end of the string.
+
+	Error codes:
+		EILSEQ  Invalid multibyte sequence. See Write().
+		EINVAL
+*)
+
+FUNCTION GetInvalidSequence(h: ICONV): STRING
+(*
+	Upon an EILSEQ error raised by Write() or WriteLine(),
+	this function return the remaining portion of the string not
+	converted. The bytes just at the start of this string is the
+	offending sequence.
+
+	ATTENTION! the internal status of the ICONV object is not changed,
+	so a new call to Write() or WriteLine() will HALT() the program.
+	See Reset().
+*)
+
+FUNCTION GetIncompleteSequence(h: ICONV): STRING
+(*
+	Return the incomplete sequence currently stored in the conversion
+	object, or NIL if not present. Normally you would call this
+	function after an EINSEQ error returned by WriteLine() or Close().
+*)
+
+FUNCTION Reset(h: ICONV)
+(*
+	Reset the status of the conversion object: the pending incomplete
+	sequence and the invalid sequence are discarded, so that the
+	conversion object is ready for new conversions.
+*)
+
+FUNCTION Close(VAR h: ICONV)
+RAISE ERROR
+(*
+	Release the ICONV object. h is set to NIL.
+
+	Error codes:
+		EINVAL  Incomplete multibyte sequence still present in the
+		        ICONV object. See GetIncompleteSequence().
+*)
+
+(**********************************************************************
+
+Example:
+
+	MODULE iconv_test
+	(*
+		Convert a file from the ISO-8859-15 encoding to the
+		UTF-8 encoding.
+	*)
+	IMPORT io, iconv
+
+	VAR
+		src, dst: FILE
+		h: ICONV
+		line: STRING
+	BEGIN
+		src->Open("a.txt", "r")
+		dst->Open("b.txt", "wct")
+		h->Open("ISO-8859-15", "UTF-8")
+		LOOP
+			line = src->ReadLine()
+			IF line = NIL THEN
+				EXIT
+			END
+			TRY dst->Write( h->WriteLine(line) )
+			CATCH EILSEQ:
+				error("Invalid multibyte sequence: "
+					+ StringToLiteral( h->GetInvalidSequence() )
+					+ "\n")
+				h->Reset()
+			END
+			dst->Write( "\n" )
+		END
+		h->Close()
+		src->Close()
+		dst->Close()
+	END
+
+**********************************************************************)
+
+END

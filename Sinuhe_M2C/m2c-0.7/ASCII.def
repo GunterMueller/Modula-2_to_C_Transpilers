@@ -1,0 +1,38 @@
+DEFINITION MODULE ASCII;
+
+CONST
+ nul=0C;
+ soh=1C;
+ stx=2C;
+ etx=3C;
+ eot=4C;
+ enq=5C;
+ ack=6C;
+ bel=7C;
+ bs=10C;
+ ht=11C;
+ lf=12C;
+ vt=13C;
+ ff=14C;
+ cr=15C;
+ so=16C;
+ si=17C;
+ dle=20C;
+ dc1=21C;
+ dc2=22C;
+ dc3=23C;
+ dc4=24C;
+ nak=25C;
+ syn=26C;
+ etb=27C;
+ can=30C;
+ em=31C;
+ sub=32C;
+ esc=33C;
+ fs=34C;
+ gs=35C;
+ rs=36C;
+ us=37C;
+ del=177C;
+
+END ASCII.

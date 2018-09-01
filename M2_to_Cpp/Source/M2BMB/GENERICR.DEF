@@ -1,0 +1,23 @@
+(* -------------------------------------------------------------------
+    This module is internally needed by the implementation of BMB
+    Cross Platform 'Fmt' module. It contains operations for conversion
+    of real numbers. Operations are general and should compile on
+    every Modula-2 compiler and execute on every platform.
+
+    by Zoran Budimac, July 11, 1996.
+    ------------------------------------------------------------------ *)
+DEFINITION MODULE GenericRealConvs;
+
+PROCEDURE StrToReal(s: ARRAY OF CHAR; VAR ok, over: BOOLEAN): REAL;
+   (* Converts 's' to a real number, setting 'ok' to TRUE if everything
+      went OK and 'over' to TRUE if overflow occured *)
+
+PROCEDURE StrToLongReal(s: ARRAY OF CHAR; VAR ok, over: BOOLEAN): LONGREAL;
+   (* Converts 's' to a long real number, setting 'ok' to TRUE if everything
+      went OK and 'over' to TRUE if overflow occured *)
+
+END GenericRealConvs.
+
+
+
+

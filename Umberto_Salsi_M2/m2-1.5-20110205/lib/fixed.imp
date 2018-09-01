@@ -1,0 +1,647 @@
+IMPLEMENTATION MODULE fixed
+
+IMPORT m2, str, buffer
+
+(*
+	TODO:
+
+	- FixedToInteger(f: FIXED): INTEGER
+	- RealToFixed(r: REAL): FIXED
+	- FixedToReal(f: FIXED): REAL
+	- Power(b: FIXED, e: FIXED): FIXED
+	- Log(x: FIXED): FIXED
+	- Exp(c: FIXED): FIXED
+*)
+
+
+TYPE
+	FIXED = RECORD
+		s: INTEGER # signe: 0:zero, 1:positive, -1:negative
+		e: INTEGER # exponent of 10
+		d: STRING  # digits in reverse order
+		# Non significant 0 digits in the head and in the tail are never
+		# stored.
+		# Example: 123.45600 ==> s=1, e=-3, d="654321"
+		# Example: 0 ==> s=0, e=?, d=?
+		# Example: 0.0123 ==> s=1, e=-4, d="321"
+	END
+
+CONST  ASC_0 = 48
+
+
+VAR zero: FIXED (* cached value *)
+
+FUNCTION Zero(): FIXED
+BEGIN
+	IF zero = NIL THEN
+		zero = {0, 0, NIL}
+	END
+	RETURN zero
+END
+
+
+VAR one: FIXED (* cached value *)
+
+FUNCTION One(): FIXED
+BEGIN
+	IF one = NIL THEN
+		one = {1, 0, "1"}
+	END
+	RETURN one
+END
+
+
+(****
+FUNCTION reverse(s: STRING): STRING
+VAR i: INTEGER   b: BUFFER
+BEGIN
+	IF s = NIL THEN
+		RETURN NIL
+	END
+	FOR i=length(s)-1 TO 0 BY -1 DO
+		AddString(b, s[i])
+	END
+	RETURN buffer.ToString(b)
+END
+****)
+
+
+FUNCTION reverse(s: STRING): STRING
+VAR
+	r: STRING
+$ int l;
+$ char *sp, *rp;
+BEGIN
+	IF s = NIL THEN
+		RETURN NIL
+	END
+$	l = fixed_s->len;
+$	sp = fixed_s->s;
+$	fixed_r = new_STRING(fixed_s->s, l);
+$	rp = fixed_r->s + l - 1;
+$	while( l > 0 ){
+$		l--;
+$		*rp = *sp;
+$		rp--;
+$		sp++;
+$	}
+	RETURN r
+END
+
+
+FUNCTION normalize(f: FIXED): FIXED
+(*
+	Sometimes this function simply modify the internal value of f,
+	so it should not be used on data passed by the client module.
+*)
+VAR
+	d: STRING
+	l, i, j: INTEGER
+BEGIN
+	d = f[d]
+	l = length(d)
+
+	IF l = 0 THEN
+		RETURN Zero()
+	END
+
+	i = 0
+	WHILE (i < l) AND (d[i] = "0") DO
+		inc(i, 1)
+	END
+
+	j = l
+	WHILE (j > i) AND (d[j-1] = "0") DO
+		inc(j, -1)
+	END
+
+	IF i = j THEN
+		RETURN Zero()
+	ELSIF i > 0 THEN
+		inc(f[e], i)
+		f[d] = d[i,j]
+	ELSE
+		f[d] = d[i,j]
+	END
+
+	IF (f[s] = 1) AND (f[e] = 0) AND (f[d] = "1") THEN
+		RETURN One()
+	END
+
+	RETURN f
+
+END
+
+
+FUNCTION ToString(f: FIXED): STRING
+VAR
+	s: STRING
+	e, x: INTEGER
+	d: STRING
+BEGIN
+	IF (f = NIL) OR (f[s] = 0) THEN
+		RETURN "0"
+	END
+	IF f[s] = -1 THEN
+		s = "-"
+	END
+	e = f[e]
+	d = reverse(f[d])
+	IF e > 0 THEN
+		RETURN s + d + repeat("0", e)
+	ELSIF e = 0 THEN
+		RETURN s + d
+	ELSIF e > -length(d) THEN
+		x = length(d) + e
+		RETURN s + d[0,x] + "." + d[x,length(d)]
+	ELSE
+		RETURN s + "0." + repeat("0", -e-length(d)) + d
+	END
+END
+
+
+FUNCTION StringToFixed(t: STRING): FIXED
+VAR
+	f: FIXED  s: INTEGER e: INTEGER d: STRING  i: INTEGER
+	p: INTEGER
+BEGIN
+	IF NOT match(t, "^[\\+\\-]?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))$") THEN
+		RETURN NIL
+	END
+	s = 0
+	i = 0
+	IF t[0] = "-" THEN
+		s = -1
+		i = 1
+	ELSIF t[0] = "+" THEN
+		s = 1
+		i = 1
+	ELSE
+		s = 1
+	END
+
+	p = find(t, ".")
+	IF p < 0 THEN
+		e = 0
+		IF i = 0 THEN
+			d = t
+		ELSE
+			d = t[1,length(t)]
+		END
+	ELSE
+		d = t[i,p] + t[p+1,length(t)]
+		e = p+1-length(t)
+	END
+
+	f[s] = s
+	f[e] = e
+	f[d] = reverse(d)
+
+	RETURN normalize(f)
+END
+
+
+FUNCTION IntegerToFixed(i: INTEGER): FIXED
+VAR f: FIXED
+BEGIN
+	IF i = INTEGER_MIN THEN
+		f[s] = -1
+		f[e] = 0
+		f[d] = itos(INTEGER_MIN)
+	ELSIF i < 0 THEN
+		f[s] = -1
+		f[e] = 0
+		f[d] = reverse(itos(-i))
+	ELSIF i = 0 THEN
+		f[s] = 0
+		#f[e] = 0
+		#f[d] = NIL
+	ELSE
+		f[s] = +1
+		f[e] = 0
+		f[d] = reverse(itos(i))
+	END
+	RETURN normalize(f)
+END
+
+
+FUNCTION ChangeSigne(f: FIXED): FIXED
+BEGIN
+	IF (f = NIL) OR (f[s] = 0) THEN
+		RETURN Zero()
+	END
+	RETURN {-f[s], f[e], f[d]}
+END
+
+
+FUNCTION DigitAt(s: STRING, i: INTEGER): INTEGER
+BEGIN
+	mark(s)
+	mark(i)
+$	if( fixed_s == NULL || fixed_i < 0 || fixed_i >= fixed_s->len )  return 0;
+$	return fixed_s->s[fixed_i] - '0';
+END
+
+
+VAR b: BUFFER (* add buffer *)
+
+FUNCTION add(e1: INTEGER, d1: STRING, e2: INTEGER, d2: STRING,
+	VAR e: INTEGER, VAR d: STRING)
+VAR i, j, x, c, r: INTEGER
+BEGIN
+	b->Empty()
+	i = min(e1, e2)
+	j = max(e1 + length(d1), e2 + length(d2))
+	FOR x = i TO j-1 DO
+		c = r + DigitAt(d1, x - e1) + DigitAt(d2, x - e2)
+		IF c < 10 THEN
+			r = 0
+		ELSE
+			r = 1
+			c = c - 10
+		END
+		b->AddChar(c + ASC_0)
+	END
+	IF r > 0 THEN
+		b->AddString("1")
+	END
+	e = i
+	d = b->ToString()
+END
+
+
+VAR t: BUFFER  (* ten-complement buffer *)
+
+FUNCTION sub(e1: INTEGER, d1: STRING, e2: INTEGER, d2: STRING,
+	VAR s: INTEGER, VAR e: INTEGER, VAR d: STRING)
+VAR i, j, x, c, r: INTEGER
+	w: STRING
+BEGIN
+	b->Empty()
+	i = min(e1, e2)
+	j = max(e1 + length(d1), e2 + length(d2))
+	FOR x = i TO j-1 DO
+		c = DigitAt(d1, x - e1) - DigitAt(d2, x - e2) - r
+		IF c < 0 THEN
+			r = 1
+			c = c + 10
+		ELSE
+			r = 0
+		END
+		b->AddChar(c + ASC_0)
+	END
+	IF r = 0 THEN
+		s = 1
+		e = i
+		d = b->ToString()
+		RETURN
+	END
+
+	(* risultato negativo: complemento a 9 + 1 di b: *)
+	w = b->ToString()
+	r = 1
+	t->Empty()
+	FOR j = 0 TO length(w)-1 DO
+		c = r + 9 - DigitAt(w, j)
+		IF c < 10 THEN
+			r = 0
+		ELSE
+			r = 1
+			c = c - 10
+		END
+		t->AddChar(c + ASC_0)
+	END
+	IF r > 0 THEN
+		t->AddString("1")
+	END
+	s = -1
+	e = i
+	d = t->ToString()
+END
+
+
+FUNCTION Add(a: FIXED, b: FIXED): FIXED
+VAR
+	f: FIXED
+BEGIN
+	IF (a = NIL) OR (a[s] = 0) THEN
+		RETURN b
+	END
+	IF (b = NIL) OR (b[s] = 0) THEN
+		RETURN a
+	END
+	IF a[s] > 0 THEN
+		IF b[s] > 0 THEN
+			f[s] = 1
+			add(a[e], a[d], b[e], b[d],         f[e], f[d])
+		ELSE
+			sub(a[e], a[d], b[e], b[d],   f[s], f[e], f[d])
+		END
+	ELSE
+		IF b[s] > 0 THEN
+			sub(b[e], b[d], a[e], a[d],   f[s], f[e], f[d])
+		ELSE
+			f[s] = -1
+			add(a[e], a[d], b[e], b[d],         f[e], f[d])
+		END
+	END
+
+	RETURN normalize(f)
+END
+
+
+
+FUNCTION Sub(a: FIXED, b: FIXED): FIXED
+VAR
+	f: FIXED
+BEGIN
+	IF (a = NIL) OR (a[s] = 0) THEN
+		RETURN ChangeSigne(b)
+	END
+	IF (b = NIL) OR (b[s] = 0) THEN
+		RETURN a
+	END
+	IF a[s] > 0 THEN
+		IF b[s] > 0 THEN
+			sub(a[e], a[d], b[e], b[d],   f[s], f[e], f[d])
+		ELSE
+			f[s] = 1
+			add(a[e], a[d], b[e], b[d],         f[e], f[d])
+		END
+	ELSE
+		IF b[s] > 0 THEN
+			f[s] = -1
+			add(a[e], a[d], b[e], b[d],         f[e], f[d])
+		ELSE
+			sub(b[e], b[d], a[e], a[d],   f[s], f[e], f[d])
+		END
+	END
+
+	RETURN normalize(f)
+END
+
+
+FUNCTION mult(a: STRING, b: STRING): STRING
+VAR
+	t: STRING
+$ int al, bl, tl, i, j, r, d;
+$ char *as, *ap, *bs, *bp, *ts, *tp;
+BEGIN
+	mark(a)
+	mark(b)
+$	al = fixed_a->len;
+$	as = fixed_a->s;
+$	ap = as;
+$	bl = fixed_b->len;
+$	bs = fixed_b->s;
+$	bp = bs;
+$	tl = al + bl;
+$	ts = alloca(tl);
+$	tp = ts;
+$	memset(ts, '0', tl);
+$	for(i=0; i<bl; i++ ){
+$		ap = as;
+$		tp = ts+i;
+$		r = 0;
+$		for( j=0; j<al; j++ ){
+$			d = r + ( *tp-'0') + ( *ap-'0')*( *bp-'0');
+$			if( d > 9 ){
+$				r = d / 10;
+$				d = d % 10;
+$			} else {
+$				r = 0;
+$			}
+$			*tp = d + '0';
+$			tp++;  ap++;
+$		}
+$		while( r > 0 ){
+$			d = r + ( *tp-'0');
+$			if( d > 9 ){
+$				r = d / 10;
+$				d = d % 10;
+$			} else {
+$				r = 0;
+$			}
+$			*tp = d + '0';
+$			tp++;
+$		}
+$		bp++;
+$	}
+$	fixed_t = new_STRING(ts, tl);
+	RETURN t
+END
+
+
+FUNCTION Mult(a: FIXED, b: FIXED): FIXED
+VAR
+	f: FIXED
+BEGIN
+	IF (a = NIL) OR (a[s] = 0) THEN
+		RETURN Zero()
+	END
+	IF (b = NIL) OR (b[s] = 0) THEN
+		RETURN Zero()
+	END
+	f[s] = a[s] * b[s]
+	f[e] = a[e] + b[e]
+	f[d] = mult(a[d], b[d])
+	RETURN normalize(f)
+END
+
+
+FUNCTION Div(a: FIXED, b: FIXED, precision: INTEGER): FIXED
+
+	FUNCTION div(a: STRING, b: STRING, VAR n: INTEGER, VAR r: STRING)
+	VAR
+		s, e, j: INTEGER
+		r2: STRING
+	BEGIN
+		n = 0
+		IF (length(b) > length(a))
+		OR (length(b) = length(a)) AND (a[length(a)-1] < b[length(b)-1]) THEN
+			r = a
+			RETURN
+		END
+		LOOP
+			sub(0, a, 0, b, s, e, r2)
+			IF s < 0 THEN
+				r = a
+				EXIT
+			END
+			inc(n, 1)
+			j = length(r2)
+			WHILE (j > 1) AND (r2[j-1] = "0") DO
+				inc(j, -1)
+			END
+			IF j < length(r2) THEN
+				r2 = r2[0,j]
+			END
+			a = r2
+		END
+	END
+
+VAR
+	ad, bd, qd, wd: STRING
+	n, qlen: INTEGER
+BEGIN
+
+	IF (b = NIL) OR (b[s] = 0) THEN
+		HALT("division by zero")
+	END
+	IF (a = NIL) OR (a[s] = 0) THEN
+		RETURN Zero()
+	END
+
+	IF precision < 0 THEN
+		precision = 0
+	END
+
+	ad = a[d]
+	bd = b[d]
+
+	IF length(ad) < length(bd) THEN
+		wd = repeat("0", length(bd) - length(ad)) + ad
+		ad = ""
+	ELSIF length(ad) = length(bd) THEN
+		wd = ad
+		ad = ""
+	ELSE
+		wd = ad[length(ad) - length(bd), length(ad)]
+		ad = ad[0,length(ad) - length(bd)]
+	END
+	qlen = 1 + (a[e] + length(a[d]) - 1) - (b[e] + length(b[d]) - 1) + precision
+	IF qlen <= 0 THEN
+		RETURN Zero()
+	END
+	LOOP
+		div(wd, bd, n, wd)
+		qd = CHR(n + ASC_0) + qd
+		IF length(qd) >= qlen THEN
+			EXIT
+		END
+		IF wd = "0" THEN
+			IF length(ad) = 0 THEN
+				wd = "0"
+			ELSE
+				wd = ad[length(ad)-1]
+				ad = ad[0,length(ad)-1]
+			END
+		ELSE
+			IF length(ad) = 0 THEN
+				wd = "0" + wd
+			ELSE
+				wd = ad[length(ad)-1] + wd
+				ad = ad[0,length(ad)-1]
+			END
+		END
+	END
+
+	RETURN normalize({a[s] * b[s], -precision, qd})
+END
+
+
+FUNCTION Abs(f: FIXED): FIXED
+BEGIN
+	IF f = NIL THEN
+		RETURN Zero()
+	END
+	IF f[s] >= 0 THEN
+		RETURN f
+	END
+	RETURN {-f[s], f[e], f[d]}
+END
+
+
+FUNCTION Trunc(x: FIXED, decimals: INTEGER): FIXED
+VAR f: FIXED  n: INTEGER
+BEGIN
+	IF (x = NIL) OR (x[s] = 0) THEN
+		RETURN Zero()
+	END
+	IF x[e] >= 0 THEN
+		RETURN x
+	END
+	IF decimals < 0 THEN
+		decimals = 0
+	END
+	n = -x[e] - decimals
+	IF n <= 0 THEN
+		RETURN x
+	END
+	IF n > length(x[d]) THEN
+		RETURN Zero()
+	END
+	f[s] = x[s]
+	f[e] = x[e] + n
+	f[d] = x[d][n,length(x[d])]
+	RETURN normalize(f)
+END
+
+
+FUNCTION Fact(n: INTEGER): FIXED
+VAR i: INTEGER   f: FIXED
+BEGIN
+	f = IntegerToFixed(1)
+	FOR i=2 TO n DO
+		f = Mult( f, IntegerToFixed(i) )
+	END
+	RETURN f
+END
+
+
+FUNCTION Signe(x: FIXED): INTEGER
+BEGIN
+	IF x = NIL THEN
+		RETURN 0
+	ELSE
+		RETURN x[s]
+	END
+END
+
+
+FUNCTION Compare(a: FIXED, b: FIXED): INTEGER
+BEGIN
+	RETURN Signe( Sub(a, b) )
+END
+
+
+FUNCTION Sqrt(x: FIXED, decimals: INTEGER): FIXED
+VAR
+	y, y1, y2, eps, one, half: FIXED
+BEGIN
+	IF (x = NIL) OR (x[s] = 0) THEN
+		RETURN Zero()
+	END
+	IF x[s] < 0 THEN
+		HALT("negative argument")
+	END
+	one = One()
+	half = StringToFixed("0.5")
+	IF decimals <= 0 THEN
+		decimals = 0
+		eps = one
+	ELSE
+		eps = StringToFixed("0." + repeat("0", decimals-1) + "1")
+	END
+	IF Compare(x, one) < 0 THEN
+		y1 = x
+		y2 = one
+	ELSE
+		y1 = one
+		y2 = x
+	END
+	LOOP
+		y = Mult(half, Add(y1, y2))
+		IF Compare(Sub(y2, y1), eps) <= 0 THEN
+			RETURN Trunc(y, decimals)
+		END
+		IF Signe( Sub(Mult(y,y), x) ) < 0 THEN
+			y1 = y
+		ELSE
+			y2 = y
+		END
+	END
+END
+
+
+END

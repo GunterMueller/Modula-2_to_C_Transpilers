@@ -1,0 +1,12 @@
+DEFINITION MODULE Table;
+ CONST LineWidth = 80; WordLong = 24;
+ TYPE Table;
+ VAR overfull: INTEGER;
+	(* >0 means that table is full*)
+
+ PROCEDURE Initiate(VAR t: Table);
+ PROCEDURE Add(t: Table;
+	      VAR x: ARRAY OF CHAR; n: INTEGER);
+  (* put pair x,n into table. x must ended by blank *)
+ PROCEDURE Print(t: Table);
+END Table.

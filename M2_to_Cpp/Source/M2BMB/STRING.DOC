@@ -1,0 +1,133 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      String                                    *
+ * Description:           String operations                         *
+ * Implementation level:  Mid-level (Useful module)                 *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  July 11, 1996                             *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE String;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError'.
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+      noError;              (* No Error *)
+      noRoomError;          (* No room in destination string *)
+      wrongPositionError;   (* Invalid slice of string was requested *)
+
+   (* Operations *)
+   (* All indices in strings start from 0 *)
+
+   PROCEDURE SubString(s, p: ARRAY OF CHAR; VAR pos: CARDINAL): BOOLEAN;
+      (* Returns TRUE if 'p' is the substring of 's', otherwise
+         returns FALSE. If returns TRUE, then 'pos' is the
+         position of substring in 's', otherwise, 'pos' is undefined *)
+
+   PROCEDURE Caps(VAR s: ARRAY OF CHAR);
+      (* Converts letters of string 's' into upper case letters *)
+
+   PROCEDURE Append(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR);
+      (* Appends string 'p' to the string 's'.
+         + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold 's' and 'p'
+      *)
+
+   PROCEDURE Concat(VAR s: ARRAY OF CHAR; s1, s2: ARRAY OF CHAR);
+      (* Appends string 's2' to 's1' giving 's'.
+         + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold 's1' and 's2'
+      *)
+
+   PROCEDURE Copy(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR);
+      (* Copies string 'p' into the string 's'
+         + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold 'p'
+      *)
+
+   PROCEDURE Equal(s, p: ARRAY OF CHAR): BOOLEAN;
+      (* Returns TRUE if strings 's' and 'p' are equal *)
+
+   PROCEDURE LEq(s, p: ARRAY OF CHAR): BOOLEAN;
+      (* Returns TRUE if string 's' is less or equal to string 'p' *)
+
+   PROCEDURE GEq(s, p: ARRAY OF CHAR): BOOLEAN;
+      (* Returns TRUE if string 's' is less or equal to string 'p' *)
+
+   PROCEDURE Length(s: ARRAY OF CHAR): CARDINAL;
+      (* Returns the length of a string 's' *)
+
+   PROCEDURE Insert(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR; pos: CARDINAL);
+     (* Inserts the string 'p' into the string 's' starting from position
+        'pos'.
+         + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold the new string
+           'wrongPositionError' - if 'pos' is not inside the string 's'
+     *)
+
+   PROCEDURE Delete(VAR s: ARRAY OF CHAR; from, to: CARDINAL);
+      (* Deletes slice from 'from' up to 'to' from string 's' (inclusive)
+         + Sets error codes:
+           'wrongPositionError' - if requested slice is not a
+                                    substring of 's'
+      *)
+
+   PROCEDURE Slice(VAR s: ARRAY OF CHAR; p: ARRAY OF CHAR;
+                   from, to: CARDINAL);
+      (* 's' is a slice from position 'from' up to 'to' (inclusive)
+         of string 'p'
+         + Sets error codes:
+           'noRoomError' - if there is not enough allocated space in 's'
+                           to hold the slice
+           'wrongPositionError' - if requested slice is not a
+                                  substring of 'p'
+      *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+END String.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - noRoomError and wrongPositionError code added
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+   - instead of 'Pos', a logical function 'SubString' is introduced
+   - operation 'Insert' added
+*)
+

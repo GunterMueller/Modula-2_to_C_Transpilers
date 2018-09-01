@@ -1,0 +1,38 @@
+=============================================================
+                    BMB Modula-2 Cross-Platform Library
+                               version 1.00
+                          'HISTORY' file (of X100D.ZIP)
+
+                       Zoran Budimac, Daniel Sendula
+                              Novi Sad, Yugoslavia
+=============================================================
+
+The newest versions of module specifications (DOC files) are:
+
+Low-level modules:
+------------------
+File       - 1.00
+FileName   - 1.00
+Dir        - 1.00
+DirEntry   - 1.00
+Time       - 1.00
+Date       - 1.00
+
+Middle-level modules:
+---------------------
+Fmt        - 1.00
+Scan       - 1.00
+String     - 1.00
+RLib       - 1.00
+LongRLib   - 1.00
+
+High-level modules:
+-------------------
+FileWr     - 1.00
+FileRd     - 1.00
+Wr         - 1.00
+Rd         - 1.00
+
+Changes:
+========
+

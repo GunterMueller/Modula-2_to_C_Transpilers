@@ -1,0 +1,37 @@
+(* -------------------------------------------------------------------
+    This module is internally needed by the implementation of BMB
+    Cross Platform 'Fmt' module. It contains operations for conversion
+    of real numbers. Operations are characteristic for internal
+    representation of real numbers of Top Speed Modula-2 ver. 1.x,
+    or 80x86/MS-DOS platform in general.
+
+    These operations are extracted from Top Speed's module Str.
+    Some of them are slighly changed to include overflow detection
+    and to better conform to BMB Conformance tests.
+    ------------------------------------------------------------------ *)
+DEFINITION MODULE TS1RealConvs;
+
+PROCEDURE StrToReal(s: ARRAY OF CHAR; VAR ok, over: BOOLEAN): REAL;
+   (* Converts 's' to a real number, setting 'ok' to TRUE if everything
+      went OK and 'over' to TRUE if overflow occured *)
+
+PROCEDURE StrToLongReal(s: ARRAY OF CHAR; VAR ok, over: BOOLEAN): LONGREAL;
+   (* Converts 's' to a long real number, setting 'ok' to TRUE if everything
+      went OK and 'over' to TRUE if overflow occured *)
+
+PROCEDURE RealToStr(VAR s: ARRAY OF CHAR; x: REAL; VAR ok: BOOLEAN);
+   (* Converts real number 'r' to string 's', setting 'ok' to TRUE if
+      everything went OK. String is in scientific notation with
+      as much decimal places as possible *)
+
+PROCEDURE LongRealToStr(VAR s: ARRAY OF CHAR; x: LONGREAL;
+                        VAR ok: BOOLEAN);
+   (* Converts long real number 'r' to string 's', setting 'ok' to TRUE if
+      everything went OK. String is in scientific notation with as much
+      decimal places as possible *)
+
+END TS1RealConvs.
+
+
+
+

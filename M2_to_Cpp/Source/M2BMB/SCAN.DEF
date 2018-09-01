@@ -1,0 +1,79 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       Scan (1.1)                                *
+ *                          (See Scan.DOC for full specification)     *
+ * Version:                 1.0                                       *
+ * Date:                    July 15, 1996                             *
+ * Conformance Test Passed: July 15, 1996                             *
+ * Platform:                DOS/80x86                                 *
+ * Requires:                TopSpeed Modula-2 Compiler ver. 1.xx      *
+ * To do:                   Replace the current implementation of     *
+ *                          'LongReal' with the generic one (if       *
+ *                          conforms to BMB Conformance test)         *
+ *                                                                    *
+ * Author:                      Tamas Cservenak & Zoran Budimac       *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: {icervenak,zjb}@unsim.ns.ac.yu*
+ * ------------------------------------------------------------------ *)
+
+DEFINITION MODULE Scan;
+
+   CONST
+     (* Error codes. Function Error() returns one of these *)
+      noError         = 0;     (* No error ocurred *)
+      conversionError = 1;     (* Error in conversion *)
+      overflowError   = 2;     (* Overflow *)
+      wrongBaseError  = 3;     (* Wrong Base *)
+
+   TYPE
+     Base = [2..16];
+
+   PROCEDURE Bool(s: ARRAY OF CHAR): BOOLEAN;
+      (* Returns boolean representation of string 's', if possible. *)
+
+   PROCEDURE Int(s: ARRAY OF CHAR): INTEGER;
+      (* Returns integer representation of string 's', if possible. *)
+
+   PROCEDURE LongInt(s: ARRAY OF CHAR): LONGINT;
+      (* Returns long integer representation of string 's', if possible. *)
+
+   PROCEDURE Card(s: ARRAY OF CHAR): CARDINAL;
+      (* Returns cardinal representation of string 's', if possible. *)
+
+   PROCEDURE LongCard(s: ARRAY OF CHAR): LONGCARD;
+      (* Returns long integer representation of string 's', if possible. *)
+
+   PROCEDURE Real(s: ARRAY OF CHAR): REAL;
+      (* Returns real representation of string 's', if possible. *)
+
+   PROCEDURE LongReal(s: ARRAY OF CHAR): LONGREAL;
+      (* Returns long real representation of string 's', if possible. *)
+
+   PROCEDURE IntB(s: ARRAY OF CHAR; base: Base): INTEGER;
+      (* Returns integer representation of string 's', if possible.
+         's' contains the number in base 'base' *)
+
+   PROCEDURE LongIntB(s: ARRAY OF CHAR; base: Base): LONGINT;
+      (* Returns long integer representation of string 's', if possible.
+         's' contains the number in base 'base' *)
+
+   PROCEDURE CardB(s: ARRAY OF CHAR; base: Base): CARDINAL;
+      (* Returns cardinal representation of string 's', if possible.
+         's' contains the number in base 'base' *)
+
+   PROCEDURE LongCardB(s: ARRAY OF CHAR; base: Base): LONGCARD;
+      (* Returns long integer representation of string 's', if possible.
+         's' contains the number in base 'base' *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code for previous operation from this module.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+  ErrorHandler = PROCEDURE (ARRAY OF CHAR);
+VAR
+  errorHandler : ErrorHandler;
+
+END Scan.
+

@@ -1,0 +1,170 @@
+IMPLEMENTATION MODULE pg
+
+$$ linker options: -I /usr/local/pgsql/include -L /usr/local/pgsql/lib -l pq
+
+$#include <libpq-fe.h>
+
+FUNCTION open(db: STRING): CONNECTION
+RAISE ERROR
+VAR
+	errmsg: STRING
+	conn: CONNECTION
+$	char *s;
+$	PGconn *conn;
+BEGIN
+$	MK_ZSTRING(s, pg_db);
+$	conn = PQconnectdb(s);
+$	if( PQstatus(conn) == CONNECTION_BAD ){
+$		s = PQerrorMessage(conn);
+$		pg_errmsg = new_STRING(s, strlen(s));
+		RAISE ERROR 1 db + ": " + errmsg
+		RETURN NIL
+$	}
+$	pg_conn = (RECORD *) conn;
+	RETURN conn
+END
+
+
+FUNCTION close(conn: CONNECTION)
+BEGIN
+	mark(conn)
+$	PQfinish( (PGconn *) pg_conn );
+END
+
+
+FUNCTION exec(conn: CONNECTION, query: STRING): RESULT
+RAISE ERROR
+VAR
+	res: RESULT
+	errmsg: STRING
+$	PGresult *res;
+$	char *s;
+BEGIN
+	mark(conn)
+$	MK_ZSTRING(s, pg_query);
+$	res = PQexec( (PGconn *) pg_conn, s);
+$	if( PQresultStatus(res) != PGRES_TUPLES_OK ){
+$		s = PQresultErrorMessage(res);
+$		pg_errmsg = new_STRING(s, strlen(s));
+		RAISE ERROR 1 query + ": " + errmsg
+$		PQclear(res);
+		RETURN NIL
+$	}
+$	pg_res = (RECORD *) res;
+	RETURN res
+END
+
+
+FUNCTION clear(res: RESULT)
+BEGIN
+	mark(res)
+$	PQclear( (PGresult *) pg_res );
+END
+
+
+FUNCTION nrows(res: RESULT): INTEGER
+BEGIN
+	mark(res)
+$	return PQntuples( (PGresult *) pg_res );
+END
+
+
+FUNCTION ncols(res: RESULT): INTEGER
+BEGIN
+	mark(res)
+$	return PQnfields( (PGresult *) pg_res );
+END
+
+
+FUNCTION fname(res: RESULT, col: INTEGER): STRING
+VAR
+	f: STRING
+$	int cols;
+$	char *fz;
+BEGIN
+	mark(res)
+	mark(col)
+$	cols = PQnfields( (PGresult *) pg_res );
+$	if( pg_col < 0 || pg_col >= cols )
+$		die("pg.fname(): col=%d out of the range", pg_col);
+$	fz = PQfname((PGresult *)pg_res, pg_col);
+$	pg_f = new_STRING(fz, strlen(fz));
+	RETURN f
+END
+
+
+FUNCTION get_value(res: RESULT, row: INTEGER, col: INTEGER): STRING
+VAR
+	v: STRING
+$	char *vz;
+$	int rows, cols;
+BEGIN
+	mark(res)
+	mark(row)
+	mark(col)
+$	rows = PQntuples( (PGresult *) pg_res );
+$	cols = PQnfields( (PGresult *) pg_res );
+$	if( pg_row < 0 || pg_row >= rows )
+$		die("pg.get_value(): row=%d out of the range", pg_row);
+$   if( pg_col < 0 || pg_col >= cols )
+$		die("pg.get_value(): col=%d out of the range", pg_col);
+$	if( PQgetisnull((PGresult *)pg_res, pg_row, pg_col) )
+$		return 0;
+$	vz = PQgetvalue((PGresult *)pg_res, pg_row, pg_col);
+$	pg_v = new_STRING(vz, strlen(vz));
+	RETURN v
+END
+
+
+FUNCTION get_value_byname(res: RESULT, row: INTEGER, fn: STRING): STRING
+VAR
+	col: INTEGER
+$	char *fnz;
+$	int rows;
+BEGIN
+	mark(fn)
+$	rows = PQntuples( (PGresult *) pg_res );
+$	if( pg_row < 0 || pg_row >= rows )
+$		die("pg_get_value_byname(): row=%d out of the range", pg_row);
+$	MK_ZSTRING(fnz, pg_fn);
+$	pg_col = PQfnumber( (PGresult *)pg_res, fnz);
+$	if( pg_col == -1 )
+$		die("pg.get_value_byname(..., ..., \"%s\"): field don't exists in table",
+$			fnz);
+	RETURN get_value(res, row, col)
+END
+
+
+(* Queste funzioni sfruttano le proprieta' del linguaggio: *)
+
+FUNCTION get_field_names(res: RESULT): ARRAY OF STRING
+VAR
+	cols, col: INTEGER
+	fn: ARRAY OF STRING
+BEGIN
+	cols = ncols(res)
+	FOR col = 0 TO cols-1 DO
+		fn[col] = fname(res, col)
+	END
+	RETURN fn
+END
+
+
+FUNCTION get_fields(res: RESULT, row: INTEGER): ARRAY OF STRING
+VAR
+	col, cols: INTEGER
+	fv: ARRAY OF STRING
+$	int rows;
+BEGIN
+$	rows = PQntuples( (PGresult *) pg_res );
+$	if( pg_row < 0 || pg_row >= rows )
+$		die("pg.get_fields(): row=%d out of the range", pg_row);
+	cols = ncols(res)
+	FOR col = 0 TO cols-1 DO
+		fv[col] = get_value(res, row, col)
+	END
+	RETURN fv
+END
+
+
+END

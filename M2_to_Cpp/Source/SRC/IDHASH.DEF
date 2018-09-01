@@ -1,0 +1,38 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE IdHash;
+(* Implements a hash table of identifier strings *)
+
+  FROM Defs IMPORT IdStr, PIdStr;
+
+  CONST
+    PrimeNum = 101;
+    MaxArray = PrimeNum - 1;
+
+  TYPE
+    List     = POINTER TO ListDesc;
+    ListDesc = RECORD
+      p: PIdStr;
+      next: List;
+    END;
+
+    T = ARRAY [0..MaxArray] OF List;   (* Hash table type *)
+
+
+  PROCEDURE Init(VAR t: T);
+  (* Initialize table 't' *)
+
+  PROCEDURE IsMember(VAR t: T; s: IdStr): BOOLEAN;
+  (* Is 's' in table 't'? *)
+
+  PROCEDURE Insert(VAR t: T; s: IdStr; VAR p: PIdStr);
+  (* Insert 's' into table 't'. The address where the copy of 's' is
+     allocated is returned in 'p' *)
+
+  PROCEDURE Remove(VAR t: T; s: IdStr);
+  (* Remove 's' from table 't', if present *)
+
+  PROCEDURE Kill(VAR t: T);
+  (* Dispose of table 't' *)
+
+END IdHash.

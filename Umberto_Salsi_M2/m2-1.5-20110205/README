@@ -1,0 +1,35 @@
+M2 Cross Compiler
+=================
+
+M2 is a cross compiler from the M2 programming language to the C
+programming language. The syntax of M2 is inspired by Modula 2, which
+in tourn is based on Pascal. Both are due to prof. Niklaus Wirth.
+
+The project of M2 started in 2002 intended to become a sorta of "strong
+typed scripting language".
+
+Then, who should be interested in using M2? Peoples that likes languages
+like Pascal and Modula should find again the pleasure of a clean
+programming language. Novices should find in M2 good tool to explore
+the concepts of algorithms and data structures, without the complexity
+of other programming languages.
+
+TO LEARN MORE about M2 and it's fetures, with examples and applications,
+plese visit
+
+	http://www.icosaedro.it/m2
+
+A copy of the reference manual is available locally into the directory
+reference/.
+
+TO INSTALL M2 please read the file INSTALL.
+
+
+ACKNOWLEDGEMENTS
+================
+Markus Kuehni provided the patch for the TEMP_FAILURE_RETRY macro, lacking
+in some systems. Alejandro Dubrovsky pointed out several incompatibilities
+involving GCC4 and the Ubuntu distribution and provided suggestions about
+how to solve them.
+
+- Umberto Salsi <m2@icosaedro.it>

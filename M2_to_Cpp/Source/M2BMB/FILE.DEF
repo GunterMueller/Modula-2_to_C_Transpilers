@@ -1,0 +1,285 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       File (1.1)                                *
+ *                          (see File.doc for full specification!)    *
+ * Version:                 1.0                                       *
+ * Date:                    August 6, 1996                            *
+ * Conformance Test Passed: -                                         *
+ * Platform:                DOS/80x86                                 *
+ * Requires:                TopSpeed Modula-2 Compiler Version 1.xx   *
+ *                                                                    *
+ * Author:                  Daniel Sendula                            *
+ *                          (for 'Black Mailbox' Group)               *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: isendula@unsim.ns.ac.yu       *
+ * ------------------------------------------------------------------ *)
+
+DEFINITION MODULE File;
+
+TYPE
+   T;           (* File type *)
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+   noError           =  0;       (* No error. *)
+   unknownError      =  1;       (* Any other error described below. *)
+   diskFullError     =  2;       (* Disk is full. *)
+   noRoomError       =  3;       (* Internal or external storage buffer exceeded. *)
+   notFileError      =  4;       (* Specified file is acctualy a directory. *)
+   fileNotFoundError =  5;       (* Specified file cannot be found. *)
+   pathNotFoundError =  6;       (* Specified directory path cannot be found. *)
+   readError         =  7;       (* Error during read operation. *)
+   writeError        =  8;       (* Error during write operation. *)
+   priviledgeError   =  9;        (* Violation of system privilegdes. *)
+   handleError       = 10;       (* Handle of file operation are incorrect. *)
+
+   (* Standard files *)
+
+   PROCEDURE StdIn(): T;
+      (* Returns a standard input file *)
+
+   PROCEDURE StdOut(): T;
+      (* Returns a standard output file *)
+
+   PROCEDURE StdErr(): T;
+      (* Returns a standard output file for error messages *)
+
+   PROCEDURE StdPrn(): T;
+      (* Returns a printer file
+       + Sets error codes:
+           'fileNotFound' - if 'n' no printer is assigned to the running
+                            console or system (if is single task system)
+      *)
+
+   (* Opening and closing of a file *)
+
+   PROCEDURE Open(Name: ARRAY OF CHAR): T;
+      (* Opens an (existing) file with name 's' returning corresponding
+         file (handle). File 's' is open in read-write mode
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'pathNotFound'
+           'fileNotFound'
+           'itIsNotaFile'
+      *)
+
+   PROCEDURE OpenRead(Name: ARRAY OF CHAR): T;
+      (* Opens an (existing) file with name 's' returning corresponding
+         file (handle). File 's' is open in read-only mode
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'pathNotFound'
+           'fileNotFound'
+           'itIsNotaFile'
+      *)
+
+   PROCEDURE Create(Name: ARRAY OF CHAR): T;
+      (* Creates a file with name 's' returning corresponding file
+         (handle). File is open in write mode.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'pathNotFound'
+           'itIsNotaFile'    - if directory with same name exists.
+           'diskFull'
+      *)
+
+   PROCEDURE Append(Name: ARRAY OF CHAR): T;
+      (* Opens an (existing) file with name 's' at the end of file,
+         returning corresponding file (handle). File 's' is open in
+         write mode.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'pathNotFound'
+           'fileNotFound'
+      *)
+
+   PROCEDURE Close(f: T);
+      (* Closes (previously open) file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+
+   PROCEDURE IsInteractive(f: T): BOOLEAN;
+      (* Returns TRUE if file is interacive.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+
+   (* Basic output file operations *)
+
+   PROCEDURE WrChar(f: T; ch: CHAR);
+      (* Writes a character 'ch' to a file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'writeError'
+           'bufferEceeded'
+           'diskFull'
+      *)
+
+   PROCEDURE WrStr(f: T; s: ARRAY OF CHAR);
+      (* Writes a string 's' to a file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'writeError'
+           'bufferEceeded'
+           'diskFull'
+      *)
+
+
+   PROCEDURE WrLn(f: T);
+      (* Writes a new-line mark to a file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'writeError'
+           'bufferEceeded'
+           'diskFull'
+      *)
+
+
+   PROCEDURE WrBin(f: T; VAR bin: ARRAY OF BYTE; size: LONGCARD);
+      (* Writes 'size' bytes of array 'bin' to a file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'writeError'
+           'bufferEceeded'
+           'diskFull'
+      *)
+
+
+   (* Basic input file operations *)
+
+   PROCEDURE RdChar(f: T): CHAR;
+      (* Reads and returns a character from a file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'readError'
+      *)
+
+   PROCEDURE UnRdChar(VAR f: T);
+      (* Returns the last read character back to file *)
+      (* Daniel: OK?. Mozxe li ova procedura da se pozove visxe
+         od jedanput uzastopce ? *)
+      (* ZJB: OK. Ne mozxe se pozvati visxe od jednom. Za to postoji SEEK. *)
+
+   PROCEDURE RdLine(f: T; VAR line: ARRAY OF CHAR);
+      (* Reads a 'line' of characters from file 'f' up to
+         the end-of-line or end-of-file marker. Markers are
+         read-in but are not part of a 'line'.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'readError'
+      *)
+
+
+   PROCEDURE RdLn(f: T);
+      (* Skips to the first position of the next line in file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'readError'
+      *)
+
+
+   PROCEDURE RdBin(f: T; VAR bin: ARRAY OF BYTE; size: LONGCARD): LONGCARD;
+      (* Reads 'size' bytes to array 'bin' from a file 'f' and
+         returns actual number of read chars. For noninteractive
+         streams, 'size' and return value should be equal except
+         when EOF is reached.
+       + Sets error codes:
+           'wrongHandle'
+           'priviledgeError'
+           'readError'
+      *)
+
+   PROCEDURE EOF(f: T):BOOLEAN;
+      (* Returns TRUE if the file 'f' is at the end.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+
+   (* Additional file operations *)
+
+   PROCEDURE Size(f: T): LONGCARD;
+      (* Returns the size of a file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+
+   PROCEDURE Pos(f: T): LONGCARD;
+      (* Returns the file position of the file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+
+   PROCEDURE Seek(f: T; Pos: LONGCARD);
+      (* Places file position pointer in file 'f' at position 'Pos' bytes
+         from beginning of file.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+      (* Advances the file position in file 'f' for 'Pos' bytes.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+      (* ZJB: ovde smo nesxto zeznuli kod komentara. NIJE Advances FOR
+              'pos' bytes, nego je 'GO TO postition 'pos' !!!
+              Ova funkcija u saradnji sa Pos() radi RelSeek.
+              Gore je ispravka, dole stara verzija teksta. *)
+
+   PROCEDURE Flush(f: T);
+      (* Writes out the buffer of file 'f'.
+       + Sets error codes:
+           'wrongHandle'
+      *)
+
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+       *)
+
+END File.
+
+(*
+   Changes from ver. 1.00:
+   - 'Char' - type of set are removed
+   - RdWhile and RdUntil are removed
+   - constants for error codes are slighly changed
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+*)
+
+

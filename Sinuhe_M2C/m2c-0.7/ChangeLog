@@ -1,0 +1,142 @@
+Thu Sep 25 10:00:42 2014  D. E. Evans <sinuhe@gnu.org>
+
+Changes since 0.6 are noted in the git log at sv.gnu.org/projects/m2c/
+
+Sun Oct 26 15:01:11 1997  Vladimir N. Makarov  <vladimir@localhost>
+
+	* New version 0.6 was fixed. The version for is 64-bit
+ 	  architectures too.
+
+Fri Dec  9 21:33:34 1994  Vladimir Makarov  <vladimir@darkstar>
+
+	* New version 0.5 was fixed.  Install means preliminary uninstall
+	in `Makefile.tmpl'.  Some unsignificant changes in
+	`m2-type-size.c'.
+
+Wed Jun 30 03:52:36 1993  Vladimir  (vladimir@hwruss1)
+
+	* File m2-generator.c was changed.  Function generate_call did not
+	test that pointer type of argument of a type transfer function is
+	represented by C structure and as consequence code of access to
+	the structure member was not generated.  Function
+	generate_statement increase variable
+	current_level_of_nesting_with_statements in incorrect place.
+	Therefore invalid code was generated for nested with statements
+	when designator after keyword `with' in a nested with-statement is
+	a field of structure in a covered with statement.
+
+	* New version 0.4 was fixed.  This version permits main module and
+	implementation module have the same suffix.  Now implementation
+	module is determined by its suffix and its source file contest
+	(by the first keyword of source file).  To make this a new regime of
+	syntax analyzer is added.  The analyzer in the regime determine
+	that given source file is a main module.  Also an implementation
+	module may be processed twice if corresponding definition file has
+	not been not processed yet.  In this case processing the
+	implementation file is finished after reading the first keyword
+	and after that corresponding definition module is processed and
+	processing the implementation module is repeated.  Also suffixes
+	of module files are changed (only `.mod' for implementation and
+	main modules and `.def' for definition module).  Therefore all
+	files with suffix `.imp' (in this directory, in the
+	sub-directories `m2-examples', `m2-tests') were renamed and file
+	m2c.1, config/common_part.h and Makefile.tmpl were changed.  The
+        main differences of new version are follows:
+	  1. New global variables testing_main_module and it_is_main
+	  module are defined.  The first variable instructs the new regime
+	  of the analyzer.  The second contains result of test in the new
+	  regime.  Therefore files `m2-main.c' and `m2-common.h' were
+	  changed.
+          2. New function test_main_module which tests that command line
+	  parameter is a main module file is added into file `m2-main.c'.
+          3. Function modula_analyzer in file `m2-main.c' has now only two
+	  arguments (file name suffix parameter was deleted).
+	  4. Function icode_and_analyze_declaration in file `m2-main.c'
+	  has new argument which is error message used when module file is
+	  not opened.  The function also returns result which instructs
+	  that given file must be repeatedly processed (after processing
+	  corresponding definition module file).
+	  5. Function compilation_unit in file `m2-syntax.c' now returns
+          result which instructs that given file must be repeatedly
+          processed (after processing corresponding definition module
+          file).  Therefore also file `m2-syntax.h' was changed.
+
+Tue Mar 16 17:53:28 1993  Makarov V.N.  (mak@aviion)
+
+	* New version 0.3 was fixed.  The main differences:
+	  1. File m2-scanner.c, function next_file_symbol.  The error was
+	  fixed.  This error resulted in invalid counting line number when
+	  last star in source line was processed in commentary.
+	  2. File m2-syntax.c, function
+	  create_and_include_declaration_node.  The function have
+	  additional parameter module_exporter.  This parameter is needed
+	  because now the function does not fixed (as in early)
+	  repeated import and export of the same entity as an error.
+	     File m2-syntax.c, function field_list_sequence.  Early the
+	  error in declaration of record field or empty field list
+	  sequence resulted in abort.  These errors were fixed.
+	  3. File m2-semantics.c, function discrete_less_then_operation.
+	  The function can process NULL parameters now.  Early the error
+	  in range construction resulted in abort in this function.
+	     Function current_procedure_error and static variable
+	  current_procedure_name are deleted.  Because the processing
+	  errors with the aid of the function resulted in invalid
+	  procedure name in the message of `m2c' when the error was fixed
+	  for the procedure which had another function call as actual
+	  parameter.
+	    Function process_call was modified.  Early Modula-2 procedures
+	  INC and DEC processed only restrictive parameters types.  Now
+	  these procedure process parameters accordingly to Modula-2
+	  report (including parameters of type ADDRESS).
+	  4. File m2-generator.c, function generate_call.  Added code for
+	  generation of type casting when parameters of type ADDRESS are
+	  processed for procedures DEC and INC.  Also code was added to
+	  generate type casting when formal parameter WORD or BYTE
+	  (without ARRAY OF) or when actual parameter ADDRESS.  The recent
+	  casting is processed by new function
+	  output_type_definition_part_through_struct_pointer which is
+	  analogous to function output_type_definition_part.  Also this
+	  new function is used to generate type casting in assignment
+	  implementing return from procedure-function.
+	    Function generate_statement.  The error was fixed for
+          processing case-statement.  Because of absence of additional
+	  brackets `{}' and nested if-else-statements the generation of
+	  some case labels did not occur.  Now new function
+	  output_type_definition_part_through_struct_pointer is used to
+	  generate type casting in assignment statement.
+	    Function generate_block now does not generate declaration of
+          extern function exit because this resulted in generation of
+	  warning by some C compilers.
+	  5. Other changes are only spelling and formatting.
+
+Fri Sep 11 17:52:50 1992  Makarov V.N. 272-44-25  (mak at aviion)
+
+	* New version 0.2 was fixed. The main differences:
+           1. Bug was fixed in function process_expression of file
+	   m2-generator.c. The function did not process case when argument
+	   expr is NULL. As a consequence the translator was aborted on
+	   some machine and programs when flag `-all' was in command line.
+
+	   2. The translator generated invalid code for the case of casts
+	   INTEGER(constant), CARDINAL(constant) because constant was
+	   sometimes considered as of type SHORTINT or SHORTCARD (i.e. it
+	   is considered that the constant size is 2 bytes). This resulted
+	   in error work of some programs (e.g. PowersOf2.mod) on machines
+	   with byte arrangement in a word analogous to Data General
+	   Aviion. Therefore needed code was added to function
+	   generate_call in file m2-generator.c.
+
+	   3. Files m2-semantics.c and doc/modula-2.texinfo were slightly
+	   corrected.
+
+Tue Jun  9 12:17:32 1992  Makaroff V.N.  (mak at vmunix)
+
+	* Version 0.1 is cardinally different from version 0.0 (e.g.
+the most of variable names are changed).  Therefore it is meaningless
+to write all changes here.
+
+Fri Dec 20 14:43:31 1991  Makaroff V.N.  (mak at vmunix_ra2)
+
+	* root of GNU Modula-2 translator.
+
+

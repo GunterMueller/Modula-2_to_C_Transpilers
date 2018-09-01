@@ -1,0 +1,59 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Mem                                         *
+ * Description:             Memory manipulations in small blocks        *
+ *                          up to 65535 bytes                           *
+ *                          (see the Mem.doc as well)                   *
+ * Implementation level:    Low-level (Necessary module)                *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 17, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_ShortMem_m2h_
+#define _M2_ShortMem_m2h_
+
+#include <_m2sys.h>
+
+namespace ShortMem {
+
+   void Copy(ADDRESS dest, ADDRESS source, CARDINAL n);
+      /* Copies a block of memory of 'n' bytes from
+         'source' to 'dest'.
+      */
+
+   template <class _BYTE1>
+   void Fill(ADDRESS dest, CARDINAL n, _BYTE1 val);
+      /* Starting from 'dest' fills 'n' bytes with 'val'. */
+
+   BOOLEAN Equal(ADDRESS m1, ADDRESS m2, CARDINAL n);
+      /* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         and 'm2' are equal.
+      */
+
+   BOOLEAN LEq(ADDRESS m1, ADDRESS m2, CARDINAL n);
+      /* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are less than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically.
+      */
+
+   BOOLEAN GEq(ADDRESS m1, ADDRESS m2, CARDINAL n);
+      /* Returns TRUE if 'n' bytes of memory starting in 'm1'
+         are greater than or equal to n bytes starting in 'm2'.
+         Sequences of bytes are comapred lexicografically.
+      */
+
+} // ShortMem
+
+#endif

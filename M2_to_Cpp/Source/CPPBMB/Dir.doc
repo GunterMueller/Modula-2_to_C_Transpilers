@@ -1,0 +1,103 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Dir                                         *
+ * Description:             Directory operations                        *
+ * Implementation level:    Low-level (Necessary module)                *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 16, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Dir_m2h_
+#define _M2_Dir_m2h_
+
+#include <_m2sys.h>
+
+namespace Dir {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError;           /* No error */
+   const CARDINAL unknownError;      /* Any error not described below */
+   const CARDINAL diskFullError;     /* Disk is full */
+   const CARDINAL noRoomError;       /* Storage buffer exceeded */
+   const CARDINAL pathNotFoundError; /* Specified directory path cannot be found */
+   const CARDINAL priviledgeError;   /* Violation of system privilegdes to set/get time */
+
+   void Make(_ARRAYOF<CHAR> dir);
+      /* Makes a new directory 'dir'.
+       + Sets error codes:
+           'diskFullError'
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   void Remove(_ARRAYOF<CHAR> dir);
+      /* Removes a directory 'dir' (if it is empty).
+       + Sets error codes:
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   void ChangeTo(_ARRAYOF<CHAR> dir);
+      /* Changes the current directory to 'dir'.
+       + Sets error codes:
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   void GetCurrent(_ARRAYOF<CHAR>& dir);
+      /* Sets 'dir' to a name of current directory.
+       + Sets error codes:
+           'noRoomError' - if string 'dir' is not large enough.
+      */
+
+   void GetParent(_ARRAYOF<CHAR>& dir);
+      /* Sets 'dir' to the parent of the current directory.
+       + Sets error codes:
+           'unknownError'      - if it is not possible to find the parent
+                                 directory - (file-)system error.
+           'pathNotFoundError'
+           'priviledgeError'
+      */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // Dir
+
+#endif

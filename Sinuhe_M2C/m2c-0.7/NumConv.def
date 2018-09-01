@@ -1,0 +1,32 @@
+DEFINITION MODULE NumConv;
+ TYPE
+  NumConvStatus=(Done,OutOfRange,BadNumber);
+  Base=[2..16];
+ VAR
+  NCStatus:NumConvStatus;
+
+  PROCEDURE LongIntToStr(i:LONGINT;b:Base;VAR s:ARRAY OF CHAR);
+   (* Convert an long integer to a string, if possible *)
+
+  PROCEDURE LongCardToStr(c:LONGCARD;b:Base;VAR s:ARRAY OF CHAR);
+   (* Convert an long cardinal to a string, if possible *)
+
+  PROCEDURE StrToLongInt(VAR s:ARRAY OF CHAR;b:Base;VAR i:LONGINT);
+   (* Convert a string to a long integer, if possible *)
+
+  PROCEDURE StrToLongCard(VAR s:ARRAY OF CHAR;b:Base;VAR c:LONGCARD);
+   (* Convert a string to a long cardinal, if possible *)
+
+  PROCEDURE StrToInt(VAR s:ARRAY OF CHAR;b:Base;VAR i:INTEGER);
+   (* Convert a string to a integer, if possible *)
+
+  PROCEDURE StrToCard(VAR s:ARRAY OF CHAR;b:Base;VAR c:CARDINAL);
+   (* Convert a string to a cardinal, if possible *)
+
+  PROCEDURE StrToShortInt(VAR s:ARRAY OF CHAR;b:Base;VAR i:SHORTINT);
+   (* Convert a string to a short integer, if possible *)
+
+  PROCEDURE StrToShortCard(VAR s:ARRAY OF CHAR;b:Base;VAR c:SHORTCARD);
+   (* Convert a string to a short cardinal, if possible *)
+
+END NumConv.

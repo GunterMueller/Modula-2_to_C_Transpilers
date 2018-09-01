@@ -1,0 +1,386 @@
+DEFINITION MODULE io
+
+TYPE
+
+	FILE = FORWARD
+
+(*
+	NOTE: A pathfile NIL or containing NUL bytes is not valid. The
+	error code EINVAL is set is this case by all the functions that
+	accept a file name or a directory name.
+*)
+
+
+FUNCTION Open(VAR f: FILE, fn: STRING, flags: STRING)
+RAISE ERROR
+(*
+	Create e new FILE object f. On error, f is set to NIL.	Open
+	the file 'fn'. 'flags' contain one or more of the following
+	characters, in any order:
+
+	r   Read only. If the file do not exist it is an error.
+	w   Write only.
+
+	U   Open the file in unbuffered mode (default is buffered).
+
+	c   If the file do not exist, create it.
+	e   Used with 'c', if the file already exists it is an error.
+	t   Truncate the file to zero length if it exist.
+	a   Append mode.
+	n   Non-blocking mode: on writing this will give EWOULDBLOCK if
+	    the write would block; on reading this will give EWOULDBLOCK
+	    if no data are immediately available.
+	s   Use synchronous I/O.
+	f   If the file is a symbolic link, do not follow. Only available
+	    on Unix-like file systems; ignored on other systems.
+
+	Either 'r' or 'w' MUST be present, or both to open the file
+	in read and write mode.
+
+	Typical flags combinations:
+
+	"r"   Read the file. If it do not exist it is an error.
+
+	"wct" Write the file. Create it if do not exist, or truncate if it
+		  exist.
+
+	New files are created using the current process umask&0777 as
+	permissions. Use UMask() to set the desired creation mask.
+
+	Error codes are defined in the module m2runtime.def:
+	
+	EACCES The requested access to the file is not allowed, or one
+	of the directories in pathname did not allow search (execute)
+	permission, or the file did not exist yet and write access to
+	the parent directory is not allowed.
+
+	EEXIST 'fn' already exists and "ce" flags were used.
+
+	EINVAL Invalid file name: 'fn' is NIL or contain a NUL byte. Or,
+	unknown flag or invalid flags combination.
+
+	EISDIR 'fn' refers to a directory and the access requested
+	involved writing.
+
+	ELOOP Too many symbolic links were encountered in resolving
+	'fn', or the flag "f" was specified but 'fn' was a symbolic link.
+
+	EMFILE The process already has the maximum number of files open.
+
+	ENFILE The limit on the total number of files open on the system
+	has been reached.
+
+	ENAMETOOLONG 'fn' is too long.
+
+	ENODEV 'fn' refers to a device special file and no corresponding
+	device exists. (This is a Linux kernel bug - in this situation
+	ENXIO must be returned.)
+
+	ENOENT The flag "c" is not set and the named file does not
+	exist. Or, a directory component in 'fn' does not exist or is
+	a dangling symbolic link.
+
+	ENOMEM Insufficient kernel memory was available.
+
+	ENOSPC 'fn' was to be created but the device containing pathname
+	has no room for the new file.
+
+	ENOTDIR A component used as a directory in pathname is not,
+	in fact, a directory.
+
+	ENXIO The flags "nw" are set, the named file is a FIFO and no
+	process has the file open for reading.	Or, the file is a device
+	special file and no corresponding device exists.
+
+	EROFS 'fn' refers to a file on a read-only filesystem and write
+	access was requested.
+
+	ETXTBSY 'fn' refers to an executable image which is currently
+	being executed and write access was requested.
+*)
+
+
+FUNCTION Write(f: FILE, s: STRING)
+RAISE ERROR
+(*
+	Write the string s to the open file f.
+
+	If the file is buffered and s is NIL or empty, no action is taken.
+
+	If the file is open in non-blocking mode, it may happen that only
+	a part of the given string be written. The remaining part still to
+	be written is stored in the FILE record and the function return
+	normally. The function will try to write the remaining part of
+	the string the next time it is called. You may use the function
+	Written() to check for the existance of this remaining part,
+	and you may call Write() with a NIL or empty string to force
+	the writing of this remaining part.
+
+	Error codes are defined in the module m2runtime.def:
+
+	EWOULDBLOCK Non-blocking mode has been selected and the write
+	would block. Nothing is written. Retry later or use a POOLSET.
+
+	EFBIG An attempt was made to write a file that exceeds the
+	implementation-defined maximum file size or the process' file
+	size limit, or to write at a position past than the maximum
+	allowed offset.
+
+	EINVAL The file is unsuitable for writing.
+
+	EIO Low-level I/O error.
+
+	ENOSPC The device has no room for data.
+
+	EPIPE The file is a pipe or a socket whose reading end is closed.
+*)
+
+FUNCTION Written(f: FILE): BOOLEAN
+(*
+	Return FALSE only if f is an unbuffered, non-blocking file
+	open in write mode and a remaining part of a string is still
+	to be written. See the discussion about the function Write()
+	for more details.
+*)
+
+FUNCTION Read(f: FILE, max: INTEGER): STRING
+RAISE ERROR
+(*
+	Read no more than max bytes. Any Read() request after the end
+	of file will return NIL.
+
+	Error codes are defined in the module m2runtime.def:
+
+	EWOULDBLOCK Non-blocking mode has been selected and the read
+	would block because no data are available. Retry later or use
+	a POOLSET.  The function return NIL.
+
+	EIO Low-level I/O error. The function return NIL.
+*)
+
+FUNCTION ReadLine(f: FILE): STRING
+RAISE ERROR
+(*
+	Read a line. A line is terminated by the character "\n" or by
+	the end of file. The terminating character "\n" is not returned
+	with the string. If no more lines are available, return NIL.
+
+	Error codes are defined in the module m2runtime.def:
+
+	EWOULDBLOCK The file is open in unbuffered, non-blocking mode
+	and no more characters are available for reading. Only a partial
+	line or NIL is returned.
+
+	EIO Low-level I/O error. The function return a partial line
+	or NIL.
+*)
+
+FUNCTION Close(VAR f: FILE)
+RAISE ERROR
+(*
+	Close the file f, and set f=NIL.
+
+	Error codes are defined in the module m2runtime.def:
+
+	EIO Low-level I/O error.
+*)
+
+
+FUNCTION SetMask(mode: STRING)
+(*
+	Set the file permissions for the new files created by Open().
+	The string 'mode' has the format
+
+		[ who "=" perms { "," who "=" perms } ]
+
+	where
+
+		who = "u" | "g" | "o"
+
+		perms = { "r" | "w" | "x" }
+
+	Permissions not set default to forbidden. An invalid mode HALT()
+	the program.  Example: owner can read and write, group can read,
+	access forbidden to other users:
+
+		SetMask("u=rw,g=r")
+*)
+
+FUNCTION GetMask(): STRING
+(*
+	Return the current creation mask. The format of the resulting
+	string is "u=*,g=*,o=*" where "*" may contain zero or more of
+	the characters "rwx".
+*)
+
+TYPE POOLSET = FORWARD
+(*
+	A set of files to be checked for reading and writing availability
+	and a timeout. All the files must be open in unbuffered and
+	non-blocking mode. There are 4 sets:
+
+	- write-set: files we are interested to check for writing
+	- read-set:  files we are interested to check for reading
+	- write-ready-set: files resulting available for writing
+	- read-ready-set:  files resulting available for reading
+
+	All these sets are initially empty.
+*)
+
+FUNCTION SetTimeout(VAR ps: POOLSET, sec: INTEGER, usec: INTEGER)
+(*
+	Set a timeout for Wait(). sec >= 0 are the seconds; 0 <= usec <=
+	999999 are the micro-seconds. Setting sec=0, usec=0 disable the
+	timeout. Invalid values are ignored. By default the timeout is
+	disabled (i.e. sec=0, usec=0) and Wait() will block.
+*)
+
+FUNCTION Timeout(ps: POOLSET): BOOLEAN
+(*
+	Return TRUE if ps=NIL or the function Wait() terminated because
+	the timeout set by SetTimeout() expired.
+*)
+
+FUNCTION Readable(VAR ps: POOLSET, f: FILE): BOOLEAN
+(*
+	The file must be open in unbuffered and non-blocking mode, or this
+	function will do nothing and will return FALSE.
+
+	The file f is added to the read-set.  If f appear in the
+	read-ready-set the file is removed from the set and the function
+	return TRUE, indicating that a call to the function Read(f, ...)
+	will not block.
+*)
+
+FUNCTION Writable(VAR ps: POOLSET, f: FILE): BOOLEAN
+(*
+	The file must be open in unbuffered and non-blocking mode, or this
+	function will do nothing and will return FALSE.
+
+	The file f is added to the write-set.  If f appear in the
+	write-ready-set the file is removed from the set and the function
+	return TRUE, indicating that a call to the function Write(f, ...)
+	will not block.
+*)
+
+FUNCTION Wait(ps: POOLSET)
+(*
+	The files of the read-set and write-set are checked for
+	availability on reading and writing respectively. The function
+	return when at least one file is available or the time-out is
+	elapsed. The sets read-set and write-set are cleared. If these
+	sets are empty and the timeout is not set, this function return
+	immediately.
+*)
+
+(*
+	Example: a program that read data from "xxx" and write them to
+	"yyy" without blocking. The files "xxx" and "yyy" may be named pipes,
+	sockets, serial lines, etc.
+
+	MODULE non_block_copy
+	IMPORT io
+	VAR
+		r, w: FILE
+		ps: POOLSET
+		buf: STRING
+	BEGIN
+		r->Open("xxx", "rUn")
+		w->Open("yyy", "wUn")
+		LOOP
+			ps->Wait()
+
+			IF (r <> NIL) AND (buf = NIL) AND Readable(ps, r) THEN
+				buf = Read(r, 4*1024)
+				IF buf = NIL THEN
+					r->Close()
+				END
+			END
+
+			IF (w <> NIL) AND ((buf <> NIL) OR NOT Written(w))
+			AND Writable(ps, w) THEN
+				IF Written(w) THEN
+					Write(w, buf)
+					buf = NIL
+				ELSE
+					Write(w, NIL)
+				END
+			ELSIF r = NIL THEN
+				w->Close()
+				EXIT
+			END
+
+		END
+	END
+
+*)
+
+
+FUNCTION GetCWD(): STRING
+RAISE ERROR
+(*
+	Return the current working directory. On error it return NIL.
+
+	Error codes:
+
+	EACCESS  Permission to read or search a component of the file
+	name was denied.
+
+	ENOENT	The current working directory has been unlinked.
+*)
+
+FUNCTION ChDir(p: STRING)
+RAISE ERROR
+(*
+	Set the current working directory.
+
+	Error codes:
+		EACCES EINVAL EIO ELOOP ENAMETOOLONG ENOENT ENOMEM ENOTDIR
+*)
+
+FUNCTION Unlink(fn: STRING)
+RAISE ERROR
+(*
+	Unlink the file or directory specified. If 'fn' is a directory,
+	it must be empty.
+
+	Error codes:
+		EACCES EBUSY EINVAL EIO ELOOP ENAMETOOLONG ENOENT ENOMEM ENOTDIR
+		ENOTEMPTY EPERM EROFS
+*)
+
+FUNCTION Rename(oldname: STRING, newname: STRING)
+RAISE ERROR
+(*
+	Rename a file or directory.
+
+	Error codes:
+		EACCES EBUSY EEXIST EINVAL EISDIR ELOOP EMLINK ENAMETOOLONG
+		ENOENT ENOMEM ENOSPC ENOTDIR ENOTEMPTY EPERM EROFS EXDEV
+*)
+
+FUNCTION MkDir(d: STRING, mode: STRING)
+RAISE ERROR
+(*
+	Create the directory 'd' using the given access mode masked with
+	the current access mask.
+
+	Error codes:
+		EACCES EEXIST EINVAL ELOOP ENAMETOOLONG ENOENT ENOMEM
+		ENOSPC ENOTDIR EPERM EROFS
+*)
+
+
+FUNCTION Touch(fn: STRING)
+RAISE ERROR
+(*
+	If the specified file do not exists, it is created empty using
+	the current permissions mask. If it exists its timestamp is set
+	to the current time.
+
+	Error codes:
+		The same error codes of Open(..., ..., "wc") and Close().
+*)
+
+
+END

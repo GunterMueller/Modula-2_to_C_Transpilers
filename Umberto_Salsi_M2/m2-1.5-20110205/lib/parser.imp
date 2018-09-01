@@ -1,0 +1,200 @@
+IMPLEMENTATION MODULE parser
+
+(*
+	TODO:
+	- gestire commenti (* *)
+	- permettere il parsing di singole STRING oltre che di file
+*)
+
+
+
+IMPORT m2
+#IMPORT io
+
+
+FUNCTION ASCII2STRING(a: STRING): STRING
+(*
+	FIXME: terribilmente inefficiente: la stringa finale viene
+	costruita aggiungendo un carattere alla volta, con tutte le
+	riallocazioni che ne conseguono. La stringa finale sara' sempre
+	di lunghezza <= della stringa iniziale, per cui dovrei allocare
+	preventivamente un buffer di lunghezza length(a), ma questo temo
+	si possa fare solo col C.
+*)
+
+	FUNCTION __hex(c: STRING): INTEGER
+	BEGIN
+		IF (c >= "0") AND (c <= "9") THEN
+			RETURN ASC(c) - ASC("0")
+		ELSIF ("A" <= c) AND (c <= "F") THEN
+			RETURN ASC(c) - ASC("A") + 10
+		ELSIF ("a" <= c) AND (c <= "f") THEN
+			RETURN ASC(c) - ASC("a") + 10
+		ELSE
+			RETURN 0
+		END
+	END
+
+
+VAR
+	i: INTEGER
+	s: STRING
+BEGIN
+	IF a = "NIL" THEN
+		RETURN NIL
+	END
+	#print("    ASCII2STRING(" + a + ")\n" )
+	IF (length(a) < 2) OR (a[0] <> "\"") OR (a[length(a)-1] <> "\"") THEN
+		RETURN a
+	END
+	s = ""
+	FOR i=1 TO length(a)-2 DO
+		IF a[i] = "\\" THEN
+			i = i+1
+			IF i >= length(a)-1 THEN
+				RETURN a
+			END
+			IF a[i] = "\"" THEN s = s + "\""
+			ELSIF a[i] = "\\" THEN s = s + "\\"
+			ELSIF a[i] = "a" THEN s = s + "\a"
+			ELSIF a[i] = "b" THEN s = s + "\b"
+			ELSIF a[i] = "n" THEN s = s + "\n"
+			ELSIF a[i] = "r" THEN s = s + "\r"
+			ELSIF a[i] = "t" THEN s = s + "\t"
+			ELSIF a[i] = "x" THEN
+				IF NOT match(a[i,length(a)-1], "^x[0-9a-fA-F][0-9a-fA-F]") THEN
+					RETURN a
+				END
+				s = s + CHR( 16 * __hex( a[i+1] ) + __hex( a[i+2] ) )
+				i = i + 2
+			ELSE
+				RETURN a
+			END
+		ELSE
+			s = s + a[i]
+		END
+	END
+	RETURN s
+END
+
+
+FUNCTION NextSym(VAR pd: Status)
+VAR
+	i, n: INTEGER
+	b: STRING
+	a: ARRAY OF STRING
+	a_tot_len: INTEGER
+BEGIN
+	LOOP
+
+		(* ensure the buffer contain something: *)
+		IF (pd[buffer] = NIL) OR (pd[idx] >= length(pd[buffer])) THEN
+			pd[idx] = 0
+			TRY pd[buffer] = io.ReadLine(pd[file_descr]) END
+			IF pd[buffer] = NIL THEN
+				pd[type] = A_EOF
+				RETURN
+			END
+		END
+
+		(* skip spaces: *)
+		b = pd[buffer]
+		i = pd[idx]
+		WHILE (i < length(b)) AND (match(b[i], "[ \t\r]")) DO
+			i = i+1
+		END
+		pd[idx] = i
+
+		(* usciamo dal LOOP se c'e' almeno un carattere da valutare: *)
+		IF i < length(b) THEN
+			(* skip one-line comment: *)
+			IF b[i] = "#" THEN
+				pd[idx] = length(b) # force reading of the next line
+			ELSE
+				EXIT
+			END
+		END
+	END
+
+	b = pd[buffer]
+	i = pd[idx]
+	(* A_NAME *)
+	IF match(b[i], "[a-zA-Z_]") THEN
+		IF match_array(b[i,length(b)], "^([a-zA-Z_][0-9a-zA-Z_]*)", a) THEN
+		END
+		pd[type] = A_NAME
+		pd[s] = a[0]
+		pd[idx] = pd[idx] + length(a[0])
+		RETURN
+	
+	(* A_STRING *)
+	ELSIF b[i] = "\"" THEN
+		IF match_array(b[i,length(b)],
+			"^(\"([^\"\\\\]|(\\\\(\\\\|\"|a|b|n|r|t|(x[0-9a-fA-F][0-9a-fA-F]))))*\")",
+			a) THEN
+			pd[type] = A_STRING
+			pd[s] = ASCII2STRING( a[0] )
+			pd[idx] = i + length(a[0])
+		ELSE
+			pd[type] = A_CHAR
+			pd[c] = ASC("\"")
+			pd[idx] = i + 1
+		END
+		RETURN
+	
+	(* A_INTEGER, A_REAL *)
+	ELSIF match(b[i], "[0-9]") THEN
+		IF match_array(b[i,length(b)],
+			"^([0-9]+)(\\.[0-9]+)?([eE]([\\-\\+]?)[0-9]+)?", a) THEN
+		END
+		a_tot_len = 0
+		FOR i=0 TO n-1 DO
+			a_tot_len = a_tot_len + length(a[i])
+		END
+		IF (a[1] = "") AND (a[2] = "") THEN
+			pd[type] = A_INTEGER
+			pd[i] = stoi(a[0])
+		ELSE
+			pd[type] = A_REAL
+			pd[r] = stor(a[0] + a[1] + a[2])
+		END
+		pd[idx] = pd[idx] + a_tot_len
+		RETURN
+	
+	(* A_CHAR *)
+	ELSE
+		pd[type] = A_CHAR
+		pd[c] = ASC(b[i])
+		pd[idx] = i+1
+	END
+END
+
+
+FUNCTION Close(VAR pd: Status)
+(* distruttore *)
+BEGIN
+	TRY io.Close(pd[file_descr])
+	ELSE
+	END
+	pd = NIL
+END
+
+
+
+FUNCTION Open(f: STRING): Status
+RAISE ERROR
+VAR
+	pd: Status
+BEGIN
+	pd[file_name] = f
+	TRY io.Open(pd[file_descr], f, "r")
+	ELSE
+		RAISE ERROR ERROR_CODE StringToLiteral(f) + ": " + ERROR_MESSAGE
+	END
+	# pd[buffer] = NIL  e' implicito
+	# pd[type] = ignoto
+	RETURN pd
+END
+
+
+END

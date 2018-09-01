@@ -1,0 +1,34 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Type;
+(* Implements storing and using information about defined types, paying
+   attention to nested blocks in the M2 program. This information is
+   used when translating M2 pointer types *)
+
+  FROM Defs IMPORT IdStr;
+
+  PROCEDURE Init;
+  (* Initialize the whole thing *)
+
+  PROCEDURE InitMod;
+  (* Initializes a new module block, making it current *)
+  
+  PROCEDURE InitProc;
+  (* Initializes a new procedure block, making it current *)
+
+  PROCEDURE Define(typeId: IdStr);
+  (* Define type named 'typeId' in the current block *)
+  
+  PROCEDURE IsDefined(typeId: IdStr): BOOLEAN;
+  (* Is type named 'typeId' visible in the current block? *)
+
+  PROCEDURE KillProc;
+  (* Dispose of the current procedure block *)
+
+  PROCEDURE KillMod;
+  (* Dispose of the current module block *)
+
+  PROCEDURE Kill;
+  (* Dispose of everything *)
+
+END Type.

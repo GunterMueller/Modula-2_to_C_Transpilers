@@ -1,0 +1,68 @@
+IMPLEMENTATION MODULE digest
+
+$$linker options: -lssl
+
+$#include <openssl/evp.h>
+
+VAR module_initialized: BOOLEAN
+
+
+FUNCTION InitializeModule()
+BEGIN
+	IF module_initialized THEN
+		RETURN
+	END
+$	OpenSSL_add_all_digests();
+	module_initialized = TRUE
+END
+
+
+FUNCTION Init(name: STRING): CTX
+RAISE ERROR
+VAR
+$	char *name;
+$	const EVP_MD *md;
+$	EVP_MD_CTX *ctx;
+BEGIN
+	IF name = NIL THEN
+		HALT("digest.Init(NIL): invalid digest name")
+	END
+	InitializeModule()
+$	MK_ZSTRING(name, digest_name);
+$	md = EVP_get_digestbyname(name);
+$	if( md == NULL ){
+		RAISE ERROR 1 "digest.Init(" + StringToLiteral(name) + "): unknown digest name"
+		RETURN NIL
+$	}
+$	ctx = M2_MALLOC(sizeof(EVP_MD_CTX));
+$	EVP_DigestInit(ctx, md);
+$	return (RECORD *) ctx;
+END
+
+
+FUNCTION Update(c: CTX, s: STRING)
+BEGIN
+	IF c = NIL THEN
+$		die("digest.Update(NIL, ...): context not instantiated");
+	END
+	IF length(s) = 0 THEN
+		RETURN
+	END
+$	EVP_DigestUpdate((void *) digest_c, digest_s->s, digest_s->len);
+END
+
+
+FUNCTION Final(c: CTX): STRING
+VAR
+$	char *result;
+$	int mdlen;
+BEGIN
+	mark(c)
+$	result = alloca(EVP_MAX_MD_SIZE);
+$	EVP_DigestFinal((void *) digest_c, result, &mdlen);
+$	/* free(digest_c); */
+$	return new_STRING(result, mdlen);
+END
+
+
+END

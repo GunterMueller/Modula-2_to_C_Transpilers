@@ -1,0 +1,122 @@
+IMPLEMENTATION MODULE m3d
+
+IMPORT math
+
+FUNCTION PointCopy(p: POINT): POINT
+BEGIN
+	RETURN {p[x], p[y], p[z]}
+END
+
+
+FUNCTION Zero(): RT
+VAR t: RT
+BEGIN
+	t[rxx] = 0.0   t[rxy] = 0.0   t[rxz] = 0.0
+	t[ryx] = 0.0   t[ryy] = 0.0   t[ryz] = 0.0
+	t[rzx] = 0.0   t[rzy] = 0.0   t[rzz] = 0.0
+	t[tx] = 0.0   t[ty] = 0.0   t[tz] = 0.0
+	RETURN t
+END
+
+
+FUNCTION Unit(): RT
+VAR t: RT
+BEGIN
+	t[rxx] = 1.0   t[rxy] = 0.0   t[rxz] = 0.0
+	t[ryx] = 0.0   t[ryy] = 1.0   t[ryz] = 0.0
+	t[rzx] = 0.0   t[rzy] = 0.0   t[rzz] = 1.0
+	t[tx] = 0.0   t[ty] = 0.0   t[tz] = 0.0
+	RETURN t
+END
+
+
+FUNCTION Translation(p: POINT): RT
+VAR t: RT
+BEGIN
+	t = Unit()
+	t[tx] = p[x]   t[ty] = p[y]   t[tz] = p[z]
+	RETURN t
+END
+
+
+FUNCTION Rotation_x(angle: REAL): RT
+VAR
+	t: RT
+	c, s: REAL
+BEGIN
+	t = Unit()
+	c = cos(angle)
+	s = sin(angle)
+	t[ryy] = c   t[ryz] = s
+	t[rzy] = -s  t[rzz] = c
+	RETURN t
+END
+
+
+FUNCTION Rotation_y(angle: REAL): RT
+VAR
+	t: RT
+	c, s: REAL
+BEGIN
+	t = Unit()
+	c = cos(angle)
+	s = sin(angle)
+	t[rxx] = c   t[rxz] = -s
+	t[rzx] = s   t[rzz] = c
+	RETURN t
+END
+
+
+FUNCTION Rotation_z(angle: REAL): RT
+VAR
+	t: RT
+	c, s: REAL
+BEGIN
+	t = Unit()
+	c = cos(angle)
+	s = sin(angle)
+	t[rxx] = c   t[rxy] = s
+	t[ryx] = -s  t[ryy] = c
+	RETURN t
+END
+
+
+FUNCTION Scale(s: REAL): RT
+VAR t: RT
+BEGIN
+	t = Zero()
+	t[rxx] = s  t[ryy] = s  t[rzz] = s
+	RETURN t
+END
+
+
+FUNCTION Product(a: RT, b: RT): RT
+VAR t: RT
+BEGIN
+	t[rxx] = a[rxx]*b[rxx] + a[rxy]*b[ryx] + a[rxz]*b[rzx]
+	t[rxy] = a[rxx]*b[rxy] + a[rxy]*b[ryy] + a[rxz]*b[rzy]
+	t[rxz] = a[rxx]*b[rxz] + a[rxy]*b[ryz] + a[rxz]*b[rzz]
+	t[ryx] = a[ryx]*b[rxx] + a[ryy]*b[ryx] + a[ryz]*b[rzx]
+	t[ryy] = a[ryx]*b[rxy] + a[ryy]*b[ryy] + a[ryz]*b[rzy]
+	t[ryz] = a[ryx]*b[rxz] + a[ryy]*b[ryz] + a[ryz]*b[rzz]
+	t[rzx] = a[rzx]*b[rxx] + a[rzy]*b[ryx] + a[rzz]*b[rzx]
+	t[rzy] = a[rzx]*b[rxy] + a[rzy]*b[ryy] + a[rzz]*b[rzy]
+	t[rzz] = a[rzx]*b[rxz] + a[rzy]*b[ryz] + a[rzz]*b[rzz]
+	t[tx] = a[rxx]*b[tx] + a[rxy]*b[ty] + a[rxz]*b[tz] + a[tx]
+	t[ty] = a[ryx]*b[tx] + a[ryy]*b[ty] + a[ryz]*b[tz] + a[ty]
+	t[tz] = a[rzx]*b[tx] + a[rzy]*b[ty] + a[rzz]*b[tz] + a[tz]
+	RETURN t
+END
+
+
+FUNCTION Transform(t: RT, p: POINT): POINT
+BEGIN
+	RETURN {
+		t[rxx]*p[x] + t[rxy]*p[y] + t[rxz]*p[z] + t[tx],
+		t[ryx]*p[x] + t[ryy]*p[y] + t[ryz]*p[z] + t[ty],
+		t[rzx]*p[x] + t[rzy]*p[y] + t[rzz]*p[z] + t[tz]
+	}
+END
+
+
+END

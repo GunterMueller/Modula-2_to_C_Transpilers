@@ -1,0 +1,99 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Wr                                          *
+ * Description:             Output operations (to screen)               *
+ * Implementation level:    High-level (Utility module)                 *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 18, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Wr_m2h_
+#define _M2_Wr_m2h_
+
+#include <_m2sys.h>
+
+namespace Wr {
+
+   void Bool(BOOLEAN b, CARDINAL field);
+      /* Writes a boolean 'b' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void Int(INTEGER n, CARDINAL field);
+      /* Writes an integer 'n' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongInt(LONGINT n, CARDINAL field);
+      /* Writes a long integer 'n' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void Card(CARDINAL n, CARDINAL field);
+      /* Writes a long integer 'n' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongCard(LONGCARD n, CARDINAL field);
+      /* Writes a long cardinal 'n' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void Real(REAL n, CARDINAL field);
+      /* Writes a real 'n' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongReal(LONGREAL n, CARDINAL field);
+      /* Writes a long real 'n' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void IntB(INTEGER n, CARDINAL base, CARDINAL field);
+      /* Writes an integer 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongIntB(LONGINT n, CARDINAL base, CARDINAL field);
+      /* Writes a long integer 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void CardB(CARDINAL n, CARDINAL base, CARDINAL field);
+      /* Writes a long integer 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void LongCardB(LONGCARD n, CARDINAL base, CARDINAL field);
+      /* Writes a long cardinal 'n' in base 'base' to screen in a field of
+         'field' positions (right adjusted).
+      */
+
+   void Char(CHAR ch);
+      /* Writes a character 'ch' to screen. */
+
+   void Str(_ARRAYOF<CHAR> s);
+      /* Writes a string 's' to screen. */
+
+   void Ln();
+      /* Writes a new-line mark to the screen. */
+
+   template <class _BYTEARRAY1>
+   void Bin(_BYTEARRAY1 bin);
+      /* Writes an array of bytes 'bin' to screen. */
+
+} // Wr
+
+#endif

@@ -1,0 +1,36 @@
+DEFINITION MODULE RealInOut;
+ (* WriteReal is Retained for compatibility *)
+
+ VAR Done: BOOLEAN;
+
+ PROCEDURE ReadReal(VAR x: REAL);
+  (* Read real number x according to syntax:           *)
+  (*  ["+" | "-"] digit{digit}["."digit{digit}]        *)
+  (*  ["E" ["+" | "-"] digit{digit}]                   *)
+  (* Done="number was read"                            *)
+  (* Input is ended at the blank or control character  *)
+  (* DEL is processed                                  *)
+
+ PROCEDURE ReadLongReal(VAR x: LONGREAL);
+  (* Read long real number, analogous to ReadReal *)
+
+ PROCEDURE ReadShortReal(VAR x: SHORTREAL);
+  (* Read short real number, analogous to ReadReal *)
+
+ PROCEDURE WriteReal(x: REAL; n: CARDINAL);
+  (* Write real using n characters. If fewer than n characters *)
+  (*   are needed, leading blanks are inserted                 *)
+
+ PROCEDURE WriteLongReal(x: LONGREAL; n: CARDINAL);
+  (* Write long real, analogous to WriteReal *)
+
+ PROCEDURE WriteRealOct(x: REAL);
+  (* Write real in octal representation *)
+
+ PROCEDURE WriteShortRealOct(x: SHORTREAL);
+  (* Write short real in octal representation *)
+
+ PROCEDURE WriteLongRealOct(x: LONGREAL);
+  (* Write long real in octal representation *)
+
+END RealInOut.

@@ -1,0 +1,184 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Fmt                                       *
+ * Description:           Conversion from different data types      *
+ *                        to strings                                *
+ * Implementation level:  Mid-level (Useful module)                 *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  July 15, 1996                             *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Fmt;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in oreder of reversed priority)
+   *)
+
+CONST
+
+      noError;                 (* No Error *)
+      noRoomError;             (* No room in destination string *)
+      wrongBaseError;          (* base < 2 or base > 16 *)
+
+TYPE
+   Base = [2..16];             (* Base for numbers *)
+
+   PROCEDURE Bool(VAR s: ARRAY OF CHAR; b: BOOLEAN);
+      (* 's' is string representation ("TRUE" or "FALSE") of boolean 'b'.
+         It holds: Scan.Bool(Fmt.Bool(b)) = b.
+         + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           'TRUE' or 'FALSE'
+      *)
+
+   PROCEDURE Int(VAR s: ARRAY OF CHAR; n: INTEGER);
+      (* 's' is string representation of integer 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+         + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           'TRUE' or 'FALSE'
+      *)
+
+   PROCEDURE LongInt(VAR s: ARRAY OF CHAR; n: LONGINT);
+      (* 's' is  string representation of long integer 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+         + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           'TRUE' or 'FALSE'
+      *)
+
+   PROCEDURE Card(VAR s: ARRAY OF CHAR; n: CARDINAL;);
+      (* 's' is  string representation of cardinal 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+         + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           'TRUE' or 'FALSE'
+      *)
+
+   PROCEDURE LongCard(VAR s: ARRAY OF CHAR; n: LONGCARD);
+      (* 's' is  string representation of long cardinal 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+         + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           'TRUE' or 'FALSE'
+      *)
+
+   PROCEDURE Real(VAR s: ARRAY OF CHAR; x: REAL);
+      (* 's' is string representation of real 'x', if possible.
+         's' is the shortest possible string in scientific notation
+         with as much significant decimal places as possible.
+         It holds: ABS(Scan.Real(Fmt.Real(x)), x) < 1.0E-6.
+         + Sets error codes:
+           'noRoomError' - if 's' is not large enough to represent 'x'
+      *)
+
+
+   PROCEDURE LongReal(VAR s: ARRAY OF CHAR; n: LONGREAL);
+      (* 's' is string representation of long real 'x', if possible.
+         's' is the shortest possible string in scientific notation
+         with as much significant decimal places as possible.
+         It holds: ABS(Scan.LongReal(Fmt.LongReal(x)), x) < 1.0E-6.
+         + Sets error codes:
+           'noRoomError' - if 's' is not large enough to represent 'x'
+      *)
+
+   PROCEDURE IntB(VAR s: ARRAY OF CHAR; n: INTEGER; base: Base);
+      (* 's' is  string representation in base 'base' of integer 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+         + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result.
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      *)
+
+   PROCEDURE LongIntB(VAR s: ARRAY OF CHAR; n: LONGINT; base: Base);
+      (* 's' is  string representation in base 'base' of long integer 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+         + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result.
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      *)
+
+   PROCEDURE CardB(VAR s: ARRAY OF CHAR; n: CARDINAL; base: Base);
+      (* 's' is  string representation in base 'base' of cardinal 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+         + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result.
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      *)
+
+   PROCEDURE LongCardB(VAR s: ARRAY OF CHAR; n: LONGCARD; base: Base);
+      (* 's' is  string representation in base 'base' of long cardinal 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+         + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result.
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      *)
+
+   PROCEDURE PadL(VAR s1: ARRAY OF CHAR; s: ARRAY OF CHAR;
+                  n: CARDINAL; ch: CHAR);
+      (* 's1' is a string of length 'n', where 's' is left adjusted,
+         and the rest is padded with 'ch'
+         + Sets error codes:
+           'noRoomError'    - if 's1' is not large enough to hold the result.
+     *)
+
+   PROCEDURE PadR(VAR s1: ARRAY OF CHAR; s: ARRAY OF CHAR;
+                  n: CARDINAL; ch: CHAR);
+      (* 's1' is a string of length 'n', where 's' is right adjusted,
+         and the rest is padded with 'ch'
+         + Sets error codes:
+           'noRoomError'    - if 's1' is not large enough to hold the result.
+     *)
+
+   PROCEDURE PadC(VAR s1: ARRAY OF CHAR; s: ARRAY OF CHAR;
+                  n: CARDINAL; ch: CHAR);
+      (* 's1' is a string of length 'n', where 's' is centered,
+         and the rest is padded with 'ch'. If number of characters
+         to be filled with 'ch' is odd (say n), then n DIV 2
+         characters are to the left of the centered 's', and
+         (n - (n DIV 2)) characters to teh right of the centered 's'.
+         + Sets error codes:
+           'noRoomError'    - if 's1' is not large enough to hold the result.
+     *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+TYPE
+   ErrorHandler: PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+       *)
+END Fmt.
+
+(*
+   Changes from ver. 1.00:
+   - 'no room' and 'wrong base' errors added. 'conversion error' omitted.
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+   - 'base' in IntB, CardB, LongIntB, and LongCardB has been restricted
+      to [2..16]
+*)
+
+

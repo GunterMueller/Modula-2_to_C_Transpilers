@@ -1,0 +1,232 @@
+#!/bin/sh
+
+#
+# Config script to tune m2c on machine-dependent things and on used C compiler.
+#   Copyright (C) 1993-1997 (see more details in file COPYING).
+#
+# This file is part of Modula-2 translator.
+#
+
+#
+# Configuration script to tune m2c
+#  on machine-dependent things and
+#  on used C compiler.
+#
+# Usage: configure +srcdir=SRCDIR +cc=CCOMPILER]
+#	 where
+#              SRCDIR is directory of sources,
+#                        for example /usr/local/src/m2c-0.7;
+#              CCOMPILER is name C compiler that will be used by m2c,
+#                           for example gcc, berkley-cc or pcc.
+#
+#  Configure ignores next options:
+#              +nfp +gas +x.
+#
+# If configure succeeds, it leaves its status in config.status.
+# If configure fails after disturbing the status quo,
+# 	config.status is removed.
+#
+
+
+corout_function=m2l_ascor
+config_file=m2-config.h
+
+move=mv;
+remove='rm -f';
+hard_link=ln;
+symbolic_link='ln -s';
+
+program_name=$0;
+
+temp_file=xxxxx;
+
+if test -f $temp_file
+then
+	echo "$program_name uses $temp_file as temporary file." 1>&2;
+	echo "Please, delete file $temp_file and try again. Good bye." 1>&2;
+	exit 1
+fi
+
+cpu=generic
+for arg in $*; do
+  case $arg in
+   +srcdir=*)
+	srcdir=`echo $arg | sed s/+srcdir=//`;
+	;;
+   +cc=*)
+	C_compiler=`echo $arg | sed s/+cc=//`;
+	;;
+   +nfp | +gas | +x)
+	;;
+   +*)
+        echo "Unrecognized option \`$arg'. Good bye." 1>&2;
+        exit 1;
+	;;
+   -*)
+        echo "Use + instead of - for starting option \`$arg'. Good bye." 1>&2;
+        exit 1;
+	;;
+   *)
+	cpu=$arg;
+	;;
+  esac
+done
+
+# Find the source files, if location was not specified.
+if test x$srcdir = x
+then
+	implicit_srcdir=1;
+	srcdir=.;
+	if test ! -f m2-semantics.c
+	then
+		srcdir=..;
+	fi
+fi
+
+# Test sources availability.
+if test ! -f ${srcdir}/m2-semantics.c
+then
+	if test x$implicit_srcdir = x
+	then
+	  echo "$program_name: Can't find m2c sources in \`${srcdir}'." 1>&2;
+	else
+	  echo "$program_name: Can't find m2c sources in \`.' or \`..'." 1>&2;
+	fi
+	exit 1;
+fi
+
+# Process argument CPU (source directory is already known).
+for arg in $*; do
+  case $arg in
+   +srcdir=* | +cc=* | +nfp | +gas | +x | +* | -*)
+	;;
+   *)
+	if canonical_name=`/bin/sh ${srcdir}/config.sub $arg`
+	then
+		cpu=`echo $canonical_name | sed s/-.*//`;
+	else
+		exit 1;
+	fi
+	;;
+  esac
+done
+
+
+if test x$cpu = x
+then
+	echo "$program_name: Machine is not defined." 1>&2;
+	echo "Good bye." 1>&2;
+	exit 1;
+fi
+
+
+if test x$C_compiler = x
+then
+	# `+cc' option was not specified. Ask C compiler name.
+	for i in ${srcdir}/config/*; do
+		case $i in
+		 ${srcdir}/config/${cpu}-*.h)
+			C_compiler_exists=x;
+			;;
+		 *)
+			;;
+		esac
+	done
+
+	if test x$C_compiler_exists = x
+	then
+		echo "Tunning on C compiler for given machine does not exist."\
+			1>&2;
+		echo "Good bye." 1>&2;
+		exit 1;
+	fi
+
+	echo "Enter name of C compiler. The possible names are:";
+	for i in ${srcdir}/config/${cpu}-*.h; do
+		echo `basename $i | sed "s/${cpu}-//" | sed "s/\\.h\$//"`;
+	done
+        echo -n "	compiler? => ";
+	read C_compiler;
+fi
+
+config_template=${cpu}-${C_compiler}.h;
+
+# Test C compiler name.
+if test ! -f ${srcdir}/config/$config_template
+then
+	echo "$program_name: file \`config/$config_template' does not exist."\
+		 1>&2;
+	echo "Good bye." 1>&2;
+	exit 1;
+fi
+
+
+# Are coroutines implemented ?
+if test -f ${srcdir}/config/${cpu}-corout.c
+then
+	corout_file=${srcdir}/config/${cpu}-corout.c;
+else
+	echo "${program_name} - warning:" 1>&2
+        echo "      Coroutines for given machine was not implemented." 1>&2;
+fi
+
+
+#------------------------------------------------
+# All is tested. Now generation.
+#------------------------------------------------
+
+
+# Generate a makefile so that the sources are found (by changing value
+#  of srcdir).
+echo "# This file is generated automatically! Change \`Makefile.tmpl'!" \
+	 >Makefile;
+sed "s@^srcdir.*=.*\$@srcdir = ${srcdir}@" ${srcdir}/Makefile.tmpl >>Makefile;
+
+# Generate link to coroutine procedures if necessary.
+# Also generate additional make rules for coroutine procedures if necessary.
+
+$remove ${corout_function}.c;
+
+if test x$corout_file != x
+then
+	# Make a symlink if possible, otherwise try a hard link
+        $symbolic_link $corout_file ${corout_function}.c 2>/dev/null\
+	 || $hard_link $corout_file ${corout_function}.c;
+
+ 	# Add rules for coroutine procedures generation by assembler
+	cat >>Makefile <<'GENCOROUTINE'
+
+m2l_ascor.o: m2l_ascor.c
+	$(CC) -E m2l_ascor.c >m2l_ascor.s
+	$(AS) -o m2l_ascor.o m2l_ascor.s
+	rm m2l_ascor.s
+GENCOROUTINE
+	corout_message="Coroutines are enabled.";
+else
+	# Remove any references to ${corout_function}.o in Makefile.
+	sed "s/${corout_function}.o//" Makefile >$temp_file;
+        $move $temp_file Makefile;
+	corout_message="Coroutines are disabled.";
+fi	
+
+# Generate ${config_file} file
+$remove ${config_file};
+echo "/* This file is generated automatically!" >${config_file};
+echo "   Change \`configure' and \`${srcdir}/config/${config_template}' !*/"\
+	 >>${config_file};
+if test x$corout_file != x
+then
+	echo "#define COROUTINE_ENABLE" >>${config_file};
+fi
+
+cat ${srcdir}/config/${config_template} >>${config_file};
+
+echo "m2c is now tuned on machine $cpu for use with a $C_compiler."\
+	 >$temp_file;
+echo "Directory of sources is \`$srcdir'. " $corout_message >>$temp_file;
+
+
+cat $temp_file | tee config.status;
+$remove $temp_file;
+
+exit 0

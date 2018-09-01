@@ -1,0 +1,114 @@
+(* ------------------------------------------------------------------ *
+ *                 BMB Modula-2 Cross-Platform Library                *
+ *                                                                    *
+ * Implementation of:       Time (1.1)                                *
+ *                          (See Time.doc for full specification)     *
+ * Version:                 1.0                                       *
+ * Date:                    July 15, 1996                             *
+ * Conformance Test Passed: -                                         *
+ * Platform:                DOS/80x86                                 *
+ * Requires:                TopSpeed Modula-2 Compiler ver. 1.xx      *
+ *                                                                    *
+ * Author:                      Zoran Budimac                         *
+ *                              University of Novi Sad, Yugoslavia    *
+ *                              e-mail: zjb@unsim.ns.ac.yu            *
+ * ------------------------------------------------------------------ *)
+
+DEFINITION MODULE Time;
+
+   (* It is assumed that time is in 24-hours format *)
+
+   TYPE
+       T = RECORD       (* A 'time' data type *)
+              hour, min, sec, hun: CARDINAL;
+           END;
+
+   CONST
+      (* Error codes. Function Error() returns one of these *)
+      noError = 0;            (* No Error *)
+      noRoomError = 1;        (* Error in conversion from/to time *)
+      conversionError = 2;
+      wrongTimeError = 3;     (* Impossible time *)
+      priviledgeError = 4;    (* Violation of system privilegdes to set time *)
+
+   (* Accesing the time components *)
+
+   PROCEDURE Hund(t: T): CARDINAL;
+      (* Returns hundreds of time 't' *)
+
+   PROCEDURE Sec(t: T): CARDINAL;
+      (* Returns seconds of time 't' *)
+
+   PROCEDURE Min(t: T): CARDINAL;
+      (* Returns minutes of time 't' *)
+
+   PROCEDURE Hour(t: T): CARDINAL;
+      (* Returns hours of time 't' *)
+
+   PROCEDURE Init(VAR t: T; hh, mm, ss, hd: CARDINAL);
+      (* Sets hours of time 't' to 'hh', minutes to 'mm',
+         seconds to 'ss' and hundereds to 'hd' *)
+
+   PROCEDURE SetHund(VAR t: T; n: CARDINAL);
+      (* Sets hundreds 'n' to time 't' *)
+
+   PROCEDURE SetSec(VAR t: T; n: CARDINAL);
+      (* Sets seconds 'n' to time 't' *)
+
+   PROCEDURE SetMin(VAR t: T; n: CARDINAL);
+      (* Sets minutes 'n' to time 't' *)
+
+   PROCEDURE SetHour(VAR t: T; n: CARDINAL);
+      (* Sets hours 'n' to time 't' *)
+
+   PROCEDURE Copy(VAR t: T; t1: T);
+
+   (* Accessing the system clock *)
+
+   PROCEDURE SetSystemTime(t: T);
+      (* Sets the system clock to time 't' *)
+
+   PROCEDURE GetSystemTime(VAR t: T);
+      (* Gets the system time in 't' *)
+
+   (* Conversion operations *)
+
+   PROCEDURE ToString(VAR str: ARRAY OF CHAR; t: T);
+      (* Converts the time 't' to string in the following
+         format: "hh:mm:ss.hs" *)
+
+   PROCEDURE FromString(VAR t: T; str: ARRAY OF CHAR);
+      (* Converts the string from format "hh:mm:ss.hs" into
+         a time 't' *)
+
+   PROCEDURE Hundts(t: T): LONGCARD;
+      (* Returns hundreds corresponding to time 't' *)
+
+   PROCEDURE FromHundts(VAR t: T; hundts: LONGCARD);
+      (* Sets 't' to a time corresponding to 'hundts' *)
+
+   (* Arithmetic operations *)
+
+   PROCEDURE Inc(VAR t: T; hun: LONGCARD);
+      (* Increments time 't' for 'hun' hundreds *)
+
+   PROCEDURE Dec(VAR t: T; hun: LONGCARD);
+      (* Decrements time 't' for 'hun' hundreds *)
+
+   PROCEDURE Add(VAR t: T; t1, t2: T);
+      (* Adds time 't1' and 't2' giving 't' *)
+
+   PROCEDURE Sub(VAR t: T; t1, t2: T);
+      (* Subtracts time 't2' from 't1' giving 't' *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+
+END Time.
+

@@ -1,0 +1,141 @@
+IMPLEMENTATION MODULE DirList
+
+IMPORT io
+
+$#include <sys/types.h>
+$#include <dirent.h>
+$#include <unistd.h>
+###$#include <linux/dirent.h>
+###$#include <linux/unistd.h>
+
+
+(***********
+FUNCTION FileType(type: INTEGER): STRING
+BEGIN
+	IF type = DT_UNKNOWN THEN
+		RETURN "u"
+	ELSIF type = DT_FIFO THEN
+		RETURN "f"
+	ELSIF type = DT_CHR THEN
+		RETURN "c"
+	ELSIF type = DT_DIR THEN
+		RETURN "d"
+	ELSIF type = DT_BLK THEN
+		RETURN "b"
+	ELSIF type = DT_REG THEN
+		RETURN "-"
+	ELSIF type = DT_LNK THEN
+		RETURN "l"
+	ELSIF type = DT_SOCK THEN
+		RETURN "s"
+	ELSE
+		RETURN "?"
+	END
+END
+***********)
+
+
+(*
+	FIXME: siamo sicuri che i campi d_type e d_fileno stiano in un INTEGER?
+*)
+
+FUNCTION Get(VAR d: ARRAY OF DirEntry, dir: STRING)
+RAISE ERROR
+VAR
+	name: STRING
+	type: INTEGER
+	fileno: INTEGER
+	i: INTEGER
+$	char *dirz;
+$	DIR *dp;
+$	struct dirent *de;
+BEGIN
+	d = NIL
+$	MK_ZSTRING(dirz, DirList_dir);
+$	dp = opendir(dirz);
+$	if( dp == NULL ){
+		RAISE ERROR 1 "DirList.Get(..., " + StringToLiteral(dir) + "): "
+		+ strerror()
+		RETURN
+$	}
+$	while( (de=readdir(dp)) != NULL ){
+$		DirList_name = new_STRING(de->d_name, strlen(de->d_name));
+$		DirList_type = de->d_type;
+$		DirList_fileno = de->d_fileno;
+		d[i][name] = name
+		d[i][type] = type
+		d[i][fileno] = fileno
+		i = i+1
+$	}
+$	if( closedir(dp) != 0 ){
+		RAISE ERROR 1 "DirList.Get(" + dir + "): closedir(): " + strerror()
+		(* ritorna comunque quello che ho letto fin qui: *)
+		RETURN
+$	}
+	(* Qui ci vorrebbe l'ordinamento alfabetico dei file, magari con
+	le opzioni previste anche da Midnight Commander, come quella di
+	mostrare per prime le dir., quella di non mostrare i file di config.
+	e i file di backup, ecc. *)
+	RETURN
+END
+
+
+FUNCTION Sort(d: ARRAY OF DirEntry)
+VAR
+	i,j: INTEGER
+	t: DirEntry
+BEGIN
+	FOR i=0 TO count(d)-2 DO
+		FOR j=i+1 TO count(d)-1 DO
+			IF d[j][name] < d[i][name] THEN
+				t = d[i]
+				d[i] = d[j]
+				d[j] = t
+			END
+		END
+	END
+END
+
+
+FUNCTION RemoveDirectory(dir: STRING)
+RAISE ERROR
+VAR
+	d: ARRAY OF DirEntry
+	i: INTEGER
+BEGIN
+	TRY Get(d, dir)
+	ELSE
+		RAISE ERROR 1 "DirList.RemoveDirectory(" + StringToLiteral(dir) + "): "
+			+ ERROR_MESSAGE
+		RETURN
+	END
+	FOR i=0 TO count(d)-1 DO
+		IF d[i][type] = DT_DIR THEN
+			IF (d[i][name] <> ".") AND (d[i][name] <> "..") THEN
+				TRY RemoveDirectory(dir + "/" + d[i][name])
+				ELSE
+					RAISE ERROR 1 "DirList.RemoveDirectory("
+					+ StringToLiteral(dir)
+					+ "): " + ERROR_MESSAGE
+					RETURN
+				END
+			END
+		ELSE
+			TRY io.Unlink(dir + "/" + d[i][name])
+			ELSE
+				RAISE ERROR 1 "DirList.RemoveDirectory(" + StringToLiteral(dir)
+					+ "): " + ERROR_MESSAGE
+				RETURN
+			END
+		END
+	END
+	TRY io.Unlink(dir)
+	ELSE
+		RAISE ERROR 1 "DirList.RemoveDirectory(" + StringToLiteral(dir) + "): "
+			+ ERROR_MESSAGE
+		RETURN
+	END
+END
+
+
+END

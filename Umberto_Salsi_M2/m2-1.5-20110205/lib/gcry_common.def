@@ -1,0 +1,11 @@
+DEFINITION MODULE gcry_common
+
+(* Common library for gcry_*. *)
+
+FUNCTION Init()
+(* Initialize the library gcry_*. *)
+
+FUNCTION ErrorDesc(code: INTEGER): STRING
+(* Return the error description of the giver error code. *)
+
+END

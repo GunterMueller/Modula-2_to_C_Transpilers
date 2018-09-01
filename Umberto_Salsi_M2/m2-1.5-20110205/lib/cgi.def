@@ -1,0 +1,74 @@
+DEFINITION MODULE cgi
+
+TYPE
+	PARAMETER = RECORD  name, value: STRING  END
+
+VAR request: ARRAY OF PARAMETER
+(*
+	Parameters returned by the HTTP request. The array is set by
+	GetRequest().
+*)
+
+FUNCTION GetRequest(max: INTEGER)
+(*
+	Parse parameters from the HTTP request. `max' bytes are allowed.
+	Parsed parameters are stored in the array `request'.
+*)
+
+FUNCTION GetParameter(name: STRING): STRING
+(*
+	Return the value of the parameter NAME. Return NIL if missing.
+*)
+
+FUNCTION URLEncode(s: STRING): STRING
+(*
+	Return S encoded as per RFC 1738, suitable for including the
+	string in a URL.
+*)
+
+FUNCTION URLDecode(s: STRING): STRING
+(*
+	Return S decoded as per RFC 1738.
+*)
+
+FUNCTION String2HTML(s: STRING): STRING
+(*
+	Return the literal version of S suitable to be included as HTML
+	text. These substitutions are made: "&" --> "&amp;", "<" -->
+	"&lt;", ">" --> "&gt;".
+*)
+
+FUNCTION String2Attribute(s: STRING): STRING
+(*
+	Return S suitable to be included as string attribute of an
+	HTML tag.  Double quotes "\"" are inserted at the start and at
+	the end of the string; these substitutions are made: "&" -->
+	"&amp;", "\"" --> "&quot;". Example:
+	print("<INPUT type=text name=prodCode value=" +
+	String2Attribute(prodCode) + " size=10 maxlength=20>")
+*)
+
+FUNCTION SetCookie(name: STRING, value: STRING, max_age: INTEGER)
+(*
+	Print the cookie to stdout as "Set-Cookie" HTTP header.  The value
+	of the cookie is encoded with URLEncode().  max_age is the cookie
+	duration (in seconds). Force the client to destroy the cookie
+	with SetCookie(name, NIL, 0).
+*)
+
+FUNCTION GetCookie(name: STRING): STRING
+(*
+	Return the value of the cookie NAME. Return NIL if missing.
+	The value is decoded with URLDecode().
+*)
+
+FUNCTION NewSessionID(len: INTEGER): STRING
+(*
+	Return a string suitable to be used as session identificator.
+	len is the number of bytes used. The string returned is encoded
+	in hexadecimal characters 0-9a-f, so it is 2*len characters long.
+	Ramdom characters are given by /dev/random. Normally, a value
+	of len=10 is a good choice for most purpuses.
+*)
+
+END

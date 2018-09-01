@@ -1,0 +1,62 @@
+DEFINITION MODULE gcry_mpi
+
+(* Multi-Precision Integer library from the libgcrypt library. See
+http://www.gnupg.org for details. *)
+
+IMPORT gcry_common
+
+TYPE MPI = FORWARD
+
+FUNCTION Copy(a: MPI): MPI
+(* Return a copy of the given MPI. *)
+
+FUNCTION Binary2MPI(b: STRING): MPI
+(*
+	Convert a string of bytes, high byte first, 2-complement, to an MPI.
+	NOTE: if the first bit is 1, the number is negative and the library
+	(function gcry_mpi_scan()) give and internal error because it cannot
+	handle negative numbers. A good idea is to insert a zero-byte in
+	front of the string to ensure the number be positive.
+	Examples:
+		Binary2MPI( encode.HexDecode("7b") ) => 123
+		Binary2MPI( encode.HexDecode("80") ) => ** Internal error **
+		Binary2MPI( encode.HexDecode("0080") ) => 128
+*)
+
+FUNCTION MPI2Binary(a: MPI): STRING
+(*
+	Convert the MPI to a string of bytes, high byte first.
+	NOTE: the MPI must be positive or zero, otherwise the function
+	will give an internal error.
+	Examples:
+		encode.HexEncode( MPI2Binary( Integer2MPI( 123 ) ) ) => "7b"
+		encode.HexEncode( MPI2Binary( Integer2MPI( 128 ) ) ) => "0080"
+		MPI2Binary( Sub(Integer2MPI(1), Integer2MPI(2)) )
+		=> ** Internal error **
+*)
+
+FUNCTION Integer2MPI(i: INTEGER): MPI
+(* `i' must be >= 0. *)
+
+FUNCTION MPI2Integer(a: MPI): INTEGER
+RAISE ERROR
+(* Error codes: 1 = MPI too big *)
+
+(* Arithmetical functions: *)
+FUNCTION Add(a: MPI, b: MPI): MPI
+FUNCTION Sub(a: MPI, b: MPI): MPI
+FUNCTION Mul(a: MPI, b: MPI): MPI
+FUNCTION Div(a: MPI, b: MPI): MPI
+FUNCTION Mod(a: MPI, b: MPI): MPI
+(*
+	NOTE: some other arithmetical and logical functions provided by
+	the library libgcrypt are still missing from this module.
+*)
+
+FUNCTION Compare(a: MPI, b: MPI): INTEGER
+(*
+	Compare(a, b) < 0, <= 0, = 0, >= 0, > 0 if a<b, a<=b, a=b, a>=b, a>b
+	respectively.
+*)
+
+END

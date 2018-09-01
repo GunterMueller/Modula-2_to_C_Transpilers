@@ -1,0 +1,84 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Rd                                        *
+ * Description:           Input operations from keyboard            *
+ * Implementation level:  High-level (Utility module)               *
+ * Depends on modules:    File, FileRd                              *
+ *                                                                  *
+ * Version:               1.00                                      *
+ * Date:                  March, 1995                               *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Rd;
+
+CONST
+   (* Error codes. Function Error() returns one of these *)
+
+   NoError;                (* No error *)
+   ConversionError;        (* Error in conversion of data types *)
+   FileError;              (* Error in writing to a file. In this case
+                              File.Error() can be consulted for better
+                              diagnostics *)
+
+   PROCEDURE Bool(): BOOLEAN;
+      (* Reads a boolean from keyboard, previously skipping all blanks *)
+
+   PROCEDURE Int(): INTEGER;
+      (* Reads an integer from keyboard, previously skipping all blanks *)
+
+   PROCEDURE LongInt(): LONGINT;
+      (* Reads a long integer from keyboard, previously skipping all blanks *)
+
+   PROCEDURE Card(): CARDINAL;
+      (* Reads a cardinal from keyboard, previously skipping all blanks *)
+
+   PROCEDURE LongCard(): LONGCARD;
+      (* Reads a long cardinal from keyboard, previously skipping all blanks *)
+
+   PROCEDURE Real(): REAL;
+      (* Reads a real from keyboard, previously skipping all blanks *)
+
+   PROCEDURE LongReal(): LONGREAL;
+      (* Reads a long real from keyboard, previously skipping all blanks *)
+
+   PROCEDURE IntB(base: CARDINAL): INTEGER;
+      (* Reads an integer from keyboard written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE LongIntB(base: CARDINAL): LONGINT;
+      (* Reads a long integer from keyboard written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE CardB(base: CARDINAL): CARDINAL;
+      (* Reads a cardinal from keyboard written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE LongCardB(base: CARDINAL): LONGCARD;
+      (* Reads a long cardinal from keyboard written in base 'base',
+         previously skipping all blanks *)
+
+   PROCEDURE Char(): CHAR;
+      (* Reads a character from keyboard *)
+
+   PROCEDURE Line(VAR line: ARRAY OF CHAR);
+      (* Reads a line 'line' from the keyboard, up to the end-of-line
+         mark *)
+
+   PROCEDURE Ln();
+      (* Skips to the next line in the keyboard input *)
+
+   PROCEDURE Bin(VAR bin: ARRAY OF BYTE);
+      (* Fills in an array of bytes 'bin' from teh keyboard *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code for previous operation from this module.
+         See the possible error codes in constant declaration part *)
+
+END Rd.
+

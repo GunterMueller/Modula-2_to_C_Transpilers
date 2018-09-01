@@ -1,0 +1,176 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Time                                        *
+ * Description:             Time operations                             *
+ * Implementation level:    Low-level (Necessary module)                *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 17, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Time_m2h_
+#define _M2_Time_m2h_
+
+#include <_m2sys.h>
+
+namespace Time {
+
+   /* It is assumed that time is in 24-hours format */
+
+   class T;    /* The 'time' data type */
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   */
+
+   const CARDINAL noError;         /* No Error */
+   const CARDINAL noRoomError;     /* No room in destination string */
+   const CARDINAL conversionError; /* Error in conversion to time */
+   const CARDINAL wrongTimeError;  /* Impossible time generated */
+   const CARDINAL priviledgeError; /* Violation of system privilegdes to set/get time */
+
+   /* Accesing the time components */
+
+   CARDINAL Hund(T t);
+      /* Returns hundreds of time 't'. */
+
+   CARDINAL Sec(T t);
+      /* Returns seconds of time 't'. */
+
+   CARDINAL Min(T t);
+      /* Returns minutes of time 't'. */
+
+   CARDINAL Hour(T t);
+      /* Returns hours of time 't'. */
+
+   void SetHund(T& t, CARDINAL n);
+      /* Sets hundreds 'n' of time 't'.
+       + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 99
+      */
+
+   void SetSec(T& t, CARDINAL n);
+      /* Sets seconds 'n' to time 't'.
+       + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 59
+      */
+
+   void SetMin(T& t, CARDINAL n);
+      /* Sets minutes 'n' to time 't'.
+       + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 59
+      */
+
+   void SetHour(T& t, CARDINAL n);
+      /* Sets hours 'n' to time 't'.
+       + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 23
+      */
+
+   void Init(T& t, CARDINAL hh, CARDINAL mm, CARDINAL ss, CARDINAL hd);
+      /* Sets hours of time 't' to 'hh', minutes to 'mm',
+         seconds to 'ss' and hundereds to 'hd'.
+       + Sets error codes:
+           'wrongTimeError' - if 't' was not properly constructed
+      */
+
+   void Copy(T& t, T t1);
+      /* Copies the time 't1' into the time 't'. */
+
+   /* Accessing the system clock */
+
+   void SetSystemTime(T t);
+      /* Sets the system clock to time 't'.
+       + Sets error codes:
+           'priviledgeError' - if 't' cannot be set due to not enough
+                               priviledges
+      */
+
+   void GetSystemTime(T& t);
+      /* Gets the system time in 't'.
+       + Sets error codes:
+           'priviledgeError' - if 't' cannot be set due to not enough
+                               priviledges
+      */
+
+   /* Conversion operations */
+
+   void ToString(_ARRAYOF<CHAR>& str, T t);
+      /* Converts the time 't' to string in the following
+         format: "hh:mm:ss.hs". Every number (hh, mm, ss, hs)
+         takes exactly two places.
+       + Sets error codes:
+           'noRoomError' - if 't' cannot fit in 'str'
+      */
+
+   void FromString(T& t, _ARRAYOF<CHAR> str);
+      /* Converts the string from format "hh:mm:ss.hs" into
+         a time 't'. Numbers do not have to occupy two places,
+         and string must have at least hh:mm (the rest is considered
+         as zero if ommited).
+       + Sets error codes:
+           'conversionError' - if 'str' is not in proper format,
+           'wrongTimeError'  - if constructed time is not valid
+      */
+
+   LONGCARD Hundts(T t);
+      /* Returns hundreds corresponding to time 't'. */
+
+   void FromHundts(T& t, LONGCARD hundts);
+      /* Sets 't' to a time corresponding to 'hundts'.
+       + Sets error codes:
+           'wrongTimeError'  - if constructed time 't' is not valid
+      */
+
+   /* Arithmetic operations */
+
+   void Inc(T& t, LONGCARD hun);
+      /* Increments time 't' for 'hun' hundreds. */
+
+   void Dec(T& t, LONGCARD hun);
+      /* Decrements time 't' for 'hun' hundreds. */
+
+   void Add(T& t, T t1, T t2);
+      /* Adds time 't1' and 't2' giving 't'. */
+
+   void Sub(T& t, T t1, T t2);
+      /* Subtracts time 't2' from 't1' giving 't'. */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // Time
+
+#endif

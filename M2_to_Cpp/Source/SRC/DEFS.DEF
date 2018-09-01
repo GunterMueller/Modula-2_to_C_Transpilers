@@ -1,0 +1,22 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE Defs;
+(* Definitions of commonly used stuff *)
+
+  CONST
+    Version    = 0;
+    Subversion = 90;
+    
+  TYPE
+    IdStr  = ARRAY [0..31] OF CHAR;
+    (* String for storing M2 identifiers *)
+
+    PIdStr = POINTER TO IdStr;
+
+    BigStr = ARRAY [0..99] OF CHAR;
+    (* String for storing bigger text, like M2 qualified identifiers *)
+
+    HugeStr = ARRAY [0..299] OF CHAR;
+    (* Even bigger, for storing whole M2 type definitions etc. *)
+
+END Defs.

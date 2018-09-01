@@ -1,0 +1,184 @@
+/* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                              C++ Port                                *
+ *                                                                      *
+ * Specification of:        Fmt                                         *
+ * Description:             Conversion from different data types        *
+ *                          to strings                                  *
+ * Implementation level:    Mid-level (Useful module)                   *
+ *                                                                      *
+ * Version:                 1.1                                         *
+ * Date:                    February 17, 2000                           *
+ *                                                                      *
+ * Authors:                 Zoran Budimac, Daniel Sendula               *
+ *                          (for 'Black Mailbox' Group)                 *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: {zjb,isendula}@unsim.ns.ac.yu   *
+ *                                                                      *
+ * C++ Port Author:         Milos Radovanovic                           *
+ *                              University of Novi Sad, Yugoslavia      *
+ *                              e-mail: radacha@eunet.yu                *
+ * -------------------------------------------------------------------- */
+
+#ifndef _M2_Fmt_m2h_
+#define _M2_Fmt_m2h_
+
+#include <_m2sys.h>
+
+namespace Fmt {
+
+   /* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in oreder of reversed priority)
+   */
+
+   const CARDINAL noError;        /* No Error */
+   const CARDINAL noRoomError;    /* No room in destination string */
+   const CARDINAL wrongBaseError; /* base < 2 or base > 16 */
+
+   typedef _SubrangeType<CARDINAL, 2, 16> Base; /* Base for numbers */
+
+   void Bool(_ARRAYOF<CHAR>& s, BOOLEAN b);
+      /* 's' is string representation ("TRUE" or "FALSE") of boolean 'b'.
+         It holds: Scan.Bool(Fmt.Bool(b)) = b.
+       + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           'TRUE' or 'FALSE'
+      */
+
+   void Int(_ARRAYOF<CHAR>& s, INTEGER n);
+      /* 's' is string representation of integer 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+       + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           the string representation of 'n'
+      */
+
+   void LongInt(_ARRAYOF<CHAR>& s, LONGINT n);
+      /* 's' is  string representation of long integer 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+       + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           the string representation of 'n'
+      */
+
+   void Card(_ARRAYOF<CHAR>& s, CARDINAL n);
+      /* 's' is  string representation of cardinal 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+       + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           the string representation of 'n'
+      */
+
+   void LongCard(_ARRAYOF<CHAR>& s, LONGCARD n);
+      /* 's' is  string representation of long cardinal 'n', if possible.
+         It holds: Scan.Bool(Fmt.Bool(n)) = n.
+       + Sets error codes:
+           'noRoomError' - if 's' is not large enough to hold
+                           the string representation of 'n'
+      */
+
+   void Real(_ARRAYOF<CHAR>& s, REAL x);
+      /* 's' is string representation of real 'x', if possible.
+         's' is the shortest possible string in scientific notation
+         with as much significant decimal places as possible.
+         It holds: ABS(Scan.Real(Fmt.Real(x)), x) < 1.0E-6.
+       + Sets error codes:
+           'noRoomError' - if 's' is not large enough to represent 'x'
+      */
+
+
+   void LongReal(_ARRAYOF<CHAR>& s, LONGREAL x);
+      /* 's' is string representation of long real 'x', if possible.
+         's' is the shortest possible string in scientific notation
+         with as much significant decimal places as possible.
+         It holds: ABS(Scan.LongReal(Fmt.LongReal(x)), x) < 1.0E-6.
+       + Sets error codes:
+           'noRoomError' - if 's' is not large enough to represent 'x'
+      */
+
+   void IntB(_ARRAYOF<CHAR>& s, INTEGER n, Base base);
+      /* 's' is  string representation in base 'base' of integer 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+       + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      */
+
+   void LongIntB(_ARRAYOF<CHAR>& s, LONGINT n, Base base);
+      /* 's' is  string representation in base 'base' of long integer 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+       + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      */
+
+   void CardB(_ARRAYOF<CHAR>& s, CARDINAL n, Base base);
+      /* 's' is  string representation in base 'base' of cardinal 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+       + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      */
+
+   void LongCardB(_ARRAYOF<CHAR>& s, LONGCARD n, Base base);
+      /* 's' is  string representation in base 'base' of long cardinal 'n',
+         if possible. It holds: Scan.Bool(Fmt.Bool(n, base), base) = n.
+       + Sets error codes:
+           'noRoomError'    - if 's' is not large enough to hold the result
+           'wrongBaseError' - if ('base' < 2) OR ('base' > 16)
+      */
+
+   void PadL(_ARRAYOF<CHAR>& s1, _ARRAYOF<CHAR> s,
+             CARDINAL n, CHAR ch);
+      /* 's1' is a string of length 'n', where 's' is left adjusted,
+         and the rest is padded with 'ch'.
+       + Sets error codes:
+           'noRoomError'    - if 's1' is not large enough to hold the result
+      */
+
+   void PadR(_ARRAYOF<CHAR>& s1, _ARRAYOF<CHAR> s,
+             CARDINAL n, CHAR ch);
+      /* 's1' is a string of length 'n', where 's' is right adjusted,
+         and the rest is padded with 'ch'.
+       + Sets error codes:
+           'noRoomError'    - if 's1' is not large enough to hold the result
+      */
+
+   void PadC(_ARRAYOF<CHAR>& s1, _ARRAYOF<CHAR> s,
+             CARDINAL n, CHAR ch);
+      /* 's1' is a string of length 'n', where 's' is centered,
+         and the rest is padded with 'ch'. If number of characters
+         to be filled with 'ch' is odd (say n), then n DIV 2
+         characters are to the left of the centered 's', and
+         (n - (n DIV 2)) characters to teh right of the centered 's'.
+       + Sets error codes:
+           'noRoomError'    - if 's1' is not large enough to hold the result
+      */
+
+   /* Errors */
+
+   CARDINAL Error();
+      /* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part.
+      */
+
+   typedef void (*ErrorHandler)(_ARRAYOF<CHAR>);
+
+   ErrorHandler errorHandler;
+      /* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      */
+
+} // Fmt
+
+#endif

@@ -1,0 +1,136 @@
+DEFINITION MODULE math
+
+CONST
+	PI     = 3.14159265358979323846264338328 # = 4.0 * atan(1.0)
+	DEGREE = 0.01745329251994329576923690768 # = 2.0*PI/360.0
+	E      = 2.71828182845904523536028747135 # = exp(1.0)
+
+FUNCTION NAN(): REAL
+(*
+	The special IEEE-754 representation of the not-a-number value.
+*)
+
+FUNCTION is_nan(x: REAL): BOOLEAN
+(*
+	Return TRUE if x is not-a-number.
+	Some functions returns NAN if an invalid argument is given, as
+	log(-1.0), asin(2.0), ... Example:
+
+		x = sqrt(-1.0)
+		IF is_nan(x) THEN
+			HALT("invalid negative value for math.sqrt(): " + x)
+		END
+
+*)
+
+FUNCTION INF(): REAL
+(*
+	Return the internal representation of "+infinity". Example:
+
+		x = -1.0/0.0
+		IF x = -INF() THEN
+			print(rtos(x))
+		END
+
+	will print "-inf".
+	NOTE: this function is expanded to a constant value at compile time.
+*)
+
+FUNCTION precision(): INTEGER
+(*
+	Return an extimation of the number of bit of precision on REAL
+	numbers. A typical math co-processor using IEEE 754 double
+	precision will give 52 bits, or 52*0.3 ~ 15 decimal digits.
+*)
+
+FUNCTION scale(): INTEGER
+(*
+	Return an extimation of the range of the exponent in REAL
+	numbers as number of bits: 2^(-scale()) < REAL < 2^scale() with
+	precision() bits of precision. With a typical math co-processor
+	using IEEE 754 double precison this function will give a scale
+	of 1021 bits, i.e. 10^-307 < REAL < 10^307 (Please see the
+	"754-1985 IEEE Standard for Binary Floating-Point Arithmetic"
+	standard for more accurate informations).
+*)
+
+FUNCTION abs(x: REAL): REAL
+(*
+	If x >= 0.0 return x, otherwise return -x.
+*)
+
+FUNCTION floor(x: REAL): REAL
+FUNCTION ceil(x: REAL): REAL
+
+FUNCTION sin(x: REAL): REAL
+FUNCTION cos(x: REAL): REAL
+FUNCTION tan(x: REAL): REAL
+(*
+	Trigonometric sine, cosine and tangent. Angles must be given
+	in radiants. Example: the sine of 30 degrees is
+
+		sin(30.0 * DEGREE)
+*)
+
+FUNCTION asin(s: REAL): REAL (* -1.0 <= s <= 1.0 *)
+(*
+	-1.0 <= s <= 1.0
+	Return the angle whose sine is s. The result is expressed in
+	radiants in the range [-PI/2.0, PI/2.0]. Example:
+
+		asin(sqrt(3.0)/2.0) - 60.0*DEGREE
+
+	should give about 0.0.
+*)
+
+FUNCTION acos(c: REAL): REAL
+(*
+	-1.0 <= c <= 1.0
+	Return the angle whose cosine is c. The result is expressed in
+	radiants in the range [0,PI].
+*)
+
+FUNCTION atan(t: REAL): REAL
+(*
+	Return the angle whose tangent is t. The result is expressed in
+	radiants in the range [-PI/2,PI/2].
+*)
+
+FUNCTION atan2(y: REAL, x: REAL): REAL
+(*
+	Return the angle (x,y)-(0,0)-(1,0). The result is expressed in
+	radiants in the range [-PI, PI].
+*)
+
+FUNCTION exp(x: REAL): REAL
+FUNCTION log(x: REAL): REAL (* x > 0.0 *)
+
+FUNCTION pow(base: REAL, power: REAL): REAL
+(* If BASE < 0.0, POWER must be integral.  *)
+
+FUNCTION sqrt(x: REAL): REAL
+(*
+	Square root. x > 0.0
+*)
+
+FUNCTION rand(): INTEGER
+(*
+	Return a pseudo-random number between 0 and RAND_MAX(). Any time
+	the program is executed, this function return the same sequence
+	of numbers.  Use srand() to set a different start seed.
+*)
+
+FUNCTION RAND_MAX(): INTEGER
+(*
+	Max value returned by rand(). In GNU library it is 2^31-1.
+	NOTE: this function is expanded to a constant value at compile time.
+*)
+
+FUNCTION srand(seed: INTEGER)
+(*
+	Set the seed for a different series of pseudo-random numbers. The
+	default seed is 1.
+*)
+
+$$ linker options: -lm
+END

@@ -1,0 +1,172 @@
+(* ---------------------------------------------------------------- *
+ *              BMB Modula-2 Cross-Platform Library                 *
+ *                                                                  *
+ * Specification of:      Time                                      *
+ * Description:           Time operations                           *
+ * Implementation level:  Low-level (Necessary module)              *
+ *                                                                  *
+ * Version:               1.1                                       *
+ * Date:                  July 15, 1996                             *
+ *                                                                  *
+ * Authors:               Zoran Budimac, Daniel Sendula             *
+ *                        (for 'Black Mailbox' Group)               *
+ *                            University of Novi Sad, Yugoslavia    *
+ *                            e-mail: {zjb,isendula}@unsim.ns.ac.yu *
+ * ---------------------------------------------------------------- *)
+
+DEFINITION MODULE Time;
+   (* It is assumed that time is in 24-hours format *)
+   TYPE
+      T;                   (* The 'time' data type *)
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+  noError;             (* No Error *)
+  noRoomError;         (* No room in destination string *)
+  conversionError;     (* Error in conversion to time *)
+  wrongTimeError;      (* Impossible time generated *)
+  priviledgeError;     (* Violation of system privilegdes to set/get time *)
+
+ (* Accesing the time components *)
+
+   PROCEDURE Hund(t: T): CARDINAL;
+      (* Returns hundreds of time 't' *)
+
+   PROCEDURE Sec(t: T): CARDINAL;
+      (* Returns seconds of time 't' *)
+
+   PROCEDURE Min(t: T): CARDINAL;
+      (* Returns minutes of time 't' *)
+
+   PROCEDURE Hour(t: T): CARDINAL;
+      (* Returns hours of time 't' *)
+
+   PROCEDURE SetHund(VAR t: T; n: CARDINAL);
+      (* Sets hundreds 'n' of time 't'
+       + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 99
+      *)
+
+   PROCEDURE SetSec(VAR t: T; n: CARDINAL);
+      (* Sets seconds 'n' to time 't'
+         + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 59
+      *)
+
+   PROCEDURE SetMin(VAR t: T; n: CARDINAL);
+      (* Sets minutes 'n' to time 't'
+         + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 59
+      *)
+
+   PROCEDURE SetHour(VAR t: T; n: CARDINAL);
+      (* Sets hours 'n' to time 't'
+         + Sets error codes:
+           'wrongTimeError' - if 'n' < 0 or 'n' > 23
+      *)
+
+   PROCEDURE Init(VAR t: T; hh, mm, ss, hd: CARDINAL);
+      (* Sets hours of time 't' to 'hh', minutes to 'mm',
+         seconds to 'ss' and hundereds to 'hd'
+         + Sets error codes:
+           'wrongTimeError' - if 't' was not properly constructed
+      *)
+
+   PROCEDURE Copy(VAR t: T; t1: T);
+      (* Copies the time 't1' into the time 't' *)
+
+   (* Accessing the system clock *)
+
+   PROCEDURE SetSystemTime(t: T);
+      (* Sets the system clock to time 't'.
+         + Sets error codes:
+           'priviledgeError' - if 't' cannot be set due to not enough
+                               priviledges
+      *)
+
+   PROCEDURE GetSystemTime(VAR t: T);
+      (* Gets the system time in 't'.
+         + Sets error codes:
+           'priviledgeError' - if 't' cannot be set due to not enough
+                               priviledges
+      *)
+
+   (* Conversion operations *)
+
+   PROCEDURE ToString(VAR str: ARRAY OF CHAR; t: T);
+      (* Converts the time 't' to string in the following
+         format: "hh:mm:ss.hs". Every number (hh, mm, ss, hs)
+         takes exactly two places.
+         + Sets error codes:
+           'noRoomError' - if 't' cannot fit in 'str'
+      *)
+
+   PROCEDURE FromString(VAR t: T; str: ARRAY OF CHAR);
+      (* Converts the string from format "hh:mm:ss.hs" into
+         a time 't'. Numbers do not have to occupy two places,
+         and string must have at least hh:mm (the rest is considered
+         as zero if ommited).
+         + Sets error codes:
+           'conversionError' - if 'str' is not in proper format,
+           'wrongTimeError'  - if constructed time is not valid
+      *)
+
+   PROCEDURE Hundts(t: T): LONGCARD;
+      (* Returns hundreds corresponding to time 't' *)
+
+   PROCEDURE FromHundts(VAR t: T; hundts: LONGCARD);
+      (* Sets 't' to a time corresponding to 'hundts' *)
+         + Sets error codes:
+           'wrongTimeError'  - if constructed time 't' is not valid
+      *)
+
+   (* Arithmetic operations *)
+
+   PROCEDURE Inc(VAR t: T; hun: LONGCARD);
+      (* Increments time 't' for 'hun' hundreds *)
+
+   PROCEDURE Dec(VAR t: T; hun: LONGCARD);
+      (* Decrements time 't' for 'hun' hundreds *)
+
+   PROCEDURE Add(VAR t: T; t1, t2: T);
+      (* Adds time 't1' and 't2' giving 't' *)
+
+   PROCEDURE Sub(VAR t: T; t1, t2: T);
+      (* Subtracts time 't2' from 't1' giving 't' *)
+
+   (* Errors *)
+
+   PROCEDURE Error(): CARDINAL;
+      (* Returns an error code and resets it to 'noError'.
+         See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+END Time.
+
+(*
+   Changes from ver. 1.00:
+   - constants for error codes are slighly changed
+   - semantics of all operation clarified
+   - error handler 'errorHandler' added
+   - 'Copy' added
+*)
+

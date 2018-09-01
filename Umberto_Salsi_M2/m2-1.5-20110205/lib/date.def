@@ -1,0 +1,48 @@
+DEFINITION MODULE date
+
+CONST
+	y_min = 1583
+	y_max = 3999
+
+	(* Gregorian calendar was adopted the 15 October 1582 in the catholic
+	countries. Others countries adopted the Gregorian calendar later:
+	Britain (1752), Russia (1918), Turkey (1927), ...
+	The astronomical year is 365.2422 days long, whereas the Gregorian
+	year is 365.2425 days long (about 26 s longer). This mean that the
+	calendal will left a day around the year 4000, so has been proposed
+	that the years divisible by 4000 are not leap years. Waiting for
+	a definitive solution to this point be taken, we have limited the
+	range of validity to the year 3999.
+	*)
+
+TYPE
+	DATE = RECORD y, m, d: INTEGER END
+	FMT = (iso, european, us)
+	(* iso: YYYY-MM-DD,  european: DD/MM/YYYY,  us: MM/DD/YYYY *)
+
+
+FUNCTION Date2String(a: DATE, fmt: FMT): STRING
+(* Return the date formatted as per the fmt argument. *)
+
+
+FUNCTION String2Date(s: STRING, fmt: FMT): DATE
+(*
+	Return NIL if the date is invalid.  Hint: to check if a date is valid:
+	IF String2Date(s) = NIL THEN  (* invalid! *) END
+*)
+
+FUNCTION Compare(a: DATE, b: DATE): INTEGER
+(* negative: a<b,    0: a=b    positive: a>b *)
+
+FUNCTION Diff(a: DATE, b: DATE): INTEGER
+(*
+	Return the days elapsed between the two dates (b - a).
+	The result may be negative if Compare(a, b) > 0.
+*)
+
+FUNCTION WeekDay(d: DATE): INTEGER
+(* 0=monday, ..., 6=sunday *)
+
+FUNCTION Today(): DATE
+
+END

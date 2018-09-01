@@ -1,0 +1,188 @@
+(* -------------------------------------------------------------------- *
+ *                 BMB Modula-2 Cross-Platform Library                  *
+ *                                                                      *
+ * Implementation of:       Keyb                                        *
+ *                          (see Keyboard.doc for full specification!)  *
+ * Version:                 1.10                                        *
+ * Date:                    March, 1996                                 *
+ * Conformance Test Passed: -                                           *
+ * Platform:                DOS/80x86                                   *
+ * Requires:                TopSpeed Modula-2 Compiler Version 1.xx     *
+ *                                                                      *
+ * Author:                  Bojan Skaljak                               *
+ *                            University of Novi Sad, Yugoslavia        *
+ * -------------------------------------------------------------------- *)
+
+DEFINITION MODULE Key;
+
+   (* Error codes. Some of these will be set by some of
+      the following operations. Once set, error codes will
+      remain in effect until:
+      - new error code is generated
+      - function 'Error' is called (that will reset the code to 'noError').
+      Only the call to 'Error' will reset the error code back to 'noError'!
+
+      If some operation sets more than one error code, then the error
+      code with highest priority will be set.
+
+      Error codes are the following: (in order of reversed priority)
+   *)
+
+CONST
+    noError		= 0; (* No Error *)
+    unknownError        = 1; (* Any other error described below *)
+
+(* predefined combinations of keys *)
+
+    none=0;
+    esc=1;
+    f1=59;
+    f2=60;
+    f3=61;
+    f4=62;
+    f5=63;
+    f6=64;
+    f7=65;
+    f8=66;
+    f9=67;
+    f10=68;
+    f11=69;
+    f12=70;
+    tilda=41;
+    num1=2;
+    num2=3;
+    num3=4;
+    num4=5;
+    num5=6;
+    num6=7;
+    num7=8;
+    num8=9;
+    num9=10;
+    num0=11;
+    minus=12;
+    equal=13;
+    dir=43;
+    backSpace=14;
+    tab=15;
+    q=16;
+    w=17;
+    e=18;
+    r=19;
+    t=20;
+    y=21;
+    u=22;
+    i=23;
+    o=24;
+    p=25;
+    rightBracket=26;
+    leftBracket=27;
+    a=30;
+    s=31;
+    d=32;
+    f=33;
+    g=34;
+    h=35;
+    j=36;
+    k=37;
+    l=38;
+    semiColon=39;
+    apostrophe=40;
+    z=44;
+    x=45;
+    c=46;
+    v=47;
+    b=48;
+    n=49;
+    m=50;
+    comma=51;
+    dot=52;
+    slash=53;
+    space=57;
+    home=71;
+    end=79;
+    delete=83;
+    pageUp=73;
+    pageDown=81;
+    up=72;
+    down=80;
+    left=75;
+    right=77;
+    padDivide=53;
+    padMultiply=55;
+    padMinus=74;
+    padPlus=78;
+    padEnter=28;
+    padDot=83;
+    padNum1=79;
+    padNum2=80;
+    padNum3=81;
+    padNum4=75;
+    padNum6=77;
+    padNum7=71;
+    padNum8=72;
+    padNum9=73;
+    padNum0=82;
+
+(* Qualifiers *)
+
+    qualifierNone=0;
+    qualifierShift=1;
+    qualifierCtrl=2;
+    qualifierAlt=4;
+    qualifierSysReq=10;
+    qualifierPause=11;
+    qualifierScrollLock=12;
+    qualifierNumLock=13;
+    qualifierCapsLock=14;
+    qualifierInsert=15;
+    qualifierCtrlAlt = qualifierCtrl + qualifierAlt;
+    qualifierCtrlShift = qualifierCtrl + qualifierShift;
+    qualifierAltShift = qualifierAlt + qualifierShift;
+
+(* Following increases are used by procedure RdKey for determining functional
+   keys, because they generate different scan code when they are pressed in
+   combination with qualifiers, such as SHIFT,ALT etc.*)
+
+    increaseAlt=45;
+    increaseShift=25;
+    increaseCtrl=35;
+
+TYPE
+   KeyType=CARDINAL;
+   QualType=CARDINAL;
+
+PROCEDURE Pressed():BOOLEAN;
+
+PROCEDURE Rd(): KeyType;
+   (* Scans keyboard and returns pressed key (no echo) as predefined
+      constant shown above *)
+
+PROCEDURE RdChar(): CHAR;
+   (* Scans keyboard and returns the character correposnding to pressed key.
+      If the key has no prinatble character on it, this function returns
+      CHR(0) *)
+
+PROCEDURE Qualifiers():QualType;
+   (* Returns current state of qualifiers *)
+
+PROCEDURE LastQualifier():QualType;
+   (* Returns last pressed qualifier *)
+
+   (* Errors *)
+
+PROCEDURE Error(): CARDINAL;
+   (* Returns an error code and resets it to 'noError'.
+      See the possible error codes in constant declaration part *)
+
+TYPE
+   ErrorHandler = PROCEDURE(ARRAY OF CHAR);
+VAR
+   errorHandler: ErrorHandler;
+      (* Initially contains procedure that will in case of an error
+         print the appropriate message and stop the program execution. It
+         can be replaced with user-defined procedure of type ErrorHandler.
+      *)
+
+END Key.
+
+

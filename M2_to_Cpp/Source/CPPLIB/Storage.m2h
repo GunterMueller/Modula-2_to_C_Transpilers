@@ -1,0 +1,28 @@
+/* By Milos Radovanovic, 2000, 2001 */
+
+#ifndef _M2_Storage_m2h_
+#define _M2_Storage_m2h_
+
+#include <_m2sys.h>
+
+namespace Storage {
+
+  // ALLOCATE/DEALLOCATE should call the constructor/destructor
+  // if p is a pointer to a class
+
+  void ALLOCATE(ADDRESS& p, CARDINAL size);
+
+  template <class T>
+  void ALLOCATE(POINTER<T> &p, CARDINAL size);
+
+  // size doesn't matter
+  void DEALLOCATE(ADDRESS& p, CARDINAL size);
+
+  template <class T>
+  void DEALLOCATE(POINTER<T> &p, CARDINAL size);
+
+  BOOLEAN Available(CARDINAL size);
+
+} // Storage
+
+#endif

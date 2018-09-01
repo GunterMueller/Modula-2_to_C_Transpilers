@@ -1,0 +1,60 @@
+DEFINITION MODULE time
+
+TYPE
+
+	TIME = RECORD
+		seconds: INTEGER  (* sec. from 1970-01-01 00:00:00 UTC *)
+		useconds: INTEGER (* microseconds *)
+		tz: INTEGER       (* time zone in seconds *)
+		dst: BOOLEAN      (* day saving time? *)
+		(*
+			UTC_time = seconds
+			local_time = seconds + tz
+			IF dst THEN
+				wall_clock_time = seconds + tz + 3600
+			ELSE
+				wall_clock_time = seconds + tz
+			END
+		*)
+	END
+
+	INTERVAL = RECORD
+		seconds, useconds: INTEGER
+	END
+
+
+FUNCTION Time(): INTEGER
+(* Return the no. of seconds from 1970-01-01 00:00:00 UT *)
+
+FUNCTION GetTime(): TIME
+(* Return the currente time. *)
+
+FUNCTION DiffTime(t1: TIME, t2: TIME): INTERVAL
+(* Return the difference t2-t1. *)
+
+FUNCTION Interval2Real(i: INTERVAL): REAL
+(* Return the number of seconds as REAL number. *)
+
+FUNCTION Interval2String(int: INTERVAL): STRING
+(* Return the number of seconds as STRING. The value may be negative
+and may contain a fractional part. Trailing zeroes are discarded. Example:
+	VAR t1: TIME
+	...
+	t1 = GetTime()
+	(* Here the code to monitor *)
+	print("Execution time: " + Interval2String( DiffTime(t1, GetTime()) )
+	+ "\n")
+*)
+
+FUNCTION GetTimeReal(): REAL
+(* Return the number of seconds since 1970-01-01 00:00:00 UTC.  Because of
+the limited precision of the REAL numbers, the resultimg value may be
+accurate only to the millisecond. Example:
+	VAR t1: REAL
+	...
+	t1 = GetTimeReal()
+	(* Here the code to monitor *)
+	print("Execution time: " + rtos(GetTimeReal()-t1) + "\n")
+*)
+
+END

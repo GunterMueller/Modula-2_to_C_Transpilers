@@ -1,0 +1,25 @@
+(* By Milos Radovanovic, 2000, 2001 *)
+
+DEFINITION MODULE VFields;
+(* Keeps one list of elements of type Variants.List *)
+
+  IMPORT Variants;
+
+  PROCEDURE Init;
+  (* Initialize list *)
+
+  PROCEDURE Insert(vList: Variants.List);
+  (* Insert 'vList' into list at the rear *)
+
+  PROCEDURE GetNext(VAR vList: Variants.List);
+  (* Return the next element of list in 'vList'. If end of list is reached,
+     empty string is returned, and the next call to GetNext will return
+     the frist element of the list *)
+
+  PROCEDURE IsEmpty(): BOOLEAN;
+  (* Is the list empty? *)
+
+  PROCEDURE Kill;
+  (* Dispose of list *)
+
+END VFields.

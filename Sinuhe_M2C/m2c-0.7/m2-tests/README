@@ -1,0 +1,57 @@
+                    ABOUT THE TEST SET
+
+
+    Test set for Modula-2 compiler is designed to check a
+reaction of compiler if the source program text contains a
+single error. A single error is a case when in a program only
+one explicit requirement of language is violated.  Therefore
+the order of tests corresponds the structure of language
+report.
+
+     The test name (without extension) contains the word
+"test" for main module or the word "add" for implementation
+and definition modules; the rest of the name consists of
+number of that section in the language report, which contains
+an explicit requirement and number of the test inside
+section.
+                                                   
+    The name component, which determines a number of the test
+inside section, is a character ("a", "b", ...). Tests
+connected with a same section have these characters added to
+its names. For example
+
+		 test10x1a.mod      is first test in section 10.1
+       whereas 
+
+		 test10x1b.mod      is  second one.
+ 
+    Exception: test 14a consists of  two files - test14a1.mod
+	       and test14a2.mod , and there is one additional 
+               digit after character in its name.
+
+       If test consists of more than one file then all these
+files have the same number of section and the same number of
+test inside section in its names. In this case the
+information about test is located in main module if it
+exists.
+
+       Inside the test file the information about test is
+located in comments. First comment defines the page number of
+the language report in the form " p. number ". It also
+defines the first and the last lines of the language report
+containing the corresponding explicit requirement; if the
+line number is counted from top of page then you can see "
+number t - number t " , and if the line number is counted
+from bottom of page then you can see " number b - number b "
+. For example
+
+           " 17b-15b "     means the lines between 17-th 
+
+                           and 15-th lines from bottom.
+
+       The second comment contains a topic ( header of
+section ). The third comment contains an explicit
+requirement. The fourth comment contains an error
+description.
+
+Sergey Katserov

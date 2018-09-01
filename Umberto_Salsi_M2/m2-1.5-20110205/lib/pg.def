@@ -1,0 +1,124 @@
+DEFINITION MODULE pg
+
+(*   PostgreSQL 7.4.2
+     ================
+
+General convention on formal parameter names:
+--------------------------------------------
+
+	conn: index to the connection opened by open()
+	res: index to the reply object returned by exec()
+	row: index of a row >=0
+	col: index of a column >= 0
+
+Example:
+-------
+
+	MODULE pg_test
+	(* Print all the records of the table TABLE_NAME from the
+	data base DB_NAME *)
+
+	IMPORT pg
+	IMPORT m2
+
+	CONST
+		DB_NAME = "mydata"
+		TABLE_NAME = "mytable"
+
+	VAR
+		db: CONNECTION
+		res: RESULT
+		cols, col, rows, row: INTEGER
+		fn, fv: ARRAY OF STRING
+
+	BEGIN
+		db = open("dbname=" + DB_NAME)
+		res = exec(db, "SELECT * FROM " + TABLE_NAME)
+		close(db)
+		fn = get_field_names(res)
+		cols = ncols(res)
+		rows = nrows(res)
+		FOR row = 0 TO rows-1 DO
+			print("RECORD n. " + itos(row+1) + ":\n")
+			fv = get_fields(res, row)
+			FOR col = 0 TO cols-1 DO
+				print("\t" + fn[col] + " = '")
+				IF fv[col] = NIL THEN
+					print("NULL\n")
+				ELSE
+					print("'" + fv[col] + "'\n")
+				END
+			END
+		END
+		clear(res)
+	END
+*)
+
+TYPE
+	CONNECTION = ADDRESS
+	RESULT = ADDRESS
+
+FUNCTION open(db: STRING): CONNECTION
+RAISE ERROR
+(*
+	Open the connection with the DB backend. The connection must be
+	closed with close(db).  Example:
+
+		VAR db: CONNECTION
+		...
+		db = open("dbname=mydatabase")
+
+	ERROR 1: connection failed
+*)
+
+FUNCTION close(conn: CONNECTION)
+(*
+	Close the connection.
+*)
+
+FUNCTION exec(conn: CONNECTION, query: STRING): RESULT
+RAISE ERROR
+(*
+	Return the result of the query.  The result must be released
+	with clear(res)
+
+	ERROR 1: query failed
+*)
+
+FUNCTION clear(res: RESULT)
+(*
+	Release the result.
+*)
+
+FUNCTION nrows(res: RESULT): INTEGER
+(* No. of rows in the result. *)
+
+FUNCTION ncols(res: RESULT): INTEGER
+(* No. of columns in the result. *)
+
+FUNCTION fname(res: RESULT, col: INTEGER): STRING
+(* Return the name of the column no. 'col'. *)
+
+FUNCTION get_value(res: RESULT, row: INTEGER, col: INTEGER): STRING
+(*
+	Return the value of the (row,col) table element.  Return NIL if
+	the field is NULL.
+*)
+
+FUNCTION get_value_byname(res: RESULT, row: INTEGER, fname: STRING): STRING
+(*
+	Return the value of the table element given his name 'fname'.
+	Return NIL if the element is NULL.
+*)
+
+FUNCTION get_field_names(res: RESULT): ARRAY OF STRING
+(*
+	Return the names of the fields.
+*)
+
+FUNCTION get_fields(res: RESULT, row: INTEGER): ARRAY OF STRING
+(*
+	Return the values of the fields. NULL elements are set to NIL.
+*)
+
+END
